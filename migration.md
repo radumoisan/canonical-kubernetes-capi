@@ -6,12 +6,13 @@ Track preparation and validation for the active Kubernetes CAPI lab sequence in 
 
 - `Not started`
 - `In progress`
+- `Migrated`
 - `Validated`
 - `Complete`
 
 ## Active Labs
 
-- `1_k8s_basics_gce.md`: `Not started`
+- `1_k8s_basics_gce.md`: `Migrated`
 - `2_networking_gce.md`: `Not started`
 - `3_keeping_apps_healthy_gce.md`: `Not started`
 - `4_storage_gce.md`: `Not started`

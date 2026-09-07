@@ -1,24 +1,29 @@
----
-hide:
-  - toc
----
+# Canonical Kubernetes CAPI
 
-# Ubuntu Server Advanced
+This site contains the Canonical Kubernetes Cluster API training material, organized one chapter per page.
 
-This site contains the Ubuntu Server Advanced training material, organized one chapter per page.
+Start with [Chapter 1: Kubernetes Basics](1-kubernetes-basics.md). Remaining chapters will be published in order.
 
-Start with [Virtualization](virtualization.md), then continue through [LXD](lxd.md), [OpenSSH](openssh.md), [Boot and System Initialization](boot-and-system-initialization.md), [Storage](storage.md), [Advanced Filesystem Concepts](advanced-filesystem-concepts.md), [ZFS](zfs.md), and [Advanced Networking Concepts](advanced-networking-concepts.md).
+## Copyright
 
-## Chapters
+This material is copyright of Canonical Limited. This material may be used for personal and noncommercial
+use only.
 
-- [Virtualization](virtualization.md): prepare the lab environment, verify KVM support, and create the first VM.
-- [LXD](lxd.md): install and initialize LXD, launch containers, and explore images, profiles, snapshots, VMs, and networks.
-- [OpenSSH](openssh.md): use SSH keys, agents, client and server configuration, port forwarding, and `ProxyJump` in the lab.
-- [Boot and System Initialization](boot-and-system-initialization.md): review GRUB2, `systemd`, journald, and task scheduling workflows.
-- [Storage](storage.md): work with partitioning, RAID, LVM, and multipathing concepts and labs.
-- [Advanced Filesystem Concepts](advanced-filesystem-concepts.md): review filesystem internals, `ext4`, ACL-related permissions, and the related labs.
-- [ZFS](zfs.md): work through ZFS pools, datasets, snapshots, clones, send/receive, and RAID layouts.
-- [Advanced Networking Concepts](advanced-networking-concepts.md): configure Netplan, VLANs, dummy interfaces, bonding, and bridging.
-- [Security](security.md): review PAM, ACLs, AppArmor, UFW, and Ubuntu Pro security services.
-- [Advanced Snap Packaging](advanced-snap-packaging.md): review snap confinement, channels, and advanced snap management commands.
-- [System Topics](advanced-system-topics.md): review time synchronization, rsyslog, diagnostic collection, and advanced XFS administration.
+This documentation is copyright of Canonical Limited. You are welcome to display on your
+computer, download and print this documentation or to use the hard copy provided to you for
+personal, education and non-commercial use only. You must retain copyright, trademark and
+other notices unaltered on any copies or printouts you make. Any trademarks, logos an service
+marks displayed in this document are property of their owners, whether Canonical or third
+parties.
+
+This documentation is provided on an "as is" basis, without warranty of any kind, either express
+or implied. Your use of this documentation is at your own risk. Canonical disclaims all warranties
+and liability that may result directly or indirectly from the use of this documentation.
+
+## Lab assumptions
+
+The following exercises will be done in a practice lab environment comprised of Virtual Machines on GCP cloud.
+The instructor will provide you with a public IP and credentials for a student machine. SSH will be used to connect to
+he student machine. The IP is static and reboot persistent.
+
+The purpose of this lab is to familiarize the student with Kubernetes. Kubernetes version `1.35` will be deployed.
