@@ -2,7 +2,7 @@
 
 This site contains the Canonical Kubernetes Cluster API training material, organized one chapter per page.
 
-Start with [Chapter 1: Kubernetes Basics](1-kubernetes-basics.md), then [Chapter 2: Networking](2-networking.md), then [Chapter 3: Keeping apps healthy](3-keeping-apps-healthy.md), then [Chapter 4: Storage and User Data](4-storage-and-user-data.md). Remaining chapters will be published in order.
+Start with [Chapter 1: Kubernetes Basics](1-kubernetes-basics.md), then [Chapter 2: Networking](2-networking.md), then [Chapter 3: Keeping apps healthy](3-keeping-apps-healthy.md), then [Chapter 4: Storage and User Data](4-storage-and-user-data.md), then [Chapter 5: Autoscaling](5-autoscaling.md). Remaining chapters will be published in order.
 
 ## Copyright
 
