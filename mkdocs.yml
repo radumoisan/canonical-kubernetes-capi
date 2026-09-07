@@ -16,6 +16,7 @@ nav:
   - "④ Storage and User Data": 4-storage-and-user-data.md
   - "⑤ Autoscaling": 5-autoscaling.md
   - "⑥ Authentication and Authorization": 6-authentication-and-authorization.md
+  - "⑦ Helm": 7-helm.md
 
 markdown_extensions:
   - tables
