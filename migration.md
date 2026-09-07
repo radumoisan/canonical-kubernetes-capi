@@ -17,6 +17,6 @@ Track preparation and validation for the active Kubernetes CAPI lab sequence in 
 - `3_keeping_apps_healthy_gce.md`: `Migrated`
 - `4_storage_gce.md`: `Migrated`
 - `5_autoscaling_gce.md`: `Migrated`
-- `6_auth_gce.md`: `Not started`
+- `6_auth_gce.md`: `Migrated`
 - `7_helm_gce.md`: `Not started`
 - `8_upgrading_gce.md`: `Not started`

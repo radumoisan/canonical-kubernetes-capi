@@ -15,6 +15,7 @@ nav:
   - "③ Keeping apps healthy": 3-keeping-apps-healthy.md
   - "④ Storage and User Data": 4-storage-and-user-data.md
   - "⑤ Autoscaling": 5-autoscaling.md
+  - "⑥ Authentication and Authorization": 6-authentication-and-authorization.md
 
 markdown_extensions:
   - tables
