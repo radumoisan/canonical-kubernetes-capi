@@ -13,6 +13,7 @@ nav:
   - "① Kubernetes Basics": 1-kubernetes-basics.md
   - "② Networking": 2-networking.md
   - "③ Keeping apps healthy": 3-keeping-apps-healthy.md
+  - "④ Storage and User Data": 4-storage-and-user-data.md
 
 markdown_extensions:
   - tables
