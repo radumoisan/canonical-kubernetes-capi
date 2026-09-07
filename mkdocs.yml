@@ -12,6 +12,7 @@ nav:
   - "🏠 Home": index.md
   - "① Kubernetes Basics": 1-kubernetes-basics.md
   - "② Networking": 2-networking.md
+  - "③ Keeping apps healthy": 3-keeping-apps-healthy.md
 
 markdown_extensions:
   - tables
