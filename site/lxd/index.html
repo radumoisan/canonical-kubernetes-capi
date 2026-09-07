@@ -1,0 +1,1952 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for the Ubuntu Server Advanced training">
+      
+      
+      
+      
+        <link rel="prev" href="../virtualization/">
+      
+      
+        <link rel="next" href="../openssh/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
+    
+    
+      
+        <title>📋 LXD - Ubuntu Server Advanced</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#lxd" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Ubuntu Server Advanced" class="md-header__button md-logo" aria-label="Ubuntu Server Advanced" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ubuntu Server Advanced
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              📋 LXD
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Ubuntu Server Advanced" class="md-nav__button md-logo" aria-label="Ubuntu Server Advanced" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Ubuntu Server Advanced
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    🏠 Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../virtualization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Virtualization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    📋 LXD
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    📋 LXD
+  </span>
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#21-containerization" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.1 Containerization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-what-is-lxd" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.2 What Is LXD?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-lxd-setup-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3 LXD Setup Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 LXD Setup Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#231-install-lxd" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.1 Install LXD
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#232-using-a-remote-lxd-as-an-image-server" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.2 Using A Remote LXD As An Image Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#233-creating-and-using-a-container" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.3 Creating And Using A Container
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#234-images" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.4 Images
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#235-lxd-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.5 LXD Profiles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#236-lxd-snapshots" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.6 LXD Snapshots
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#237-kvm-vms-in-lxd" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.7 KVM VMs In LXD
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#238-lxd-networks" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.8 LXD Networks
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../openssh/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 OpenSSH
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../boot-and-system-initialization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Boot and System Init
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-filesystem-concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Filesystem Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zfs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 ZFS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-networking-concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Networking Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-snap-packaging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Advanced Snap Packaging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-system-topics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 System Topics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#21-containerization" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.1 Containerization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-what-is-lxd" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.2 What Is LXD?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-lxd-setup-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3 LXD Setup Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2.3 LXD Setup Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#231-install-lxd" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.1 Install LXD
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#232-using-a-remote-lxd-as-an-image-server" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.2 Using A Remote LXD As An Image Server
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#233-creating-and-using-a-container" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.3 Creating And Using A Container
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#234-images" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.4 Images
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#235-lxd-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.5 LXD Profiles
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#236-lxd-snapshots" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.6 LXD Snapshots
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#237-kvm-vms-in-lxd" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.7 KVM VMs In LXD
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#238-lxd-networks" class="md-nav__link">
+    <span class="md-ellipsis">
+       2.3.8 LXD Networks
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="lxd">LXD<a class="headerlink" href="#lxd" title="Permanent link">&para;</a></h1>
+<p>This chapter introduces LXD system containers and basic LXD VM workflows.</p>
+<p>In this chapter you will:</p>
+<ul>
+<li>review containerization concepts</li>
+<li>install and initialize LXD</li>
+<li>launch and manage containers</li>
+<li>work with images, profiles, and snapshots</li>
+<li>create a VM with LXD</li>
+<li>inspect and attach LXD networks</li>
+</ul>
+<h2 id="21-containerization"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 2.1 Containerization<a class="headerlink" href="#21-containerization" title="Permanent link">&para;</a></h2>
+<p>Containers are isolated userspace environments that run on the same host kernel. They use Linux kernel features such as namespaces and cgroups to isolate processes, filesystems, users, and networking with much lower overhead than a full virtual machine.</p>
+<p>Unlike full virtualization, containers do not boot their own kernel. They share the host kernel, which reduces resource usage and allows faster startup.</p>
+<p>Two common container models are used in practice:</p>
+<ul>
+<li>application containers, which package a single service or process</li>
+<li>system containers, which provide a fuller operating system environment</li>
+</ul>
+<p>LXD focuses on system containers. Under the hood it uses LXC, while adding a daemon, API, and management tools that make container lifecycle tasks easier.</p>
+<h2 id="22-what-is-lxd"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 2.2 What Is LXD?<a class="headerlink" href="#22-what-is-lxd" title="Permanent link">&para;</a></h2>
+<p>LXD is a system container and virtual machine manager. It provides VM-style operations such as launch, stop, snapshot, copy, and delete, but uses Linux containers for container workloads instead of hardware virtualization.</p>
+<p>LXD is built around two main components:</p>
+<ul>
+<li><code>lxd</code>, the system daemon that exposes the management API</li>
+<li><code>lxc</code>, the CLI client used to manage local or remote LXD servers</li>
+</ul>
+<p>LXD is image-based. Containers and VMs are created from images, and those images can be downloaded from local or remote image servers.</p>
+<h2 id="23-lxd-setup-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 2.3 LXD Setup Lab<a class="headerlink" href="#23-lxd-setup-lab" title="Permanent link">&para;</a></h2>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Run this lab on <code>LABVM</code> unless a step explicitly says otherwise.
+In this lab environment, <code>LABVM</code> is reachable at <code>192.168.101.50</code>.</p>
+</div>
+<h3 id="231-install-lxd"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 2.3.1 Install LXD<a class="headerlink" href="#231-install-lxd" title="Permanent link">&para;</a></h3>
+<p>Install and initialize LXD on <code>LABVM</code>.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise installs and initializes LXD on <code>LABVM</code>. Success means the <code>ubuntu</code> user can access LXD through the <code>lxd</code> group, <code>lxd init --auto</code> completes, <code>lxdbr0</code> is configured with MTU <code>1450</code>, and the test container <code>noble</code> starts successfully.</p>
+</div>
+<p>Step 1: Make sure you are logged in to <code>LABVM</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In this lab, the <code>ubuntu</code> user password on <code>LABVM</code> is <code>ubuntu</code>.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to LABVM over SSH.</span>
+ssh<span class="w"> </span><span class="m">192</span>.168.101.50
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ubuntu@192.168.101.50&#39;s password:
+Welcome to Ubuntu 24.04 LTS (GNU/Linux 6.8.0-*-generic x86_64)
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<p>Step 2: Set a <code>LABVM</code> prompt, then install ZFS support for LXD storage features.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To make it easier to distinguish <code>LABVM</code> from <code>LABHOST</code>, set a custom shell prompt on <code>LABVM</code> before continuing.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Append a LABVM prompt to ~/.bashrc.</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s\n&#39;</span><span class="w"> </span><span class="s1">&#39;PS1=&quot;\[\e[1;32m\]\u@LABVM\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\\$ &quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reload ~/.bashrc in the current shell.</span>
+<span class="nb">source</span><span class="w"> </span>~/.bashrc
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ubuntu@LABVM:~$
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install the ZFS tools used by the LXD storage backend in this lab.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>-y<span class="w"> </span>install<span class="w"> </span>zfsutils-linux
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Reading package lists... Done
+Building dependency tree... Done
+The following NEW packages will be installed:
+  zfsutils-linux
+...
+Setting up zfsutils-linux ...
+</code></pre></div>
+</details>
+<p>LXD can use ZFS for storage pools and snapshots. ZFS is covered in more detail later in the course.</p>
+<p>Step 3: Create the <code>lxd</code> group.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Ensure the lxd system group exists.</span>
+sudo<span class="w"> </span>groupadd<span class="w"> </span>--system<span class="w"> </span>lxd
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 4: Add the <code>ubuntu</code> user to the <code>lxd</code> group.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add the ubuntu user to the lxd group.</span>
+sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>lxd<span class="w"> </span>ubuntu
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 5: Refresh the current shell group membership.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start a new shell that picks up the lxd group membership.</span>
+newgrp<span class="w"> </span>lxd
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>This starts a subshell with the updated group membership. If the prompt looks the same, that is normal.</p>
+<p>You will leave this subshell near the end of the lab before you close the SSH session back to <code>LABHOST</code>.</p>
+<p>Step 6: Install LXD as a snap.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install LXD from the validated 5.21 stable channel.</span>
+sudo<span class="w"> </span>snap<span class="w"> </span>install<span class="w"> </span>lxd<span class="w"> </span>--channel<span class="o">=</span><span class="m">5</span>.21/stable
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>lxd (5.21/stable) 5.21.* from Canonical installed
+</code></pre></div>
+</details>
+<p>Step 7: Initialize LXD with the default configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Initialize LXD with the default non-interactive settings.</span>
+sudo<span class="w"> </span>lxd<span class="w"> </span>init<span class="w"> </span>--auto
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use <code>lxd init</code> without <code>--auto</code> if you want the interactive setup flow.</p>
+</div>
+<p>Step 8: Set the LXD bridge MTU to <code>1450</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Set the default LXD bridge MTU to 1450 for this lab.</span>
+lxc<span class="w"> </span>network<span class="w"> </span><span class="nb">set</span><span class="w"> </span>lxdbr0<span class="w"> </span>bridge.mtu<span class="o">=</span><span class="m">1450</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Some LXD client versions may print a first-use hint after this command. If that happens, you can ignore it.</p>
+<p>Step 9: Launch a new Ubuntu 24.04 container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Launch a container named noble from the Ubuntu 24.04 image.</span>
+lxc<span class="w"> </span>launch<span class="w"> </span>ubuntu:24.04<span class="w"> </span>noble
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Creating noble
+Starting noble
+</code></pre></div>
+</details>
+<p>Step 10: List instances.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List instances and confirm noble is running.</span>
+lxc<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+-------+---------+----------------------+------+-----------+-----------+
+| NAME  |  STATE  |         IPV4         | IPV6 |   TYPE    | SNAPSHOTS |
++-------+---------+----------------------+------+-----------+-----------+
+| noble | RUNNING | 10.96.234.22 (eth0)  | fd42:ac23:f544:f9ac:216:3eff:fe9c:640d (eth0) | CONTAINER | 0 |
++-------+---------+----------------------+------+-----------+-----------+
+</code></pre></div>
+</details>
+<p>Step 11: List images in the local store.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List cached images in the local LXD image store.</span>
+lxc<span class="w"> </span>image<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| ALIAS | FINGERPRINT  | PUBLIC |             DESCRIPTION              | ARCHITECTURE |   TYPE    |   SIZE   |         UPLOAD DATE          |
++-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+|       | d6c393290422 | no     | ubuntu 24.04 LTS amd64 (release) (20260321) | x86_64 | CONTAINER | 267.82MiB | Apr 10, 2026 at 8:00am (UTC) |
++-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+</code></pre></div>
+</details>
+<p>Step 12: Create the <code>ubuntu</code> image alias.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a local ubuntu alias for the downloaded image fingerprint.</span>
+lxc<span class="w"> </span>image<span class="w"> </span><span class="nb">alias</span><span class="w"> </span>create<span class="w"> </span>ubuntu<span class="w"> </span>&lt;fingerprint&gt;
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Replace <code>&lt;fingerprint&gt;</code> with the actual value shown in the previous <code>lxc image list</code> output. In the example above, that value is <code>d6c393290422</code>.</p>
+<p>The <code>ubuntu</code> alias can then be used as a shorter image reference.</p>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>After the initial setup, make sure you remember:</p>
+<ul>
+<li>LXD is installed as a snap in this lab</li>
+<li><code>lxd init --auto</code> gives you a quick default setup</li>
+<li>once initialized, you can launch instances immediately with <code>lxc launch</code></li>
+</ul>
+</div>
+<h3 id="232-using-a-remote-lxd-as-an-image-server"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 2.3.2 Using A Remote LXD As An Image Server<a class="headerlink" href="#232-using-a-remote-lxd-as-an-image-server" title="Permanent link">&para;</a></h3>
+<p>LXD can launch instances directly from remote image servers.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise shows how LXD launches from a remote image server and caches the image locally. Success means the <code>centos</code> container starts from <code>images:</code> and later appears in the local image store.</p>
+</div>
+<p>Step 1: Launch a CentOS Stream 9 container from the <code>images</code> remote.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Launch a CentOS Stream 9 container from the public images remote.</span>
+lxc<span class="w"> </span>launch<span class="w"> </span>images:centos/9-Stream<span class="w"> </span>centos
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Creating centos
+Starting centos
+</code></pre></div>
+</details>
+<p>Step 2: List images available from the <code>images</code> remote.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pay attention to the trailing <code>:</code> in <code>images:</code>. The colon is required when referring to a remote image server.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># List images published by the images remote.</span>
+lxc<span class="w"> </span>image<span class="w"> </span>list<span class="w"> </span>images:
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+--------------------------------------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+|             FINGERPRINT              |    ALIAS     | PUBLIC |             DESCRIPTION              | ARCHITECTURE |   TYPE    |   SIZE   |         UPLOAD DATE          |
++--------------------------------------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| 3374eec53d86                         | almalinux/9 (3 more)     | yes | AlmaLinux 9 amd64 (20260410_0016)     | x86_64 | CONTAINER | 113.25MiB | Apr 10, 2026 at 12:16am (UTC) |
+| 1e979a497c10                         | alpine/3.20 (3 more)     | yes | Alpine 3.20 amd64 (20260401_0107)     | x86_64 | CONTAINER | 3.09MiB   | Apr 1, 2026 at 1:07am (UTC)   |
+| ccf0a36f7e0b                         | centos/9-Stream (3 more) | yes | CentOS 9-Stream amd64 (20260410_0402) | x86_64 | CONTAINER | 117.14MiB | Apr 10, 2026 at 4:02am (UTC)  |
++--------------------------------------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+</code></pre></div>
+</details>
+<p>Step 3: List images in the local store.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pay attention to the trailing <code>:</code> in <code>local:</code>. The colon is required when referring to the local image store as a remote.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># List images cached locally after the remote launch.</span>
+lxc<span class="w"> </span>image<span class="w"> </span>list<span class="w"> </span>local:
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| ALIAS | FINGERPRINT  | PUBLIC |             DESCRIPTION              | ARCHITECTURE |   TYPE    |   SIZE   |         UPLOAD DATE          |
++-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| ubuntu | d6c393290422 | no   | ubuntu 24.04 LTS amd64 (release) (20260321) | x86_64 | CONTAINER | 267.82MiB | Apr 10, 2026 at 8:00am (UTC) |
+|        | ccf0a36f7e0b | no   | CentOS 9-Stream amd64 (20260410_0402) | x86_64 | CONTAINER | 117.14MiB | Apr 10, 2026 at 8:11am (UTC) |
+| ...    | ...          | ...  | ...                                  | ...          | ...       | ...       | ...                          |
++-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>For image servers, remember:</p>
+<ul>
+<li><code>images:</code>, <code>ubuntu:</code>, and similar names are remotes</li>
+<li>the trailing <code>:</code> matters</li>
+<li>launching from a remote can also cache the image locally</li>
+</ul>
+</div>
+<h3 id="233-creating-and-using-a-container"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 2.3.3 Creating And Using A Container<a class="headerlink" href="#233-creating-and-using-a-container" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise walks through the basic container lifecycle. Success means you can launch <code>first</code>, run commands inside it, copy files in and out, and then stop and delete it cleanly.</p>
+</div>
+<p>Step 1: Launch a container named <code>first</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Launch a container named first from the local ubuntu alias.</span>
+lxc<span class="w"> </span>launch<span class="w"> </span>ubuntu<span class="w"> </span>first
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Creating first
+Starting first
+</code></pre></div>
+</details>
+<p>Step 2: Confirm that the container is running.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List instances and confirm first is running.</span>
+lxc<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+-------+---------+----------------------+------+-----------+-----------+
+| NAME  |  STATE  |         IPV4         | IPV6 |   TYPE    | SNAPSHOTS |
++-------+---------+----------------------+------+-----------+-----------+
+| centos | RUNNING | 10.96.234.59 (eth0) | fd42:ac23:f544:f9ac:216:3eff:fe04:9c3c (eth0) | CONTAINER | 0 |
+| first  | RUNNING | 10.96.234.238 (eth0) | fd42:ac23:f544:f9ac:216:3eff:fea3:c6f4 (eth0) | CONTAINER | 0 |
+| noble  | RUNNING | 10.96.234.22 (eth0) | fd42:ac23:f544:f9ac:216:3eff:fe9c:640d (eth0) | CONTAINER | 0 |
++-------+---------+----------------------+------+-----------+-----------+
+</code></pre></div>
+</details>
+<p>Step 3: Open a shell inside the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open an interactive shell inside first.</span>
+lxc<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>first<span class="w"> </span>--<span class="w"> </span>/bin/bash
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>root@first:~#
+</code></pre></div>
+</details>
+<p>Step 4: Exit the container shell.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Leave the container shell and return to LABVM.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>exit
+ubuntu@LABVM:~$
+</code></pre></div>
+</details>
+<p>Step 5: Run a command directly in the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Refresh package metadata inside first.</span>
+lxc<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>first<span class="w"> </span>--<span class="w"> </span>apt<span class="w"> </span>update
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
+Reading package lists... Done
+</code></pre></div>
+</details>
+<p>Step 6: Pull a file from the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Copy /etc/hosts from first to the current directory on LABVM.</span>
+lxc<span class="w"> </span>file<span class="w"> </span>pull<span class="w"> </span>first/etc/hosts<span class="w"> </span>.
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 7: Push a file into the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Copy the local hosts file into /tmp inside first.</span>
+lxc<span class="w"> </span>file<span class="w"> </span>push<span class="w"> </span>./hosts<span class="w"> </span>first/tmp/
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 8: Verify the copied file in the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Verify that /tmp/hosts exists inside first.</span>
+lxc<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>first<span class="w"> </span>--<span class="w"> </span>ls<span class="w"> </span>-l<span class="w"> </span>/tmp/hosts
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>-rw-r--r-- 1 ubuntu ubuntu 221 Apr 10 08:20 /tmp/hosts
+</code></pre></div>
+</details>
+<p>Step 9: Stop the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Stop the first container before cleanup.</span>
+lxc<span class="w"> </span>stop<span class="w"> </span>first
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 10: Delete the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Delete the stopped first container.</span>
+lxc<span class="w"> </span>delete<span class="w"> </span>first
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>The basic LXD container workflow is:</p>
+<ul>
+<li>launch with <code>lxc launch</code></li>
+<li>inspect with <code>lxc list</code></li>
+<li>enter or run commands with <code>lxc exec</code></li>
+<li>stop and delete when finished</li>
+</ul>
+</div>
+<h3 id="234-images"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 2.3.4 Images<a class="headerlink" href="#234-images" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise compares the image remotes configured in LXD. Success means you can identify the difference between remote image listings such as <code>images:</code> and locally cached images under <code>local:</code>.</p>
+</div>
+<p>Step 1: List configured remotes.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List the image remotes currently configured in LXD.</span>
+lxc<span class="w"> </span>remote<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+----------------------+---------------------------------------------------+---------------+-------------+--------+--------+--------+
+|         NAME         |                        URL                        |   PROTOCOL    |  AUTH TYPE  | PUBLIC | STATIC | GLOBAL |
++----------------------+---------------------------------------------------+---------------+-------------+--------+--------+--------+
+| images               | https://images.lxd.canonical.com                  | simplestreams | none        | YES    | YES    | NO     |
+| local (current)      | unix://                                           | lxd           | file access | NO     | YES    | NO     |
+| ubuntu               | https://cloud-images.ubuntu.com/releases/         | simplestreams | none        | YES    | YES    | NO     |
+| ubuntu-daily         | https://cloud-images.ubuntu.com/daily/            | simplestreams | none        | YES    | YES    | NO     |
+| ubuntu-minimal       | https://cloud-images.ubuntu.com/minimal/releases/ | simplestreams | none        | YES    | YES    | NO     |
+| ubuntu-minimal-daily | https://cloud-images.ubuntu.com/minimal/daily/    | simplestreams | none        | YES    | YES    | NO     |
++----------------------+---------------------------------------------------+---------------+-------------+--------+--------+--------+
+</code></pre></div>
+</details>
+<p>Step 2: List images from the <code>images</code> remote.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pay attention to the trailing <code>:</code> in <code>images:</code>. The colon is required when referring to a remote image server.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># List images available from the images remote.</span>
+lxc<span class="w"> </span>image<span class="w"> </span>list<span class="w"> </span>images:
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+--------------------------------------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+|             FINGERPRINT              |    ALIAS     | PUBLIC |             DESCRIPTION              | ARCHITECTURE |   TYPE    |   SIZE   |         UPLOAD DATE          |
++--------------------------------------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| 3374eec53d86                         | almalinux/9 (3 more)     | yes | AlmaLinux 9 amd64 (20260410_0016)     | x86_64 | CONTAINER | 113.25MiB | Apr 10, 2026 at 12:16am (UTC) |
+| 1e979a497c10                         | alpine/3.20 (3 more)     | yes | Alpine 3.20 amd64 (20260401_0107)     | x86_64 | CONTAINER | 3.09MiB   | Apr 1, 2026 at 1:07am (UTC)   |
+| ccf0a36f7e0b                         | centos/9-Stream (3 more) | yes | CentOS 9-Stream amd64 (20260410_0402) | x86_64 | CONTAINER | 117.14MiB | Apr 10, 2026 at 4:02am (UTC)  |
++--------------------------------------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+</code></pre></div>
+</details>
+<p>Step 3: List images in the local store.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pay attention to the trailing <code>:</code> in <code>local:</code>. The colon is required when referring to the local image store as a remote.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># List images currently cached in the local image store.</span>
+lxc<span class="w"> </span>image<span class="w"> </span>list<span class="w"> </span>local:
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| ALIAS | FINGERPRINT  | PUBLIC |             DESCRIPTION              | ARCHITECTURE |   TYPE    |   SIZE   |         UPLOAD DATE          |
++-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| ubuntu | d6c393290422 | no   | ubuntu 24.04 LTS amd64 (release) (20260321) | x86_64 | CONTAINER | 267.82MiB | Apr 10, 2026 at 8:00am (UTC) |
+|        | ccf0a36f7e0b | no   | CentOS 9-Stream amd64 (20260410_0402) | x86_64 | CONTAINER | 117.14MiB | Apr 10, 2026 at 8:11am (UTC) |
+| ...    | ...          | ...  | ...                                  | ...          | ...       | ...       | ...                          |
++-------+--------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+</code></pre></div>
+</details>
+<p>Step 4: List Ubuntu release images.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pay attention to the trailing <code>:</code> in <code>ubuntu:</code>. The colon is required when referring to the Ubuntu image remote.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># List published release images from the ubuntu remote.</span>
+lxc<span class="w"> </span>image<span class="w"> </span>list<span class="w"> </span>ubuntu:
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+--------------------------------------+----------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+|             FINGERPRINT              |     ALIAS      | PUBLIC |             DESCRIPTION              | ARCHITECTURE |   TYPE    |   SIZE   |         UPLOAD DATE          |
++--------------------------------------+----------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| ...                                  | 22.04          | yes    | ubuntu 22.04 LTS amd64 (release)     | x86_64       | CONTAINER | ...      | ...                          |
+| ...                                  | 24.04          | yes    | ubuntu 24.04 LTS amd64 (release)     | x86_64       | CONTAINER | ...      | ...                          |
+| ...                                  | 14.04          | yes    | ubuntu 14.04 LTS amd64 (release)     | x86_64       | CONTAINER | ...      | ...                          |
+| ...                                  | ...            | ...    | ...                                  | ...          | ...       | ...      | ...                          |
++--------------------------------------+----------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+</code></pre></div>
+</details>
+<p>Step 5: List daily Ubuntu images.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pay attention to the trailing <code>:</code> in <code>ubuntu-daily:</code>. The colon is required when referring to the Ubuntu daily image remote.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># List published daily images from the ubuntu-daily remote.</span>
+lxc<span class="w"> </span>image<span class="w"> </span>list<span class="w"> </span>ubuntu-daily:
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+--------------------------------------+----------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+|             FINGERPRINT              |     ALIAS      | PUBLIC |             DESCRIPTION              | ARCHITECTURE |   TYPE    |   SIZE   |         UPLOAD DATE          |
++--------------------------------------+----------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+| c533845b5db1                         | b (5 more)     | yes    | ubuntu 18.04 LTS amd64 (daily)       | x86_64       | CONTAINER | 215.55MiB | Jun 7, 2023 at 12:00am (UTC)  |
+| dde688f95cc6                         | n (9 more)     | yes    | ubuntu 24.04 LTS amd64 (daily) (20260323) | x86_64 | CONTAINER | 267.82MiB | Mar 23, 2026 at 12:00am (UTC) |
+| f6039be3f0c2                         | r (7 more)     | yes    | ubuntu 26.04 LTS amd64 (daily)       | x86_64       | CONTAINER | 311.04MiB | Mar 28, 2026 at 12:00am (UTC) |
+| ...                                  | ...            | ...    | ...                                  | ...          | ...       | ...       | ...                           |
++--------------------------------------+----------------+--------+--------------------------------------+--------------+-----------+----------+------------------------------+
+</code></pre></div>
+</details>
+<h3 id="235-lxd-profiles"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 2.3.5 LXD Profiles<a class="headerlink" href="#235-lxd-profiles" title="Permanent link">&para;</a></h3>
+<p>Profiles store reusable instance configuration.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise introduces profiles as reusable defaults for instances. Success means you can identify the devices defined in the <code>default</code> profile and understand that instances inherit those settings.</p>
+</div>
+<p>Step 1: List all profiles.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List the profiles currently configured in LXD.</span>
+lxc<span class="w"> </span>profile<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+---------+---------------------+---------+
+|  NAME   |     DESCRIPTION     | USED BY |
++---------+---------------------+---------+
+| default | Default LXD profile | 2       |
++---------+---------------------+---------+
+</code></pre></div>
+</details>
+<p>Step 2: Open the default profile for editing.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open the default profile in your editor.</span>
+lxc<span class="w"> </span>profile<span class="w"> </span>edit<span class="w"> </span>default
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The editor opens with content similar to:
+
+name: default
+description: Default LXD profile
+config: {}
+devices:
+  eth0:
+    name: eth0
+    network: lxdbr0
+    type: nic
+  root:
+    path: /
+    pool: default
+    type: disk
+</code></pre></div>
+</details>
+<p>If you open the editor only to inspect the profile, exit without saving changes.</p>
+<p>Step 3: Show the current profile definition.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the current default profile definition.</span>
+lxc<span class="w"> </span>profile<span class="w"> </span>show<span class="w"> </span>default
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>name: default
+description: Default LXD profile
+config: {}
+devices:
+  eth0:
+    name: eth0
+    network: lxdbr0
+    type: nic
+  root:
+    path: /
+    pool: default
+    type: disk
+used_by:
+- /1.0/instances/noble
+- /1.0/instances/centos
+project: default
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Profiles are reusable defaults:</p>
+<ul>
+<li>they define things like NICs, disks, and other instance settings</li>
+<li>multiple instances can share the same profile</li>
+<li>changing a profile changes the defaults applied to instances that use it</li>
+</ul>
+</div>
+<h3 id="236-lxd-snapshots"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 2.3.6 LXD Snapshots<a class="headerlink" href="#236-lxd-snapshots" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise shows how to create a snapshot, restore from it, and clone a new container from it. Success means <code>lxc info noble</code> shows <code>my-snapshot</code> and the cloned container starts successfully.</p>
+</div>
+<p>Step 1: Create a snapshot of <code>noble</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a snapshot of noble named my-snapshot.</span>
+lxc<span class="w"> </span>snapshot<span class="w"> </span>noble<span class="w"> </span>my-snapshot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Snapshots are typically fast because the storage backend records only changed data.</p>
+<p>Step 2: Show container information, including snapshots.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show noble details, including snapshot information.</span>
+lxc<span class="w"> </span>info<span class="w"> </span>noble
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Name: noble
+Status: RUNNING
+Type: container
+Snapshots:
++-------------+----------------------+------------+----------+
+|    NAME     |       TAKEN AT       | EXPIRES AT | STATEFUL |
++-------------+----------------------+------------+----------+
+| my-snapshot | 2026/04/10 08:46 UTC |            | NO       |
++-------------+----------------------+------------+----------+
+</code></pre></div>
+</details>
+<p>Step 3: Restore the container from the snapshot.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Restore noble from the my-snapshot snapshot.</span>
+lxc<span class="w"> </span>restore<span class="w"> </span>noble<span class="w"> </span>my-snapshot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 4: Create a new container from the snapshot.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a new container from the noble snapshot.</span>
+lxc<span class="w"> </span>copy<span class="w"> </span>noble/my-snapshot<span class="w"> </span>my-new-container-from-snapshot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 5: Assign the default profile to the new container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Apply the default profile to the cloned container.</span>
+lxc<span class="w"> </span>profile<span class="w"> </span>assign<span class="w"> </span>my-new-container-from-snapshot<span class="w"> </span>default
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Profiles default applied to my-new-container-from-snapshot
+</code></pre></div>
+</details>
+<p>Step 6: Start the new container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start the container created from the snapshot.</span>
+lxc<span class="w"> </span>start<span class="w"> </span>my-new-container-from-snapshot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 7: List instances.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Verify that the cloned container is present and running.</span>
+lxc<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+--------------------------------+---------+----------------------+------------------------------------------------+-----------+-----------+
+|              NAME              |  STATE  |         IPV4         |                      IPV6                      |   TYPE    | SNAPSHOTS |
++--------------------------------+---------+----------------------+------------------------------------------------+-----------+-----------+
+| centos                         | RUNNING | 10.96.234.26 (eth0)  | fd42:ac23:f544:f9ac:661b:abcd:de3f:426c (eth0) | CONTAINER | 0         |
+| my-new-container-from-snapshot | RUNNING | 10.96.234.198 (eth0) | fd42:ac23:f544:f9ac:216:3eff:fe95:17d7 (eth0)  | CONTAINER | 0         |
+| noble                          | RUNNING | 10.96.234.22 (eth0)  | fd42:ac23:f544:f9ac:216:3eff:fe9c:640d (eth0)  | CONTAINER | 1         |
++--------------------------------+---------+----------------------+------------------------------------------------+-----------+-----------+
+</code></pre></div>
+</details>
+<p>Step 8: Stop the <code>centos</code> container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Stop the centos container before cleanup.</span>
+lxc<span class="w"> </span>stop<span class="w"> </span>centos
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 9: Stop the <code>noble</code> container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Stop the noble container before cleanup.</span>
+lxc<span class="w"> </span>stop<span class="w"> </span>noble
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 10: Stop the cloned container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Stop the snapshot-based container before cleanup.</span>
+lxc<span class="w"> </span>stop<span class="w"> </span>my-new-container-from-snapshot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 11: Delete the <code>centos</code> container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Delete the centos container.</span>
+lxc<span class="w"> </span>delete<span class="w"> </span>centos
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 12: Delete the <code>noble</code> container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Delete the noble container.</span>
+lxc<span class="w"> </span>delete<span class="w"> </span>noble
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 13: Delete the cloned container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Delete the snapshot-based container.</span>
+lxc<span class="w"> </span>delete<span class="w"> </span>my-new-container-from-snapshot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Snapshots are useful because you can:</p>
+<ul>
+<li>save an instance state quickly</li>
+<li>roll back to that state later</li>
+<li>clone a new instance from a snapshot</li>
+</ul>
+</div>
+<h3 id="237-kvm-vms-in-lxd"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 2.3.7 KVM VMs In LXD<a class="headerlink" href="#237-kvm-vms-in-lxd" title="Permanent link">&para;</a></h3>
+<p>LXD can manage both containers and virtual machines.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise compares default and custom LXD VM sizing. Success means you can open a shell in each VM and confirm that <code>ubuntu-vm2</code> sees 2 vCPUs, about 2 GiB of RAM, and a 20G root disk.</p>
+</div>
+<p>Step 1: Launch a VM with the default resource settings.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The first VM launch may take longer than a container launch. Allow a minute or two for the image download, first boot, and initial cloud-init run.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Launch an LXD VM named ubuntu-vm.</span>
+lxc<span class="w"> </span>launch<span class="w"> </span>ubuntu:24.04<span class="w"> </span>ubuntu-vm<span class="w"> </span>--vm
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Launching ubuntu-vm
+Retrieving image: Unpacking image: 100%
+</code></pre></div>
+</details>
+<p>Step 2: Open the VM console.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When the console connects, expect to see the VM boot logs while the system starts.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open the serial console for ubuntu-vm.</span>
+lxc<span class="w"> </span>console<span class="w"> </span>ubuntu-vm
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Console connected to ubuntu-vm
+To detach from the console, press: &lt;ctrl&gt;+a q
+</code></pre></div>
+</details>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This console gives you serial access to the new LXD VM, but it does not reuse the <code>ubuntu</code> / <code>ubuntu</code> credentials from <code>LABVM</code>.</p>
+<p>No custom cloud-init <code>user-data</code> is copied into or injected from <code>LABVM</code> when <code>ubuntu-vm</code> is created (as we haven't copied/configured any, inside LABVM). The VM therefore boots with the default image behavior instead of the Chapter 1 guest settings.</p>
+<p>Use the console to watch the boot process, then use <code>lxc shell ubuntu-vm</code> once the guest agent is ready.</p>
+</div>
+<p>To exit the LXD console, press <code>Ctrl+a q</code>.</p>
+<p>Step 3: Open a shell in the VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open a shell inside ubuntu-vm once the guest agent is ready.</span>
+lxc<span class="w"> </span>shell<span class="w"> </span>ubuntu-vm
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>root@ubuntu-vm:~#
+</code></pre></div>
+</details>
+<p>If <code>lxc shell ubuntu-vm</code> reports that the guest agent is not ready yet, wait a little longer and retry.</p>
+<p>Step 4: Check CPU information in the VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show CPU details inside ubuntu-vm.</span>
+cat<span class="w"> </span>/proc/cpuinfo
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>processor   : 0
+model name  : Intel(R) Xeon(R) Gold 5120 CPU @ 2.20GHz
+...
+</code></pre></div>
+</details>
+<p>Step 5: Check memory in the VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show memory usage inside ubuntu-vm.</span>
+free<span class="w"> </span>-m
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>              total        used        free      shared  buff/cache   available
+Mem:             956         336         530          18         250         620
+Swap:             0           0           0
+</code></pre></div>
+</details>
+<p>Step 6: Check block devices in the VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List block devices inside ubuntu-vm.</span>
+lsblk
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda       8:0    0   10G  0 disk
+sda1      8:1    0    9G  0 part /
+sda15     8:15   0  106M  0 part /boot/efi
+sda16   259:0    0  913M  0 part /boot
+</code></pre></div>
+</details>
+<p>Step 7: Exit the VM shell.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Leave the VM shell and return to LABVM.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>exit
+ubuntu@LABVM:~$
+</code></pre></div>
+</details>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This default configuration is suitable for testing. Production settings are usually adjusted with profiles or explicit limits.</p>
+</div>
+<p>Step 8: Launch a second VM with custom limits.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Launch a second VM with custom CPU, memory, and disk limits.</span>
+lxc<span class="w"> </span>launch<span class="w"> </span>ubuntu:24.04<span class="w"> </span>ubuntu-vm2<span class="w"> </span>--vm<span class="w"> </span>-c<span class="w"> </span>limits.cpu<span class="o">=</span><span class="m">2</span><span class="w"> </span>-c<span class="w"> </span>limits.memory<span class="o">=</span>2GiB<span class="w"> </span>-d<span class="w"> </span>root,size<span class="o">=</span>20GiB
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Launching ubuntu-vm2
+Retrieving image: Unpacking image: 100%
+</code></pre></div>
+</details>
+<p>Step 9: Open a shell in the second VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open a shell inside ubuntu-vm2 once the guest agent is ready.</span>
+lxc<span class="w"> </span>shell<span class="w"> </span>ubuntu-vm2
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>root@ubuntu-vm2:~#
+</code></pre></div>
+</details>
+<p>If the guest agent is still starting, wait and retry this command.</p>
+<p>Step 10: Check CPU information in the second VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Count the visible processors and confirm ubuntu-vm2 sees 2 vCPUs.</span>
+grep<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;^processor&#39;</span><span class="w"> </span>/proc/cpuinfo
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>2
+</code></pre></div>
+</details>
+<p>Step 11: Check memory in the second VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show memory usage and confirm ubuntu-vm2 sees about 2 GiB of RAM.</span>
+free<span class="w"> </span>-m
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>              total        used        free      shared  buff/cache   available
+Mem:            1962         332        1540          18         254        1630
+Swap:             0           0           0
+</code></pre></div>
+</details>
+<p>Step 12: Check block devices in the second VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List block devices and confirm the root disk for ubuntu-vm2 is 20G.</span>
+lsblk<span class="w"> </span>-d<span class="w"> </span>-o<span class="w"> </span>NAME,SIZE,TYPE
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>NAME  SIZE TYPE
+sda    20G disk
+sr0   368K rom
+</code></pre></div>
+</details>
+<p>Step 13: Exit the second VM shell.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Leave the VM shell and return to LABVM.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>exit
+ubuntu@LABVM:~$
+</code></pre></div>
+</details>
+<p>Step 14: Delete the first VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Force-delete ubuntu-vm during cleanup.</span>
+lxc<span class="w"> </span>delete<span class="w"> </span>ubuntu-vm<span class="w"> </span>--force
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 15: Delete the second VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Force-delete ubuntu-vm2 during cleanup.</span>
+lxc<span class="w"> </span>delete<span class="w"> </span>ubuntu-vm2<span class="w"> </span>--force
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p><code>--force</code> removes the instance even if it is still running.</p>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>LXD can manage both kinds of workloads:</p>
+<ul>
+<li>containers share the host kernel</li>
+<li>VMs boot their own kernel</li>
+<li>you use the same <code>lxc</code> tool to manage both</li>
+</ul>
+</div>
+<h3 id="238-lxd-networks"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 2.3.8 LXD Networks<a class="headerlink" href="#238-lxd-networks" title="Permanent link">&para;</a></h3>
+<p><code>lxd init</code> can create a managed bridge and attach it to the default profile.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise shows how LXD-managed bridges are applied through profiles. Success means <code>noble</code> inherits both <code>eth0</code> and <code>eth1</code>, and <code>eth1</code> receives an IPv4 address after you request a DHCP lease.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As you work through the steps, pay attention to these points:</p>
+<ul>
+<li><code>lxdbr0</code> is the default managed bridge created during initialization</li>
+<li><code>brtest0</code> becomes a second managed bridge</li>
+<li>adding <code>brtest0</code> to the <code>default</code> profile gives new instances a second NIC</li>
+<li>the container only gets a usable IPv4 address on <code>eth1</code> after you request a DHCP lease</li>
+</ul>
+</div>
+<p>Step 1: List LXD networks.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List the configured LXD networks and confirm the default bridge `lxdbr0` exists.</span>
+lxc<span class="w"> </span>network<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+--------+----------+---------+----------------+---------------------------+-------------+---------+---------+
+|  NAME  |   TYPE   | MANAGED |      IPV4      |           IPV6            | DESCRIPTION | USED BY |  STATE  |
++--------+----------+---------+----------------+---------------------------+-------------+---------+---------+
+| enp1s0 | physical | NO      |                |                           |             | 0       |         |
+| lxdbr0 | bridge   | YES     | 10.96.234.1/24 | fd42:ac23:f544:f9ac::1/64 |             | 1       | CREATED |
++--------+----------+---------+----------------+---------------------------+-------------+---------+---------+
+</code></pre></div>
+</details>
+<p>Step 2: Show network runtime information for <code>lxdbr0</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show runtime details for `lxdbr0` and confirm the bridge is up.</span>
+lxc<span class="w"> </span>network<span class="w"> </span>info<span class="w"> </span>lxdbr0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Name: lxdbr0
+MAC address: 00:16:3e:9f:d0:a5
+MTU: 1450
+State: up
+Type: broadcast
+</code></pre></div>
+</details>
+<p>Step 3: Show the <code>lxdbr0</code> configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the managed bridge settings for `lxdbr0`, including its address range and NAT settings.</span>
+lxc<span class="w"> </span>network<span class="w"> </span>show<span class="w"> </span>lxdbr0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>name: lxdbr0
+description: &quot;&quot;
+type: bridge
+managed: true
+status: Created
+config:
+  bridge.mtu: &quot;1450&quot;
+  ipv4.address: 10.96.234.1/24
+  ipv4.nat: &quot;true&quot;
+  ipv6.address: fd42:ac23:f544:f9ac::1/64
+  ipv6.nat: &quot;true&quot;
+</code></pre></div>
+</details>
+<p>Step 4: Inspect the host interface for <code>lxdbr0</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the host-side interface for `lxdbr0` and confirm the bridge address matches the LXD config.</span>
+ip<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>lxdbr0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>3: lxdbr0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1450 qdisc noqueue state UP group default qlen 1000
+    inet 10.96.234.1/24 scope global lxdbr0
+    inet6 fd42:ac23:f544:f9ac::1/64 scope global
+</code></pre></div>
+</details>
+<p>Step 5: Create a second managed bridge.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a second managed bridge named `brtest0` that will later back a second NIC.</span>
+lxc<span class="w"> </span>network<span class="w"> </span>create<span class="w"> </span>brtest0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Network brtest0 created
+</code></pre></div>
+</details>
+<p>Step 6: Show the new bridge configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the new bridge configuration and note its separate IPv4 and IPv6 subnets.</span>
+lxc<span class="w"> </span>network<span class="w"> </span>show<span class="w"> </span>brtest0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>name: brtest0
+description: &quot;&quot;
+type: bridge
+managed: true
+status: Created
+config:
+  ipv4.address: 10.131.118.1/24
+  ipv4.nat: &quot;true&quot;
+  ipv6.address: fd42:6d0d:48bd:9e07::1/64
+  ipv6.nat: &quot;true&quot;
+</code></pre></div>
+</details>
+<p>Step 7: Attach the new network to the default profile.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Attach `brtest0` to the `default` profile so new instances inherit a second interface as `eth1`.</span>
+lxc<span class="w"> </span>network<span class="w"> </span>attach-profile<span class="w"> </span>brtest0<span class="w"> </span>default<span class="w"> </span>eth1
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 8: Review the default profile.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Confirm that the `default` profile now defines both `eth0` and `eth1`.</span>
+lxc<span class="w"> </span>profile<span class="w"> </span>show<span class="w"> </span>default
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>name: default
+description: Default LXD profile
+config: {}
+devices:
+  eth0:
+    name: eth0
+    network: lxdbr0
+    type: nic
+  eth1:
+    nictype: bridged
+    parent: brtest0
+    type: nic
+  root:
+    path: /
+    pool: default
+    type: disk
+used_by: []
+project: default
+</code></pre></div>
+</details>
+<p>Step 9: Launch a new container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Launch a new container so it inherits the updated default profile.</span>
+lxc<span class="w"> </span>launch<span class="w"> </span>ubuntu:24.04<span class="w"> </span>noble
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Launching noble
+Retrieving image: Unpacking image: 100%
+</code></pre></div>
+</details>
+<p>Step 10: List instances.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Confirm that `noble` is running and notice that only `eth0` has an IPv4 address so far.</span>
+lxc<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+-------+---------+----------------------+-----------------------------------------------+-----------+-----------+
+| NAME  |  STATE  |         IPV4         |                     IPV6                      |   TYPE    | SNAPSHOTS |
++-------+---------+----------------------+-----------------------------------------------+-----------+-----------+
+| noble | RUNNING | 10.96.234.221 (eth0) | fd42:ac23:f544:f9ac:216:3eff:fe26:d997 (eth0) | CONTAINER | 0         |
+|       |         |                      | fd42:6d0d:48bd:9e07:216:3eff:fe75:e9ab (eth1) |           |           |
++-------+---------+----------------------+-----------------------------------------------+-----------+-----------+
+</code></pre></div>
+</details>
+<p>Step 11: Show the expanded instance configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the fully expanded config and confirm `noble` inherited both NICs from the profile.</span>
+lxc<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span>--expanded<span class="w"> </span>noble
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>architecture: x86_64
+config:
+  image.description: ubuntu 24.04 LTS amd64 (release) (20260321)
+devices:
+  eth0:
+    name: eth0
+    network: lxdbr0
+    type: nic
+  eth1:
+    nictype: bridged
+    parent: brtest0
+    type: nic
+  root:
+    path: /
+    pool: default
+    type: disk
+</code></pre></div>
+</details>
+<p>Step 12: Refresh package metadata in the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Refresh package metadata before installing the DHCP client needed for `eth1`.</span>
+lxc<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>noble<span class="w"> </span>--<span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>update
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
+Reading package lists... Done
+</code></pre></div>
+</details>
+<p>Step 13: Install the DHCP client in the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install the DHCP client that will request an IPv4 lease for `eth1`.</span>
+lxc<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>noble<span class="w"> </span>--<span class="w"> </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>isc-dhcp-client
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Reading package lists... Done
+Building dependency tree... Done
+The following NEW packages will be installed:
+  isc-dhcp-client isc-dhcp-common
+...
+Setting up isc-dhcp-client ...
+</code></pre></div>
+</details>
+<p>Step 14: Request a DHCP lease on <code>eth1</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Request a DHCP lease on `eth1` so the second NIC receives an IPv4 address.</span>
+lxc<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>noble<span class="w"> </span>--<span class="w"> </span>dhclient<span class="w"> </span>eth1
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Setting LLMNR support level &quot;yes&quot; for &quot;20&quot;, but the global support level is &quot;no&quot;.
+</code></pre></div>
+</details>
+<p>The exact output can vary. The real success check is in the next step, where <code>lxc list</code> should show an IPv4 address on <code>eth1</code>.</p>
+<p>Step 15: List instances again.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Confirm that `noble` now shows addresses on both `eth0` and `eth1`.</span>
+lxc<span class="w"> </span>list
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>+-------+---------+-----------------------+-----------------------------------------------+-----------+-----------+
+| NAME  |  STATE  |         IPV4          |                     IPV6                      |   TYPE    | SNAPSHOTS |
++-------+---------+-----------------------+-----------------------------------------------+-----------+-----------+
+| noble | RUNNING | 10.96.234.221 (eth0)  | fd42:ac23:f544:f9ac:216:3eff:fe26:d997 (eth0) | CONTAINER | 0         |
+|       |         | 10.131.118.236 (eth1) | fd42:6d0d:48bd:9e07:216:3eff:fe75:e9ab (eth1) |           |           |
++-------+---------+-----------------------+-----------------------------------------------+-----------+-----------+
+</code></pre></div>
+</details>
+<p>Step 16: Delete the container.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Force-delete the noble container during cleanup.</span>
+lxc<span class="w"> </span>delete<span class="w"> </span>noble<span class="w"> </span>--force
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 17: Remove LXD from <code>LABVM</code> when the lab is complete.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Remove the LXD snap and its state from LABVM.</span>
+sudo<span class="w"> </span>snap<span class="w"> </span>remove<span class="w"> </span>lxd<span class="w"> </span>--purge
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>2026-04-10T09:38:49Z INFO Waiting for &quot;snap.lxd.daemon.service&quot; to stop.
+lxd removed
+</code></pre></div>
+</details>
+<p>Step 18: Leave the <code>newgrp lxd</code> subshell.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Leave the subshell started by newgrp.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ubuntu@LABVM:~$
+</code></pre></div>
+</details>
+<p>Step 19: Return to <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Exit the SSH session and return to LABHOST.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+Connection to 192.168.101.50 closed.
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>LXD networking is profile-driven in this lab:</p>
+<ul>
+<li>bridges such as <code>lxdbr0</code> and <code>brtest0</code> are managed by LXD</li>
+<li>profiles decide which NICs instances receive</li>
+<li><code>lxc config show --expanded</code> shows the final instance configuration after profile inheritance</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.sections", "navigation.expand", "content.code.copy"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      
+    
+  </body>
+</html>

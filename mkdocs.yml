@@ -1,0 +1,51 @@
+site_name: Ubuntu Server Advanced
+site_description: Documentation site for the Ubuntu Server Advanced training
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
+nav:
+  - "🏠 Home": index.md
+  - "📋 Virtualization": virtualization.md
+  - "📋 LXD": lxd.md
+  - "📋 OpenSSH": openssh.md
+  - "📋 Boot and System Init": boot-and-system-initialization.md
+  - "📋 Storage": storage.md
+  - "📋 Filesystem Concepts": advanced-filesystem-concepts.md
+  - "📋 ZFS": zfs.md
+  - "📋 Networking Concepts": advanced-networking-concepts.md
+  - "📋 Security": security.md
+  - "📋 Advanced Snap Packaging": advanced-snap-packaging.md
+  - "📋 System Topics": advanced-system-topics.md
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - codehilite
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - toc:
+      permalink: true
+      title: On this page
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+plugins:
+  - search
+
+extra_css:
+  - stylesheets/extra.css

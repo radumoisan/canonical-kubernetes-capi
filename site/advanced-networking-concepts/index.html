@@ -1,0 +1,1995 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for the Ubuntu Server Advanced training">
+      
+      
+      
+      
+        <link rel="prev" href="../zfs/">
+      
+      
+        <link rel="next" href="../security/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
+    
+    
+      
+        <title>📋 Networking Concepts - Ubuntu Server Advanced</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#advanced-networking-concepts" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Ubuntu Server Advanced" class="md-header__button md-logo" aria-label="Ubuntu Server Advanced" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ubuntu Server Advanced
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              📋 Networking Concepts
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Ubuntu Server Advanced" class="md-nav__button md-logo" aria-label="Ubuntu Server Advanced" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Ubuntu Server Advanced
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    🏠 Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../virtualization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Virtualization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lxd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 LXD
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../openssh/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 OpenSSH
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../boot-and-system-initialization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Boot and System Init
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-filesystem-concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Filesystem Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zfs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 ZFS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    📋 Networking Concepts
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    📋 Networking Concepts
+  </span>
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#81-netplan" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.1 Netplan
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.1 Netplan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#811-netplan-general-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.1.1 Netplan General Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.1.1 Netplan General Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-configuration-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Configuration Structure
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#812-device-configuration-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.1.2 Device Configuration IDs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.1.2 Device Configuration IDs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#physical-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Physical Devices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#virtual-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Virtual Devices
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#813-netplan-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.1.3 Netplan Commands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.1.3 Netplan Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linux-bridges" class="md-nav__link">
+    <span class="md-ellipsis">
+      Linux Bridges
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vlans-and-trunking" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLANs and Trunking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-interface-bonding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Interface Bonding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predictable-interface-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      Predictable Interface Naming
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#82-netplan-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.2 Netplan Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.2 Netplan Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#821-general-configuration-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.2.1 General Configuration Lab
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#822-vlan-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.2.2 VLAN Lab
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#823-bonding-and-bridging-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.2.3 Bonding and Bridging Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.2.3 Bonding and Bridging Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bonding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bonding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bridges" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bridges
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clean-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clean Up
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-snap-packaging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Advanced Snap Packaging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-system-topics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 System Topics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#81-netplan" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.1 Netplan
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.1 Netplan">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#811-netplan-general-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.1.1 Netplan General Overview
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.1.1 Netplan General Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-configuration-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Configuration Structure
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#812-device-configuration-ids" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.1.2 Device Configuration IDs
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.1.2 Device Configuration IDs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#physical-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Physical Devices
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#virtual-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Virtual Devices
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#813-netplan-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.1.3 Netplan Commands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.1.3 Netplan Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linux-bridges" class="md-nav__link">
+    <span class="md-ellipsis">
+      Linux Bridges
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vlans-and-trunking" class="md-nav__link">
+    <span class="md-ellipsis">
+      VLANs and Trunking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-interface-bonding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Network Interface Bonding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predictable-interface-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      Predictable Interface Naming
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#82-netplan-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.2 Netplan Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.2 Netplan Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#821-general-configuration-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.2.1 General Configuration Lab
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#822-vlan-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.2.2 VLAN Lab
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#823-bonding-and-bridging-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       8.2.3 Bonding and Bridging Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8.2.3 Bonding and Bridging Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bonding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bonding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bridges" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bridges
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clean-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Clean Up
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="advanced-networking-concepts">Advanced Networking Concepts<a class="headerlink" href="#advanced-networking-concepts" title="Permanent link">&para;</a></h1>
+<p>This chapter explains how Ubuntu uses Netplan for persistent network configuration, then walks through VLAN, bonding, and bridging labs.</p>
+<p>In this chapter, you will:</p>
+<ul>
+<li>understand how Netplan describes network configuration on Ubuntu</li>
+<li>recognize physical and virtual device definitions</li>
+<li>review bridges, VLANs, and bonding concepts</li>
+<li>configure static addressing, VLANs, bonds, and bridges in the lab</li>
+</ul>
+<h2 id="81-netplan"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 8.1 Netplan<a class="headerlink" href="#81-netplan" title="Permanent link">&para;</a></h2>
+<h3 id="811-netplan-general-overview"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 8.1.1 Netplan General Overview<a class="headerlink" href="#811-netplan-general-overview" title="Permanent link">&para;</a></h3>
+<p>Netplan is the standard way to describe network configuration on modern Ubuntu systems. You write YAML under <code>/etc/netplan/*.yaml</code>, and Netplan renders backend-specific configuration for the active networking daemon.</p>
+<p>Ubuntu has used Netplan by default since 18.04 LTS. Installers, cloud-init, and administrators all write Netplan YAML, and Netplan passes the final configuration to the active renderer during boot.</p>
+<p>Netplan supports these main renderers:</p>
+<ul>
+<li><code>NetworkManager</code></li>
+<li><code>systemd-networkd</code></li>
+</ul>
+<p>Wi-Fi and WWAN are usually managed by <code>NetworkManager</code>. Other configured devices are typically managed by <code>systemd-networkd</code> unless the configuration says otherwise.</p>
+<p><img alt="Netplan rendering" src="../assets/netplan.png" /></p>
+<h4 id="general-configuration-structure">General Configuration Structure<a class="headerlink" href="#general-configuration-structure" title="Permanent link">&para;</a></h4>
+<p>Every Netplan configuration starts with a top-level <code>network:</code> mapping and <code>version: 2</code>. Device definitions are grouped by type such as <code>ethernets:</code>, <code>wifis:</code>, <code>vlans:</code>, <code>bonds:</code>, or <code>bridges:</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">network</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">renderer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">networkd</span>
+<span class="w">  </span><span class="nt">ethernets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enp1s0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.10.10.2/24</span>
+<span class="w">      </span><span class="nt">nameservers</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">search</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">mydomain</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">otherdomain</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">10.10.10.1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.1.1.1</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">routes</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+<span class="w">          </span><span class="nt">via</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.10.10.1</span>
+</code></pre></div>
+<h3 id="812-device-configuration-ids"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 8.1.2 Device Configuration IDs<a class="headerlink" href="#812-device-configuration-ids" title="Permanent link">&para;</a></h3>
+<p>The keys under each device-type section are called configuration IDs. They must be unique across the full Netplan configuration.</p>
+<p>For physical devices, the ID can be a simple interface name or a label used together with <code>match:</code> rules.</p>
+<p>For virtual devices, the ID is the name of the device that Netplan creates.</p>
+<h4 id="physical-devices">Physical Devices<a class="headerlink" href="#physical-devices" title="Permanent link">&para;</a></h4>
+<p>Examples include Ethernet and Wi-Fi devices.</p>
+<p>These devices can appear dynamically, so Netplan can match them by name, MAC address, driver, or path. If a match identifies one device reliably, <code>set-name:</code> can rename it to a stable and friendlier name.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">match</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enp2*</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="nt">match</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">macaddress</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">11:22:33:AA:BB:FF</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="nt">match</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ixgbe</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">en*s0</span>
+</code></pre></div>
+<h4 id="virtual-devices">Virtual Devices<a class="headerlink" href="#virtual-devices" title="Permanent link">&para;</a></h4>
+<p>Examples include bridges, bonds, and veth-style interfaces.</p>
+<p>These devices are created from the configuration rather than matched from existing hardware. Because of that, <code>match:</code> and <code>set-name:</code> do not apply to them.</p>
+<h3 id="813-netplan-commands"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 8.1.3 Netplan Commands<a class="headerlink" href="#813-netplan-commands" title="Permanent link">&para;</a></h3>
+<p>Common Netplan commands include:</p>
+<ul>
+<li><code>netplan generate</code>: read YAML and render backend configuration files</li>
+<li><code>netplan apply</code>: apply the current configuration to the running system</li>
+<li><code>netplan try</code>: apply changes temporarily and roll them back unless you confirm them</li>
+</ul>
+<h4 id="linux-bridges">Linux Bridges<a class="headerlink" href="#linux-bridges" title="Permanent link">&para;</a></h4>
+<p>A bridge connects Ethernet segments at Layer 2 and behaves like a virtual switch. It forwards traffic by MAC address rather than IP address.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">network</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">renderer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">networkd</span>
+<span class="w">  </span><span class="nt">ethernets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ens1p0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">dhcp4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no</span>
+<span class="w">    </span><span class="nt">ens1p1</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">dhcp4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no</span>
+<span class="w">  </span><span class="nt">bridges</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">br0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">interfaces</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ens1p0</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ens1p1</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.100.10/24</span>
+<span class="w">      </span><span class="nt">gateway4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.100.1</span>
+<span class="w">      </span><span class="nt">nameservers</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.1.1.1</span>
+</code></pre></div>
+<p>This example creates <code>br0</code>, adds two Ethernet interfaces, and places the IP configuration on the bridge itself.</p>
+<h4 id="vlans-and-trunking">VLANs and Trunking<a class="headerlink" href="#vlans-and-trunking" title="Permanent link">&para;</a></h4>
+<p><img alt="VLANs" src="../assets/vlans.png" /></p>
+<p>VLANs split a physical network into separate broadcast domains by tagging frames with IEEE 802.1Q headers.</p>
+<ul>
+<li><code>VLAN ID</code>: identifies the VLAN, normally <code>1</code> to <code>4094</code></li>
+<li>priority bits: mark traffic class</li>
+</ul>
+<p>Access ports send traffic untagged to the host. Trunk ports carry tagged traffic and let one interface participate in multiple VLANs.</p>
+<p>VLAN support depends on the <code>8021q</code> kernel module.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check whether the 8021q module is currently loaded.</span>
+lsmod<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>8021q
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>8021q                  ...
+garp                   ... 8021q
+mrp                    ... 8021q
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show information about the 8021q module.</span>
+modinfo<span class="w"> </span>8021q
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>filename:       /lib/modules/.../8021q.ko
+description:    IEEE 802.1Q VLAN Support
+license:        GPL
+...
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="nt">network</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">renderer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">networkd</span>
+<span class="w">  </span><span class="nt">ethernets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">mainif</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">match</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">macaddress</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;de:ad:be:ef:ca:fe&quot;</span>
+<span class="w">      </span><span class="nt">set-name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mainif</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;10.3.0.5/23&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">nameservers</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;8.8.8.8&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;8.8.4.4&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">search</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">example.com</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">routes</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+<span class="w">          </span><span class="nt">via</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.3.0.1</span>
+<span class="w">  </span><span class="nt">vlans</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">vlan15</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+<span class="w">      </span><span class="nt">link</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mainif</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;10.3.99.5/24&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">vlan10</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">      </span><span class="nt">link</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mainif</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;10.3.98.5/24&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">nameservers</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">search</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">domain1.example.com</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">domain2.example.com</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<p>This example creates two VLAN interfaces on top of one physical NIC.</p>
+<h4 id="network-interface-bonding">Network Interface Bonding<a class="headerlink" href="#network-interface-bonding" title="Permanent link">&para;</a></h4>
+<p><img alt="Bonding" src="../assets/bonds.png" /></p>
+<p>Bonding combines multiple interfaces into one logical interface for redundancy, throughput, or both.</p>
+<p>Common bond modes:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>active-backup</code></td>
+<td>One active NIC, others on standby</td>
+</tr>
+<tr>
+<td><code>balance-rr</code></td>
+<td>Round-robin load balancing</td>
+</tr>
+<tr>
+<td><code>802.3ad</code></td>
+<td>LACP-based link aggregation</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a bond interface in active-backup mode.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>bond0<span class="w"> </span><span class="nb">type</span><span class="w"> </span>bond<span class="w"> </span>mode<span class="w"> </span>active-backup<span class="w"> </span>miimon<span class="w"> </span><span class="m">100</span>
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="nt">network</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">renderer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">networkd</span>
+<span class="w">  </span><span class="nt">ethernets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enp1s0</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">    </span><span class="nt">enp2s0</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">  </span><span class="nt">bonds</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">bond0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">dhcp4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="w">      </span><span class="nt">interfaces</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enp1s0</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enp2s0</span>
+<span class="w">      </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">active-backup</span>
+<span class="w">        </span><span class="nt">primary</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enp1s0</span>
+<span class="w">        </span><span class="nt">mii-monitor-interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+</code></pre></div>
+<p>This example creates <code>bond0</code> from two Ethernet interfaces and configures it for failover.</p>
+<h4 id="predictable-interface-naming">Predictable Interface Naming<a class="headerlink" href="#predictable-interface-naming" title="Permanent link">&para;</a></h4>
+<p>Names like <code>enp1s0</code>, <code>ens1p0</code>, and <code>enp3s0</code> follow Ubuntu's predictable naming scheme.</p>
+<p>Example format: <code>enp&lt;bus number&gt;s&lt;slot/function&gt;</code></p>
+<p><code>enp3s0</code> means:</p>
+<ul>
+<li><code>en</code>: Ethernet</li>
+<li><code>p3</code>: PCI bus 3</li>
+<li><code>s0</code>: slot or function 0</li>
+</ul>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Netplan YAML under <code>/etc/netplan/*.yaml</code> is the source of truth for persistent network configuration. Match physical interfaces by stable properties such as name or MAC address, define virtual interfaces directly in Netplan, and use <code>netplan try</code> before <code>netplan apply</code> when changing live settings.</p>
+</div>
+<h2 id="82-netplan-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 8.2 Netplan Lab<a class="headerlink" href="#82-netplan-lab" title="Permanent link">&para;</a></h2>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Run this lab on <code>LABVM</code>. These exercises change live network settings on <code>LABVM</code>, so use the VM console when possible, or use <code>netplan try</code> before applying changes permanently.</p>
+</div>
+<h3 id="821-general-configuration-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 8.2.1 General Configuration Lab<a class="headerlink" href="#821-general-configuration-lab" title="Permanent link">&para;</a></h3>
+<p>This lab reviews the current Netplan setup and confirms the primary interface uses the expected static configuration.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise is a consistency check. Success means the live interface state, the Netplan YAML, and the rendered <code>systemd-networkd</code> file all describe the same static address, default route, and DNS servers for <code>enp1s0</code>.</p>
+</div>
+<p>If your current <code>/etc/netplan/50-cloud-init.yaml</code> already matches the target shown later in this lab, you do not need to change the file contents. The goal is to verify the baseline configuration and practice the safe Netplan workflow before later labs make real changes.</p>
+<p>Step 1: Review the current address and route information.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the current address configuration.</span>
+ip<span class="w"> </span>addr
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>2: enp1s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1450 ...
+    inet 192.168.101.50/24 brd 192.168.101.255 scope global enp1s0
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the current routing table.</span>
+ip<span class="w"> </span>route
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>default via 192.168.101.1 dev enp1s0
+192.168.101.0/24 dev enp1s0 proto kernel scope link src 192.168.101.50
+</code></pre></div>
+</details>
+<p>Step 2: Review the current Netplan file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the active cloud-init Netplan file.</span>
+sudo<span class="w"> </span>cat<span class="w"> </span>/etc/netplan/50-cloud-init.yaml
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp1s0:
+      addresses:
+      - &quot;192.168.101.50/24&quot;
+      nameservers:
+        addresses:
+        - 8.8.8.8
+        - 1.1.1.1
+      mtu: 1450
+      routes:
+      - to: &quot;default&quot;
+        via: &quot;192.168.101.1&quot;
+</code></pre></div>
+</details>
+<p>Step 3: Review the rendered backend configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the rendered systemd-networkd configuration.</span>
+sudo<span class="w"> </span>cat<span class="w"> </span>/var/run/systemd/network/10-netplan-enp1s0.network
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>[Match]
+Name=enp1s0
+
+[Link]
+MTUBytes=1450
+
+[Network]
+LinkLocalAddressing=ipv6
+Address=192.168.101.50/24
+DNS=8.8.8.8
+DNS=1.1.1.1
+
+[Route]
+Destination=0.0.0.0/0
+Gateway=192.168.101.1
+</code></pre></div>
+</details>
+<p>Step 4: Back up <code>/etc/netplan/50-cloud-init.yaml</code>, then compare it with the following target static configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Back up the current Netplan file.</span>
+sudo<span class="w"> </span>cp<span class="w"> </span>/etc/netplan/50-cloud-init.yaml<span class="w"> </span>/etc/netplan/50-cloud-init.yaml.bak
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Keep this backup so you can quickly restore the original file if a later edit goes wrong.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">network</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">renderer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">networkd</span>
+<span class="w">  </span><span class="nt">ethernets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enp1s0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.101.50/24</span>
+<span class="w">      </span><span class="nt">nameservers</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">8.8.8.8</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.1.1.1</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">routes</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+<span class="w">          </span><span class="nt">via</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.101.1</span>
+<span class="w">      </span><span class="nt">mtu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1450</span>
+</code></pre></div>
+<p>If your current file differs from the target, update it now. If it already matches, leave it unchanged and continue.</p>
+<p>Step 5: Test the configuration safely.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Try the new Netplan configuration with rollback protection.</span>
+sudo<span class="w"> </span>netplan<span class="w"> </span>try
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Do you want to keep these settings?
+
+Press ENTER before the timeout to accept the new configuration.
+</code></pre></div>
+</details>
+<p>Even when no file change was needed, this step is still useful practice for validating a Netplan configuration with rollback protection.</p>
+<p>Step 6: Apply the configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Apply the Netplan configuration.</span>
+sudo<span class="w"> </span>netplan<span class="w"> </span>apply
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<h3 id="822-vlan-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 8.2.2 VLAN Lab<a class="headerlink" href="#822-vlan-lab" title="Permanent link">&para;</a></h3>
+<p>This lab creates temporary VLAN interfaces with <code>ip</code> and then makes them persistent with Netplan.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise shows that one physical interface can carry multiple VLAN-tagged interfaces. In the base lab setup, the first <code>lsmod | grep 8021q</code> usually shows no output. After you create the first VLAN, confirm that <code>ip -d link show</code> reports the correct VLAN ID, each VLAN has its own address, and the later <code>lsmod</code> check shows <code>8021q</code> loaded.</p>
+</div>
+<p>Step 1: Check whether the <code>8021q</code> module is already loaded.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check for the VLAN kernel module.</span>
+lsmod<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>8021q
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 2: Create the first VLAN interface.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create VLAN 42 on top of enp1s0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>link<span class="w"> </span>enp1s0<span class="w"> </span>name<span class="w"> </span>enp1s0.42<span class="w"> </span><span class="nb">type</span><span class="w"> </span>vlan<span class="w"> </span>id<span class="w"> </span><span class="m">42</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 3: Inspect the VLAN details.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show detailed information for the VLAN interface.</span>
+ip<span class="w"> </span>-d<span class="w"> </span>link<span class="w"> </span>show<span class="w"> </span>enp1s0.42
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>... enp1s0.42@enp1s0: &lt;BROADCAST,MULTICAST&gt; ...
+    vlan protocol 802.1Q id 42 &lt;REORDER_HDR&gt;
+</code></pre></div>
+</details>
+<p>Step 4: Assign an address to the VLAN interface.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Assign an IPv4 address to VLAN 42.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="m">192</span>.168.42.42/24<span class="w"> </span>brd<span class="w"> </span><span class="m">192</span>.168.42.255<span class="w"> </span>dev<span class="w"> </span>enp1s0.42
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 5: Verify the address assignment.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the address assigned to VLAN 42.</span>
+ip<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>dev<span class="w"> </span>enp1s0.42
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>...
+    inet 192.168.42.42/24 brd 192.168.42.255 scope global enp1s0.42
+</code></pre></div>
+</details>
+<p>Step 6: Bring the VLAN interface up.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Enable VLAN 42.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>enp1s0.42<span class="w"> </span>up
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 7: Confirm the interface is up.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the operational state of VLAN 42.</span>
+ip<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>enp1s0.42
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>... state UP ...
+</code></pre></div>
+</details>
+<p>Step 8: Confirm that <code>8021q</code> loaded automatically.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Re-check whether 8021q is loaded.</span>
+lsmod<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>8021q
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>8021q                  ...
+garp                   ... 8021q
+mrp                    ... 8021q
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show module metadata for 8021q.</span>
+modinfo<span class="w"> </span>8021q
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>filename:       /lib/modules/.../8021q.ko
+description:    IEEE 802.1Q VLAN Support
+...
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check the kernel log for 8021q activity.</span>
+sudo<span class="w"> </span>dmesg<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>8021q
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>[ ... ] 8021q: 802.1Q VLAN Support v1.8
+[ ... ] 8021q: adding VLAN 0 to HW filter on device enp1s0
+</code></pre></div>
+</details>
+<p>Step 9: Create a second VLAN on the same parent interface.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create VLAN 100 on top of enp1s0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>link<span class="w"> </span>enp1s0<span class="w"> </span>name<span class="w"> </span>enp1s0.100<span class="w"> </span><span class="nb">type</span><span class="w"> </span>vlan<span class="w"> </span>id<span class="w"> </span><span class="m">100</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Bring VLAN 100 up.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>enp1s0.100<span class="w"> </span>up
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show detailed information for VLAN 100.</span>
+ip<span class="w"> </span>-d<span class="w"> </span>link<span class="w"> </span>show<span class="w"> </span>enp1s0.100
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>... vlan protocol 802.1Q id 100 ...
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Assign an IPv4 address to VLAN 100.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="m">192</span>.168.100.42/24<span class="w"> </span>brd<span class="w"> </span>+<span class="w"> </span>dev<span class="w"> </span>enp1s0.100
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>brd +</code> tells <code>ip</code> to calculate the broadcast address from the prefix automatically.
+For this command, it resolves to <code>192.168.100.255</code>, so it is equivalent to <code>brd 192.168.100.255</code>.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the address assigned to VLAN 100.</span>
+ip<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>dev<span class="w"> </span>enp1s0.100
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>...
+    inet 192.168.100.42/24 brd 192.168.100.255 scope global enp1s0.100
+</code></pre></div>
+</details>
+<p>Step 10: Review the full interface state.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show all network interfaces and addresses.</span>
+ip<span class="w"> </span>addr
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>...
+enp1s0.42 ...
+    inet 192.168.42.42/24 ...
+enp1s0.100 ...
+    inet 192.168.100.42/24 ...
+</code></pre></div>
+</details>
+<p>Step 11: Make the VLANs persistent in Netplan.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Edit the Netplan file to add VLAN definitions.</span>
+sudo<span class="w"> </span>vim<span class="w"> </span>/etc/netplan/50-cloud-init.yaml
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>&quot;/etc/netplan/50-cloud-init.yaml&quot; ...
+</code></pre></div>
+</details>
+<p>Use this configuration:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">network</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">renderer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">networkd</span>
+<span class="w">  </span><span class="nt">ethernets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enp1s0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;192.168.101.50/24&quot;</span>
+<span class="w">      </span><span class="nt">nameservers</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.1.1.1</span>
+<span class="w">      </span><span class="nt">routes</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;default&quot;</span>
+<span class="w">          </span><span class="nt">via</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;192.168.101.1&quot;</span>
+<span class="w">      </span><span class="nt">mtu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1450</span>
+<span class="w">  </span><span class="nt">vlans</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">vlan42</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<span class="w">      </span><span class="nt">link</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enp1s0</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">192.168.42.42/24</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">vlan100</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">      </span><span class="nt">link</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enp1s0</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">192.168.100.42/24</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<p>Step 12: Test the updated configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Try the Netplan configuration before committing it.</span>
+sudo<span class="w"> </span>netplan<span class="w"> </span>try
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Do you want to keep these settings?
+</code></pre></div>
+</details>
+<p>Step 13: Apply the new configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Apply the VLAN-aware Netplan configuration.</span>
+sudo<span class="w"> </span>netplan<span class="w"> </span>apply
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Changes made with <code>ip</code> are temporary until you describe them in Netplan and apply the configuration. Creating the first VLAN interface usually autoloads the <code>8021q</code> kernel module, and <code>brd +</code> tells <code>ip</code> to calculate the broadcast address from the subnet.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On modern Ubuntu systems, prefer <code>iproute2</code> tools such as <code>ip addr</code>, <code>ip route</code>, <code>ip neigh</code>, and <code>ss</code> instead of older <code>net-tools</code> commands.</p>
+</div>
+<h3 id="823-bonding-and-bridging-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 8.2.3 Bonding and Bridging Lab<a class="headerlink" href="#823-bonding-and-bridging-lab" title="Permanent link">&para;</a></h3>
+<p>This lab uses dummy interfaces to simulate extra NICs for bonding and bridging.</p>
+<p>Step 1: Check whether the <code>dummy</code> module is loaded, then load it if needed.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check whether the dummy module is loaded.</span>
+sudo<span class="w"> </span>lsmod<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Load the dummy module.</span>
+sudo<span class="w"> </span>modprobe<span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Confirm that the dummy module is now loaded.</span>
+sudo<span class="w"> </span>lsmod<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>dummy                  ...
+</code></pre></div>
+</details>
+<p>Step 2: Create a test interface and rename it.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a dummy interface.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>dummy0<span class="w"> </span><span class="nb">type</span><span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Rename dummy0 to ens10.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>name<span class="w"> </span>ens10<span class="w"> </span>dev<span class="w"> </span>dummy0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the renamed interface.</span>
+ip<span class="w"> </span>link<span class="w"> </span>show<span class="w"> </span>ens10
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>... ens10: &lt;BROADCAST,NOARP&gt; ...
+</code></pre></div>
+</details>
+<p>Step 3: Change the MAC address.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Set a custom MAC address on ens10.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>ens10<span class="w"> </span>address<span class="w"> </span><span class="m">00</span>:22:22:ff:ff:ff
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 4: Add and inspect an alias address.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the interface before adding an alias.</span>
+ip<span class="w"> </span>link<span class="w"> </span>show<span class="w"> </span>ens10
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>... link/ether 00:22:22:ff:ff:ff ...
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add an alias address on ens10.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="m">192</span>.168.100.199/24<span class="w"> </span>brd<span class="w"> </span>+<span class="w"> </span>dev<span class="w"> </span>ens10<span class="w"> </span>label<span class="w"> </span>ens10:0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the full address information for ens10.</span>
+ip<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>ens10
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>...
+    inet 192.168.100.199/24 brd 192.168.100.255 scope global ens10:0
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># List all IPv4 addresses.</span>
+ip<span class="w"> </span>a<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-w<span class="w"> </span>inet
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>inet 127.0.0.1/8 scope host lo
+inet 192.168.101.50/24 ... enp1s0
+inet 192.168.100.199/24 ... ens10:0
+</code></pre></div>
+</details>
+<p>Step 5: Remove the temporary test interface.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Remove the alias address from ens10.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>del<span class="w"> </span><span class="m">192</span>.168.100.199/24<span class="w"> </span>brd<span class="w"> </span>+<span class="w"> </span>dev<span class="w"> </span>ens10<span class="w"> </span>label<span class="w"> </span>ens10:0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Delete the dummy interface.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>delete<span class="w"> </span>ens10<span class="w"> </span><span class="nb">type</span><span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Unload the dummy module.</span>
+sudo<span class="w"> </span>rmmod<span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<h4 id="bonding">Bonding<a class="headerlink" href="#bonding" title="Permanent link">&para;</a></h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise demonstrates an <code>active-backup</code> bond. The main checks are that <code>bond0</code> shows <code>bond mode active-backup</code> and that the address is assigned to <code>bond0</code>, not to the member interfaces.</p>
+</div>
+<p>Step 1: Reload the <code>dummy</code> module, then create two dummy interfaces for the bond.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reload the dummy module if you unloaded it earlier in this lab.</span>
+sudo<span class="w"> </span>modprobe<span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the first dummy interface.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>ens10<span class="w"> </span><span class="nb">type</span><span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the second dummy interface.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>ens11<span class="w"> </span><span class="nb">type</span><span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 2: Create the bond interface.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create bond0 in active-backup mode.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>add<span class="w"> </span>bond0<span class="w"> </span><span class="nb">type</span><span class="w"> </span>bond<span class="w"> </span>mode<span class="w"> </span>active-backup<span class="w"> </span>miimon<span class="w"> </span><span class="m">100</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 3: Attach the member interfaces.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Make sure ens10 is down before attaching it to bond0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>ens10<span class="w"> </span>down
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Attach ens10 to bond0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>ens10<span class="w"> </span>master<span class="w"> </span>bond0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Make sure ens11 is down before attaching it to bond0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>ens11<span class="w"> </span>down
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Attach ens11 to bond0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>ens11<span class="w"> </span>master<span class="w"> </span>bond0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Bring the bond member interfaces back up.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>ens10<span class="w"> </span>up<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>ens11<span class="w"> </span>up
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 4: Bring the bond up and assign an address.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Bring bond0 up.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dev<span class="w"> </span>bond0<span class="w"> </span>up
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Assign an address to bond0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="m">172</span>.16.0.14/24<span class="w"> </span>dev<span class="w"> </span>bond0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 5: Inspect the bond.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show detailed information for bond0.</span>
+ip<span class="w"> </span>-d<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>bond0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>... bond mode active-backup ...
+    inet 172.16.0.14/24 scope global bond0
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>With dummy interfaces, <code>bond0</code> may still report <code>state DOWN</code> even after you assign the address.
+Use the bond mode and the configured address as the main checks for this step.</p>
+</div>
+<p>Step 6: Remove the bond interface but keep the dummy interfaces for the bridge lab.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Delete bond0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>del<span class="w"> </span>bond0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<h4 id="bridges">Bridges<a class="headerlink" href="#bridges" title="Permanent link">&para;</a></h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise shows that a bridge acts as the Layer 2 device while the IP configuration lives on the bridge itself. Success means <code>brctl show</code> lists <code>ens10</code> and <code>ens11</code> under <code>br0</code>, <code>ip link show</code> marks them as bridge members, and <code>ip -d addr show br0</code> shows the address on <code>br0</code>.</p>
+</div>
+<p>Step 1: Install the bridge utilities.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install the bridge-utils package.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>bridge-utils
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The following NEW packages will be installed:
+  bridge-utils
+...
+Setting up bridge-utils (...)
+</code></pre></div>
+</details>
+<p>Step 2: Create and inspect a bridge.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the Linux bridge br0.</span>
+sudo<span class="w"> </span>brctl<span class="w"> </span>addbr<span class="w"> </span>br0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the current bridge configuration.</span>
+sudo<span class="w"> </span>brctl<span class="w"> </span>show
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>bridge name bridge id       STP enabled interfaces
+br0     ...     no
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the current interface state.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>show
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>...
+br0: &lt;BROADCAST,MULTICAST&gt; ...
+ens10: &lt;BROADCAST,NOARP&gt; ...
+ens11: &lt;BROADCAST,NOARP&gt; ...
+</code></pre></div>
+</details>
+<p>Step 3: Add the two interfaces to the bridge.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add ens10 to br0.</span>
+sudo<span class="w"> </span>brctl<span class="w"> </span>addif<span class="w"> </span>br0<span class="w"> </span>ens10
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add ens11 to br0.</span>
+sudo<span class="w"> </span>brctl<span class="w"> </span>addif<span class="w"> </span>br0<span class="w"> </span>ens11
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the bridge members.</span>
+sudo<span class="w"> </span>brctl<span class="w"> </span>show
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>bridge name bridge id       STP enabled interfaces
+br0     ...     no      ens10
+                        ens11
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the interface state after adding bridge members.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>show
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>...
+br0: &lt;BROADCAST,MULTICAST&gt; ...
+ens10: ... master br0 ...
+ens11: ... master br0 ...
+</code></pre></div>
+</details>
+<p>Step 4: Assign an address to the bridge.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Assign an IPv4 address to br0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>addr<span class="w"> </span>add<span class="w"> </span><span class="m">10</span>.255.0.4/24<span class="w"> </span>dev<span class="w"> </span>br0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 5: Inspect the bridge in detail.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show detailed information for br0.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>-d<span class="w"> </span>addr<span class="w"> </span>show<span class="w"> </span>br0
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>...
+    inet 10.255.0.4/24 scope global br0
+    bridge ...
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>With dummy bridge members, <code>br0</code> may still report <code>state DOWN</code> while the address is present.
+Use the assigned address and bridge details as the main verification signals.</p>
+</div>
+<p>Step 6: Make the bridge configuration persistent in Netplan.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Edit the Netplan file to add the bridge configuration.</span>
+sudo<span class="w"> </span>vim<span class="w"> </span>/etc/netplan/50-cloud-init.yaml
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>&quot;/etc/netplan/50-cloud-init.yaml&quot; ...
+</code></pre></div>
+</details>
+<p>Use this configuration:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">network</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">renderer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">networkd</span>
+<span class="w">  </span><span class="nt">ethernets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enp1s0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;192.168.101.50/24&quot;</span>
+<span class="w">      </span><span class="nt">nameservers</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.1.1.1</span>
+<span class="w">      </span><span class="nt">routes</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;default&quot;</span>
+<span class="w">          </span><span class="nt">via</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;192.168.101.1&quot;</span>
+<span class="w">      </span><span class="nt">mtu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1450</span>
+<span class="w">    </span><span class="nt">ens10</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">dhcp4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no</span>
+<span class="w">    </span><span class="nt">ens11</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">dhcp4</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">no</span>
+<span class="w">  </span><span class="nt">vlans</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">vlan42</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<span class="w">      </span><span class="nt">link</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enp1s0</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">192.168.42.42/24</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">vlan100</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">      </span><span class="nt">link</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enp1s0</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">192.168.100.42/24</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">bridges</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">br0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">10.255.0.4/24</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interfaces</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ens10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">ens11</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<p>Step 7: Apply the bridge configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Apply the updated Netplan configuration.</span>
+sudo<span class="w"> </span>netplan<span class="w"> </span>apply
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<h4 id="clean-up">Clean Up<a class="headerlink" href="#clean-up" title="Permanent link">&para;</a></h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>The goal of cleanup is to return the machine to its base network state. By the end of this section, the Netplan-managed <code>br0</code>, <code>vlan42</code>, and <code>vlan100</code> interfaces and the dummy interfaces should all be removed.</p>
+</div>
+<p>Step 1: Restore <code>/etc/netplan/50-cloud-init.yaml</code> to the base configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Edit the Netplan file to remove the VLAN and bridge definitions added earlier in this lab.</span>
+sudo<span class="w"> </span>vim<span class="w"> </span>/etc/netplan/50-cloud-init.yaml
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>&quot;/etc/netplan/50-cloud-init.yaml&quot; ...
+</code></pre></div>
+</details>
+<p>Restore the file to this base configuration:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">network</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">  </span><span class="nt">renderer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">networkd</span>
+<span class="w">  </span><span class="nt">ethernets</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enp1s0</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;192.168.101.50/24&quot;</span>
+<span class="w">      </span><span class="nt">nameservers</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">addresses</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.1.1.1</span>
+<span class="w">      </span><span class="nt">routes</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;default&quot;</span>
+<span class="w">          </span><span class="nt">via</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;192.168.101.1&quot;</span>
+<span class="w">      </span><span class="nt">mtu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1450</span>
+</code></pre></div>
+<p>After you apply this base configuration, Netplan removes the persistent <code>br0</code>, <code>vlan42</code>, and <code>vlan100</code> interfaces for you.</p>
+<p>Step 2: Apply the restored configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Apply the restored base Netplan configuration.</span>
+sudo<span class="w"> </span>netplan<span class="w"> </span>apply
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 3: Remove the remaining dummy interfaces and unload the <code>dummy</code> module.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Delete ens11.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>del<span class="w"> </span>ens11
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Delete ens10.</span>
+sudo<span class="w"> </span>ip<span class="w"> </span>link<span class="w"> </span>del<span class="w"> </span>ens10
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Unload the dummy module.</span>
+sudo<span class="w"> </span>rmmod<span class="w"> </span>dummy
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Dummy interfaces let you practice bonding and bridging safely without extra physical NICs. Test bonds and bridges from the CLI first, then make the final configuration persistent with Netplan and restore the base file during cleanup so the machine returns to its base state.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.sections", "navigation.expand", "content.code.copy"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      
+    
+  </body>
+</html>

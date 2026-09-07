@@ -1,0 +1,10 @@
+apiVersion: v2
+name: canonical-ubuntu-advanced
+version: 0.2.0
+description: A Helm chart for MkDocs support for Canonical Ubuntu Advanced training
+appVersion: 0.2.0
+dependencies:
+  - name: redis
+    version: "18.1.2"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled

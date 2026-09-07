@@ -1,0 +1,14 @@
+version: 2
+ethernets:
+  enp1s0:
+    addresses:
+      - 192.168.101.50/24
+    nameservers:
+      addresses:
+        - 8.8.8.8
+        - 1.1.1.1
+    routes:
+      - to: default
+        via: 192.168.101.1
+    renderer: networkd
+    mtu: 1450

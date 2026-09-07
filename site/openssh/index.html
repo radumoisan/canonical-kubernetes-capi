@@ -1,0 +1,2451 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for the Ubuntu Server Advanced training">
+      
+      
+      
+      
+        <link rel="prev" href="../lxd/">
+      
+      
+        <link rel="next" href="../boot-and-system-initialization/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
+    
+    
+      
+        <title>📋 OpenSSH - Ubuntu Server Advanced</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#openssh" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Ubuntu Server Advanced" class="md-header__button md-logo" aria-label="Ubuntu Server Advanced" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ubuntu Server Advanced
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              📋 OpenSSH
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Ubuntu Server Advanced" class="md-nav__button md-logo" aria-label="Ubuntu Server Advanced" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Ubuntu Server Advanced
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    🏠 Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../virtualization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Virtualization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lxd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 LXD
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    📋 OpenSSH
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    📋 OpenSSH
+  </span>
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#31-what-is-openssh" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.1 What Is OpenSSH?
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 What Is OpenSSH?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+       Examples
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-ssh-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.2 SSH Keys
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 SSH Keys">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#321-key-based-ssh-logins" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.2.1 Key-Based SSH Logins
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#322-generating-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.2.2 Generating Keys
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-ssh-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.3 SSH Tools
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 SSH Tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#331-ssh-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.3.1 ssh-agent
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#332-importing-and-copying-ssh-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.3.2 Importing And Copying SSH Keys
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#333-using-rsync-with-ssh" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.3.3 Using rsync With ssh
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#34-openssh-server-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.4 OpenSSH Server Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 OpenSSH Server Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#341-ssh-hardening-recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.4.1 SSH Hardening Recommendations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#35-ssh-client-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.5 SSH Client Configuration Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 SSH Client Configuration Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#351-typical-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.5.1 Typical Use Cases
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#36-port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.6 Port Forwarding
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.6 Port Forwarding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#361-local-port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.6.1 Local Port Forwarding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#362-remote-port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.6.2 Remote Port Forwarding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#363-ssh-jump-hosts-and-proxyjump" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.6.3 SSH Jump Hosts And ProxyJump
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#37-ssh-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7 SSH Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.7 SSH Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#371-ssh-key-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.1 SSH Key Generation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#372-sshd-ssh-agent-ssh-add-and-ssh-copy-id" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.2 sshd, ssh-agent, ssh-add, and ssh-copy-id
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#373-using-ssh-user-configuration-to-connect-with-a-custom-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.3 Using SSH User Configuration To Connect With A Custom Identity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#374-local-port-forwarding-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.4 Local Port Forwarding Lab
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#375-remote-port-forwarding-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.5 Remote Port Forwarding Lab
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#376-ssh-jump-host-access-with-proxyjump" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.6 SSH Jump Host Access With ProxyJump
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../boot-and-system-initialization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Boot and System Init
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-filesystem-concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Filesystem Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zfs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 ZFS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-networking-concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Networking Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-snap-packaging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Advanced Snap Packaging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-system-topics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 System Topics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#31-what-is-openssh" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.1 What Is OpenSSH?
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 What Is OpenSSH?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+       Examples
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-ssh-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.2 SSH Keys
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 SSH Keys">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#321-key-based-ssh-logins" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.2.1 Key-Based SSH Logins
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#322-generating-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.2.2 Generating Keys
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-ssh-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.3 SSH Tools
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.3 SSH Tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#331-ssh-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.3.1 ssh-agent
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#332-importing-and-copying-ssh-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.3.2 Importing And Copying SSH Keys
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#333-using-rsync-with-ssh" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.3.3 Using rsync With ssh
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#34-openssh-server-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.4 OpenSSH Server Configuration
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.4 OpenSSH Server Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#341-ssh-hardening-recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.4.1 SSH Hardening Recommendations
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#35-ssh-client-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.5 SSH Client Configuration Files
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.5 SSH Client Configuration Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#351-typical-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.5.1 Typical Use Cases
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#36-port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.6 Port Forwarding
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.6 Port Forwarding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#361-local-port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.6.1 Local Port Forwarding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#362-remote-port-forwarding" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.6.2 Remote Port Forwarding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#363-ssh-jump-hosts-and-proxyjump" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.6.3 SSH Jump Hosts And ProxyJump
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#37-ssh-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7 SSH Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.7 SSH Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#371-ssh-key-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.1 SSH Key Generation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#372-sshd-ssh-agent-ssh-add-and-ssh-copy-id" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.2 sshd, ssh-agent, ssh-add, and ssh-copy-id
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#373-using-ssh-user-configuration-to-connect-with-a-custom-identity" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.3 Using SSH User Configuration To Connect With A Custom Identity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#374-local-port-forwarding-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.4 Local Port Forwarding Lab
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#375-remote-port-forwarding-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.5 Remote Port Forwarding Lab
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#376-ssh-jump-host-access-with-proxyjump" class="md-nav__link">
+    <span class="md-ellipsis">
+       3.7.6 SSH Jump Host Access With ProxyJump
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="openssh">OpenSSH<a class="headerlink" href="#openssh" title="Permanent link">&para;</a></h1>
+<p>This chapter covers OpenSSH client and server usage, key-based authentication, and common SSH workflows used in the lab.</p>
+<p>In this chapter you will:</p>
+<ul>
+<li>review core OpenSSH concepts</li>
+<li>generate and manage SSH keys</li>
+<li>use <code>ssh-agent</code>, <code>ssh-add</code>, <code>ssh-copy-id</code>, and <code>ssh-import-id</code></li>
+<li>review server and client configuration files</li>
+<li>use local and remote port forwarding</li>
+<li>connect through a jump host with <code>ProxyJump</code></li>
+</ul>
+<h2 id="31-what-is-openssh"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 3.1 What Is OpenSSH?<a class="headerlink" href="#31-what-is-openssh" title="Permanent link">&para;</a></h2>
+<p>OpenSSH provides secure remote shell access over an untrusted network. On Ubuntu, the SSH client is installed by default, while the server must be installed separately if you want to accept inbound SSH connections.</p>
+<p>SSH can authenticate users with passwords, keys, or other mechanisms, but key-based authentication is the recommended default for administrative access.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to a remote host over SSH.</span>
+ssh<span class="w"> </span>user@remote-host
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>The authenticity of host &#39;remote-host (...)&#39; can&#39;t be established.
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install the OpenSSH server package.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>openssh-server
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Reading package lists... Done
+Building dependency tree... Done
+The following NEW packages will be installed:
+  openssh-server
+...
+Setting up openssh-server ...
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Ubuntu installs the OpenSSH client by default. Install <code>openssh-server</code> only on systems that need to accept SSH connections.</p>
+</div>
+<p>The main server configuration file is <code>/etc/ssh/sshd_config</code>. The client configuration file is <code>/etc/ssh/ssh_config</code>.</p>
+<h3 id="examples"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<p>Make a backup of the server configuration before changing it.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a backup copy of the default SSH server configuration.</span>
+sudo<span class="w"> </span>cp<span class="w"> </span>/etc/ssh/sshd_config<span class="w"> </span>/etc/ssh/sshd_config.factory-defaults
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Make the backup file read-only.</span>
+sudo<span class="w"> </span>chmod<span class="w"> </span>a-w<span class="w"> </span>/etc/ssh/sshd_config.factory-defaults
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Edit the SSH server configuration.</span>
+sudo<span class="w"> </span>nano<span class="w"> </span>/etc/ssh/sshd_config
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>GNU nano ... /etc/ssh/sshd_config
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Restart the SSH service after saving configuration changes.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>sshd
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open the section 5 config-file manual for sshd_config.</span>
+man<span class="w"> </span><span class="m">5</span><span class="w"> </span>sshd_config
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>SSHD_CONFIG(5)                File Formats Manual                SSHD_CONFIG(5)
+</code></pre></div>
+</details>
+<h2 id="32-ssh-keys"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 3.2 SSH Keys<a class="headerlink" href="#32-ssh-keys" title="Permanent link">&para;</a></h2>
+<p>SSH keys allow a client to prove its identity to a remote SSH server without relying on password entry for every login. A key pair consists of a private key, which stays on the client, and a public key, which is placed on the remote host.</p>
+<p>When a compatible private key is available locally and the matching public key is present in <code>~/.ssh/authorized_keys</code> on the server, SSH can authenticate without transmitting the private key over the network.</p>
+<h3 id="321-key-based-ssh-logins"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.2.1 Key-Based SSH Logins<a class="headerlink" href="#321-key-based-ssh-logins" title="Permanent link">&para;</a></h3>
+<p>Key-based authentication is generally stronger than password authentication because private keys are harder to guess or brute-force than ordinary passwords.</p>
+<p>Modern Ubuntu systems typically default to <code>ed25519</code> for new SSH keys. RSA is still supported and may be needed for compatibility with older systems.</p>
+<p>To use key-based SSH logins, you need to:</p>
+<ul>
+<li>create a key pair</li>
+<li>keep the private key secure on the client</li>
+<li>place the public key on the remote system</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Hardware-backed keys such as FIDO2 security keys can provide stronger protection for private key material when required.</p>
+</div>
+<h3 id="322-generating-keys"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.2.2 Generating Keys<a class="headerlink" href="#322-generating-keys" title="Permanent link">&para;</a></h3>
+<p>To keep the workflow consistent across OpenSSH versions, specify the key algorithm explicitly.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Generate a new ed25519 SSH key pair.</span>
+ssh-keygen<span class="w"> </span>-t<span class="w"> </span>ed25519
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Generating public/private ed25519 key pair.
+Enter file in which to save the key (/home/ubuntu/.ssh/id_ed25519):
+</code></pre></div>
+</details>
+<p>This chapter uses <code>ed25519</code> in the lab steps. If you need an RSA key explicitly, generate one with <code>-t rsa</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Generate a new RSA SSH key pair.</span>
+ssh-keygen<span class="w"> </span>-t<span class="w"> </span>rsa
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Generating public/private rsa key pair.
+Enter file in which to save the key (/home/ubuntu/.ssh/id_rsa):
+</code></pre></div>
+</details>
+<p>Copy the public key to a remote server with <code>ssh-copy-id</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install your local public key on a remote host.</span>
+ssh-copy-id<span class="w"> </span>username@remotehost
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: ...
+Number of key(s) added: 1
+</code></pre></div>
+</details>
+<p>Use verbose mode when troubleshooting authentication.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show verbose SSH connection and key-selection details.</span>
+ssh<span class="w"> </span>-v<span class="w"> </span>username@remotehost
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>debug1: Reading configuration data /home/ubuntu/.ssh/config
+debug1: Offering public key: /home/ubuntu/.ssh/id_ed25519
+</code></pre></div>
+<p>Representative verbose output often includes lines like these:</p>
+<div class="highlight"><pre><span></span><code>debug1: Offering public key: /home/user/.ssh/id_ed25519
+debug1: Offering public key: /home/user/.ssh/id_rsa
+debug1: Server accepts key: pkalg ssh-ed25519
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>The key-based login model is:</p>
+<ul>
+<li>the private key stays on the client</li>
+<li>the public key is installed on the server</li>
+<li><code>ssh -v</code> helps you see which keys SSH is actually trying</li>
+</ul>
+</div>
+<h2 id="33-ssh-tools"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 3.3 SSH Tools<a class="headerlink" href="#33-ssh-tools" title="Permanent link">&para;</a></h2>
+<h3 id="331-ssh-agent"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.3.1 ssh-agent<a class="headerlink" href="#331-ssh-agent" title="Permanent link">&para;</a></h3>
+<p><code>ssh-agent</code> keeps decrypted private keys in memory for the current session so SSH clients can reuse them without repeatedly prompting for the passphrase.</p>
+<p>On Ubuntu desktop systems, <code>ssh-agent</code> is often started automatically as part of the graphical session. On headless systems and terminal-only sessions, you may need to start it manually.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add the default ed25519 key to the running SSH agent.</span>
+ssh-add<span class="w"> </span>~/.ssh/id_ed25519
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Enter passphrase for /home/ubuntu/.ssh/id_ed25519:
+Identity added: /home/ubuntu/.ssh/id_ed25519 (...)
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># List identities currently held by the SSH agent.</span>
+ssh-add<span class="w"> </span>-l
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>256 SHA256:... /home/ubuntu/.ssh/id_ed25519 (ED25519)
+</code></pre></div>
+</details>
+<p>By default, <code>ssh-add</code> looks for these common private key file names:</p>
+<div class="highlight"><pre><span></span><code>~/.ssh/id_rsa
+~/.ssh/id_dsa
+~/.ssh/id_ecdsa
+~/.ssh/id_ed25519
+~/.ssh/identity
+</code></pre></div>
+<p>You can also start the agent manually in a shell session.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start a new SSH agent for the current shell.</span>
+<span class="nb">eval</span><span class="w"> </span><span class="k">$(</span>ssh-agent<span class="k">)</span>
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Agent pid 12345
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add the default private key to the newly started agent.</span>
+ssh-add
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Identity added: /home/ubuntu/.ssh/id_ed25519 (...)
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Confirm that the agent is holding at least one identity.</span>
+ssh-add<span class="w"> </span>-l
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>256 SHA256:... /home/ubuntu/.ssh/id_ed25519 (ED25519)
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Remove all identities from the SSH agent.</span>
+ssh-add<span class="w"> </span>-D
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>All identities removed.
+</code></pre></div>
+</details>
+<h3 id="332-importing-and-copying-ssh-keys"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.3.2 Importing And Copying SSH Keys<a class="headerlink" href="#332-importing-and-copying-ssh-keys" title="Permanent link">&para;</a></h3>
+<p>Ubuntu includes tools that help move public keys into place quickly.</p>
+<p><code>ssh-copy-id</code> copies a local public key to a remote server. <code>ssh-import-id</code> imports public keys from supported identity providers such as GitHub and Launchpad into the local <code>authorized_keys</code> file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Import public keys published on GitHub.</span>
+ssh-import-id<span class="w"> </span>gh:your-github-username
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>2026-... INFO Importing 1 key(s) from gh:your-github-username
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Import public keys published on Launchpad.</span>
+ssh-import-id<span class="w"> </span>lp:your-launchpad-username
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>2026-... INFO Importing 1 key(s) from lp:your-launchpad-username
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>ssh-import-id</code> is useful in automated provisioning flows, including cloud-init based setups.</p>
+</div>
+<h3 id="333-using-rsync-with-ssh"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.3.3 Using rsync With ssh<a class="headerlink" href="#333-using-rsync-with-ssh" title="Permanent link">&para;</a></h3>
+<p><code>rsync</code> can use SSH as its transport so file transfers are encrypted in transit.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Copy a file from a remote host to the local system over SSH.</span>
+rsync<span class="w"> </span>-azvPe<span class="w"> </span>ssh<span class="w"> </span>user@10.10.10.10:/path-to/file.txt<span class="w"> </span>/tmp/
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>receiving incremental file list
+file.txt
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Copy a local file to a remote host over SSH.</span>
+rsync<span class="w"> </span>-azvPe<span class="w"> </span>ssh<span class="w"> </span>file.txt<span class="w"> </span>user@10.10.10.10:/pathto/backups/
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>sending incremental file list
+file.txt
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>These SSH helpers solve different problems:</p>
+<ul>
+<li><code>ssh-agent</code> keeps decrypted keys in memory</li>
+<li><code>ssh-copy-id</code> installs your public key on a remote host</li>
+<li><code>ssh-import-id</code> pulls published public keys into <code>authorized_keys</code></li>
+<li><code>rsync -e ssh</code> copies files securely over SSH</li>
+</ul>
+</div>
+<h2 id="34-openssh-server-configuration"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 3.4 OpenSSH Server Configuration<a class="headerlink" href="#34-openssh-server-configuration" title="Permanent link">&para;</a></h2>
+<p>The main SSH server configuration file on Ubuntu is:</p>
+<div class="highlight"><pre><span></span><code>/etc/ssh/sshd_config
+</code></pre></div>
+<p>This file controls server behavior such as authentication methods, login rules, and network binding. Do not confuse it with <code>/etc/ssh/ssh_config</code>, which affects client behavior.</p>
+<p>By default, the SSH server listens on port <code>22</code>, but the listening port can be changed when needed.</p>
+<div class="highlight"><pre><span></span><code>Port 2222
+</code></pre></div>
+<h3 id="341-ssh-hardening-recommendations"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.4.1 SSH Hardening Recommendations<a class="headerlink" href="#341-ssh-hardening-recommendations" title="Permanent link">&para;</a></h3>
+<p>These settings are common hardening examples for <code>sshd_config</code>.</p>
+<p>Limit which users can log in:</p>
+<div class="highlight"><pre><span></span><code>AllowUsers alice bob
+</code></pre></div>
+<p>Disable direct root login:</p>
+<div class="highlight"><pre><span></span><code>PermitRootLogin no
+</code></pre></div>
+<p>Require keys instead of passwords:</p>
+<div class="highlight"><pre><span></span><code>PasswordAuthentication no
+</code></pre></div>
+<p>Reject empty passwords explicitly:</p>
+<div class="highlight"><pre><span></span><code>PermitEmptyPasswords no
+</code></pre></div>
+<p>Restrict the interfaces or addresses the server listens on:</p>
+<div class="highlight"><pre><span></span><code>ListenAddress 192.168.1.100
+</code></pre></div>
+<p>Always test SSH changes carefully before closing your current session.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Restart the SSH service after validating configuration changes.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>ssh
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Keep a second terminal open while testing SSH configuration changes. A bad <code>sshd_config</code> change can lock you out of a remote system.</p>
+</div>
+<h2 id="35-ssh-client-configuration-files"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 3.5 SSH Client Configuration Files<a class="headerlink" href="#35-ssh-client-configuration-files" title="Permanent link">&para;</a></h2>
+<p>SSH supports both per-user and system-wide client configuration files.</p>
+<ul>
+<li>user configuration: <code>~/.ssh/config</code></li>
+<li>system configuration: <code>/etc/ssh/ssh_config</code></li>
+</ul>
+<p>These files let you define reusable connection settings such as host aliases, usernames, ports, and identity files.</p>
+<p>Example user configuration:</p>
+<div class="highlight"><pre><span></span><code>Host labvm
+  HostName 192.168.101.50
+  User ubuntu
+</code></pre></div>
+<p>With that entry, this command:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect using a host alias defined in ~/.ssh/config.</span>
+ssh<span class="w"> </span>labvm
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<p>is equivalent to:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect directly without using the SSH host alias.</span>
+ssh<span class="w"> </span>ubuntu@192.168.101.50
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use an explicit username or set <code>User ubuntu</code> in <code>~/.ssh/config</code> when you want <code>ssh labvm</code> to land on the <code>ubuntu</code> account consistently.</p>
+</div>
+<h3 id="351-typical-use-cases"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.5.1 Typical Use Cases<a class="headerlink" href="#351-typical-use-cases" title="Permanent link">&para;</a></h3>
+<p>You can add more options when the target host needs custom settings.</p>
+<p>Use a different username:</p>
+<div class="highlight"><pre><span></span><code>User myadmin
+</code></pre></div>
+<p>Use a non-default private key:</p>
+<div class="highlight"><pre><span></span><code>IdentityFile ~/.ssh/id_custom
+</code></pre></div>
+<p>Use a non-standard port:</p>
+<div class="highlight"><pre><span></span><code>Port 2222
+</code></pre></div>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Keep the config split clear:</p>
+<ul>
+<li>server settings live in <code>/etc/ssh/sshd_config</code></li>
+<li>client settings live in <code>/etc/ssh/ssh_config</code> or <code>~/.ssh/config</code></li>
+<li>test server-side changes carefully so you do not lock yourself out</li>
+</ul>
+<p><code>~/.ssh/config</code> is useful because it lets you save:</p>
+<ul>
+<li>host aliases</li>
+<li>usernames</li>
+<li>ports</li>
+<li>identity files</li>
+</ul>
+</div>
+<h2 id="36-port-forwarding"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 3.6 Port Forwarding<a class="headerlink" href="#36-port-forwarding" title="Permanent link">&para;</a></h2>
+<h3 id="361-local-port-forwarding"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.6.1 Local Port Forwarding<a class="headerlink" href="#361-local-port-forwarding" title="Permanent link">&para;</a></h3>
+<p>Local port forwarding exposes a remote service on a local client port through an SSH tunnel.</p>
+<p><img alt="Local port forwarding diagram" src="../assets/openssh-local-portfw.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Forward a local port to a remote service through an SSH server.</span>
+ssh<span class="w"> </span>-L<span class="w"> </span>local_port:remote_address:remote_port<span class="w"> </span>username@ssh_server
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>The SSH session stays open while the tunnel is active.
+</code></pre></div>
+</details>
+<p>This is useful when a remote service is reachable from the SSH server but not directly from your current machine.</p>
+<h3 id="362-remote-port-forwarding"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.6.2 Remote Port Forwarding<a class="headerlink" href="#362-remote-port-forwarding" title="Permanent link">&para;</a></h3>
+<p>Remote port forwarding exposes a local service on a remote system through an SSH tunnel.</p>
+<p><img alt="Remote port forwarding diagram" src="../assets/openssh-remote-portfw.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Expose a local service on a port on the remote SSH server.</span>
+ssh<span class="w"> </span>-R<span class="w"> </span>remote_port:remote_address:local_port<span class="w"> </span>username@ssh_server
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>The SSH session stays open while the tunnel is active.
+</code></pre></div>
+</details>
+<p>This can be useful when a service on your local machine needs to be reached from the remote side for testing or controlled access.</p>
+<h3 id="363-ssh-jump-hosts-and-proxyjump"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.6.3 SSH Jump Hosts And ProxyJump<a class="headerlink" href="#363-ssh-jump-hosts-and-proxyjump" title="Permanent link">&para;</a></h3>
+<p>When a target host is not directly reachable, SSH can connect through an intermediate jump host with <code>-J</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to an internal host through a jump host.</span>
+ssh<span class="w"> </span>-J<span class="w"> </span>ubuntu@LABVM<span class="w"> </span>ubuntu@INTERNALVM
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@internalvm:~$
+</code></pre></div>
+</details>
+<p>You can define the same behavior in <code>~/.ssh/config</code>.</p>
+<div class="highlight"><pre><span></span><code>Host internalvm
+  HostName 192.168.100.50
+  User ubuntu
+  ProxyJump ubuntu@192.168.101.50
+</code></pre></div>
+<p>Then connect with the alias:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to the internal host using the configured alias.</span>
+ssh<span class="w"> </span>internalvm
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@internalvm:~$
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>ProxyJump</code> is the preferred modern replacement for older <code>ProxyCommand</code> based jump-host setups.</p>
+</div>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>The three SSH tunnel patterns to remember are:</p>
+<ul>
+<li><code>ssh -L</code> exposes a remote service on your local machine</li>
+<li><code>ssh -R</code> exposes a local service on the remote machine</li>
+<li><code>ssh -J</code> reaches a target through a jump host</li>
+</ul>
+</div>
+<h2 id="37-ssh-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 3.7 SSH Lab<a class="headerlink" href="#37-ssh-lab" title="Permanent link">&para;</a></h2>
+<p>In this lab you will use OpenSSH from the course lab environment.</p>
+<ul>
+<li><code>LABHOST</code>: the assigned lab host that the student logs in to</li>
+<li><code>LABVM</code>: the virtual machine created earlier in the course</li>
+<li><code>INTERNALVM</code>: an internal VM reachable from <code>LABVM</code></li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Start this lab on <code>LABHOST</code> unless a step explicitly says otherwise.</p>
+</div>
+<h3 id="371-ssh-key-generation"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.7.1 SSH Key Generation<a class="headerlink" href="#371-ssh-key-generation" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise establishes the SSH variables and key pair used throughout the rest of the chapter. Success means the three lab IP variables are available in your shell and <code>~/.ssh/</code> contains the generated private and public key files.</p>
+</div>
+<p>Step 1: Define the lab IP variables used throughout the chapter.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These variables are persisted in <code>~/.bashrc</code> for later use. If you rerun this step, avoid appending duplicate variable definitions.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Export the lab IP variables for the current shell.</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LABHOSTIP</span><span class="o">=</span><span class="m">192</span>.168.101.1
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Export the LABVM IP for the current shell.</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LABVMIP</span><span class="o">=</span><span class="m">192</span>.168.101.50
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Export the INTERNALVM IP for the current shell.</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">INTERNALVMIP</span><span class="o">=</span><span class="m">192</span>.168.122.51
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Persist the LABHOST IP in ~/.bashrc.</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;LABHOSTIP=192.168.101.1\n&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Persist the LABVM IP in ~/.bashrc.</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;LABVMIP=192.168.101.50\n&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Persist the INTERNALVM IP in ~/.bashrc.</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;INTERNALVMIP=192.168.122.51\n&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Ensure the USER variable is set to ubuntu for this lab.</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">USER</span><span class="o">=</span>ubuntu
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 2: Generate the local SSH key pair.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Generate an ed25519 SSH key pair on LABHOST.</span>
+ssh-keygen<span class="w"> </span>-t<span class="w"> </span>ed25519
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Generating public/private ed25519 key pair.
+Enter file in which to save the key (/home/ubuntu/.ssh/id_ed25519):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/ubuntu/.ssh/id_ed25519
+Your public key has been saved in /home/ubuntu/.ssh/id_ed25519.pub
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use the default options by pressing <code>Enter</code> at each prompt unless you need a custom location or passphrase.</p>
+</div>
+<p>Step 3: List the generated SSH files.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List the contents of ~/.ssh after key generation.</span>
+ls<span class="w"> </span>-al<span class="w"> </span>~/.ssh/
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>total 28
+drwx------  2 ubuntu ubuntu ... .
+drwxr-x---  5 ubuntu ubuntu ... ..
+-rw-------  1 ubuntu ubuntu ... authorized_keys
+-rw-------  1 ubuntu ubuntu ... id_ed25519
+-rw-r--r--  1 ubuntu ubuntu ... id_ed25519.pub
+-rw-------  1 ubuntu ubuntu ... known_hosts
+</code></pre></div>
+</details>
+<h3 id="372-sshd-ssh-agent-ssh-add-and-ssh-copy-id"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.7.2 sshd, ssh-agent, ssh-add, and ssh-copy-id<a class="headerlink" href="#372-sshd-ssh-agent-ssh-add-and-ssh-copy-id" title="Permanent link">&para;</a></h3>
+<p><code>ssh-add</code> loads private keys into the running agent. <code>ssh-copy-id</code> installs a local public key on a remote server.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise proves that the generated key can log in to <code>LABVM</code> and shows how <code>ssh-agent</code> manages the private key in memory. Success means <code>ssh-copy-id</code> installs the key, <code>ssh $LABVMIP</code> logs in without asking for the <code>ubuntu</code> password, and <code>ssh-add -l</code> lists the loaded identity.</p>
+</div>
+<p>Step 1: Copy the local public key to <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Copy your public key to the ubuntu account on LABVM.</span>
+ssh-copy-id<span class="w"> </span>ubuntu@<span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: &quot;/home/ubuntu/.ssh/id_ed25519.pub&quot;
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+Number of key(s) added: 1
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In this lab, the <code>ubuntu</code> password on <code>LABVM</code> is <code>ubuntu</code> if password authentication is still required for the initial copy.</p>
+</div>
+<p>Step 2: Confirm that key-based login works.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to LABVM using SSH after copying the key.</span>
+ssh<span class="w"> </span><span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can also install the public key manually by appending <code>~/.ssh/id_ed25519.pub</code> or <code>~/.ssh/id_rsa.pub</code> to <code>~/.ssh/authorized_keys</code> on <code>LABVM</code>.</p>
+</div>
+<p>Step 3: Return to <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Exit the SSH session back to LABHOST.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+Connection to 192.168.101.50 closed.
+</code></pre></div>
+</details>
+<p>Step 4: Check whether the SSH server is running.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the current SSH service status.</span>
+systemctl<span class="w"> </span>status<span class="w"> </span>ssh
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>● ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: enabled)
+     Active: active (running)
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On some Ubuntu systems, SSH is activated through <code>ssh.socket</code>. In that case, <code>systemctl status ssh</code> can still show the server as running even when the unit itself is listed as <code>disabled</code>.</p>
+</div>
+<p>Step 5: Check whether <code>ssh-agent</code> is already running.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check for a running ssh-agent process.</span>
+ps<span class="w"> </span>-el<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ssh-agent
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 6: Start <code>ssh-agent</code> manually if it is not already running.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start a new ssh-agent for the current shell session.</span>
+<span class="nb">eval</span><span class="w"> </span><span class="k">$(</span>ssh-agent<span class="k">)</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Agent pid 12345
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Ubuntu desktop systems, <code>ssh-agent</code> is usually started automatically. Manual startup is more common on headless systems, VMs, and terminal-only sessions.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you open a new shell later, you may need to start <code>ssh-agent</code> again and reload your key in that shell.</p>
+</div>
+<p>Step 7: Add the private key to the agent.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add the generated SSH key to the running ssh-agent.</span>
+ssh-add<span class="w"> </span>~/.ssh/id_ed25519
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Identity added: /home/ubuntu/.ssh/id_ed25519 (ubuntu@playground-rdu)
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This lab generates <code>id_ed25519</code> explicitly, so the later <code>ssh-add</code> step always loads the same key type.</p>
+</div>
+<p>Step 8: List the loaded keys.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List identities currently available through ssh-agent.</span>
+ssh-add<span class="w"> </span>-l
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>256 SHA256:3rNMyyHgbnx9g0E7+JlTEazQ4KOF2XqjQNeG+o69Dks ubuntu@playground-rdu (ED25519)
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>The practical key-based workflow is:</p>
+<ul>
+<li>generate a key pair with <code>ssh-keygen -t ed25519</code></li>
+<li>install the public key with <code>ssh-copy-id</code></li>
+<li>load the private key into <code>ssh-agent</code> with <code>ssh-add</code> when needed</li>
+</ul>
+</div>
+<h3 id="373-using-ssh-user-configuration-to-connect-with-a-custom-identity"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.7.3 Using SSH User Configuration To Connect With A Custom Identity<a class="headerlink" href="#373-using-ssh-user-configuration-to-connect-with-a-custom-identity" title="Permanent link">&para;</a></h3>
+<p>SSH client configuration can store reusable connection settings, including a host alias, username, and a specific private key.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise creates a second user on <code>LABVM</code>, assigns a separate SSH key to that user, and stores the connection details in <code>~/.ssh/config</code>. Success means <code>ssh labvm</code> connects you to <code>LABVM</code> as <code>myadmin</code> using <code>~/.ssh/id_custom</code>.</p>
+</div>
+<p>Step 1: Connect to <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to LABVM before creating the new user.</span>
+ssh<span class="w"> </span><span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<p>Step 2: On <code>LABVM</code>, create a new user.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the myadmin user on LABVM.</span>
+sudo<span class="w"> </span>adduser<span class="w"> </span>myadmin
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>New password:
+Retype new password:
+info: Adding user `myadmin&#39; ...
+info: Adding new group `myadmin&#39; ...
+info: Creating home directory `/home/myadmin&#39; ...
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Set a password you know for <code>myadmin</code>. The first <code>ssh-copy-id</code> into that account uses this password before key-based login is available.</p>
+</div>
+<p>Step 3: Optionally add the user to <code>sudo</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Add myadmin to the sudo group.</span>
+sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>sudo<span class="w"> </span>myadmin
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 4: Return to <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Exit the SSH session back to LABHOST.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+Connection to 192.168.101.50 closed.
+</code></pre></div>
+</details>
+<p>Step 5: On <code>LABHOST</code>, generate a second key pair for the custom identity.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Generate a dedicated ed25519 key pair for the custom SSH alias.</span>
+ssh-keygen<span class="w"> </span>-t<span class="w"> </span>ed25519<span class="w"> </span>-f<span class="w"> </span>~/.ssh/id_custom
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Generating public/private ed25519 key pair.
+Enter passphrase (empty for no passphrase):
+</code></pre></div>
+</details>
+<p>Step 6: Copy the custom public key to the new user on <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install the custom public key for myadmin on LABVM.</span>
+ssh-copy-id<span class="w"> </span>-i<span class="w"> </span>~/.ssh/id_custom.pub<span class="w"> </span>myadmin@<span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Number of key(s) added: 1
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When prompted, use the <code>myadmin</code> password you set in Step 2.</p>
+</div>
+<p>Step 7: Create the SSH client config file if it does not exist yet.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create ~/.ssh/config if it does not already exist.</span>
+touch<span class="w"> </span>~/.ssh/config
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Restrict the SSH config file permissions.</span>
+chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>~/.ssh/config
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 8: Add the host alias configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Append a labvm host alias that uses the custom identity.</span>
+tee<span class="w"> </span>-a<span class="w"> </span>~/.ssh/config<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">Host labvm</span>
+<span class="s">  HostName 192.168.101.50</span>
+<span class="s">  User myadmin</span>
+<span class="s">  IdentityFile ~/.ssh/id_custom</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Host labvm
+  HostName 192.168.101.50
+  User myadmin
+  IdentityFile ~/.ssh/id_custom
+</code></pre></div>
+</details>
+<p>Step 9: Connect with the alias.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to LABVM as myadmin using the SSH alias.</span>
+ssh<span class="w"> </span>labvm
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+myadmin@ubuntu:~$
+</code></pre></div>
+</details>
+<p>Step 10: Exit back to <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Exit the SSH session back to LABHOST.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+Connection to 192.168.101.50 closed.
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>A host alias in <code>~/.ssh/config</code> can bundle:</p>
+<ul>
+<li>the destination host</li>
+<li>the username</li>
+<li>the private key to use</li>
+</ul>
+<p>Then you can connect with a short command such as <code>ssh labvm</code>.</p>
+</div>
+<h3 id="374-local-port-forwarding-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.7.4 Local Port Forwarding Lab<a class="headerlink" href="#374-local-port-forwarding-lab" title="Permanent link">&para;</a></h3>
+<p>This lab forwards traffic from <code>LABHOST</code> through <code>LABVM</code> to <code>www.ubuntu.com</code>.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise demonstrates local port forwarding. Success means a service reached through <code>https://127.0.0.1</code> on <code>LABHOST</code> is actually being fetched through the SSH tunnel on <code>LABVM</code>.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">How traffic flows</p>
+<ol>
+<li>The SSH tunnel is created between <code>LABHOST</code> and <code>LABVM</code>.</li>
+<li>Your browser opens <code>https://127.0.0.1:443</code> on <code>LABHOST</code>.</li>
+<li>SSH forwards that traffic through the tunnel to <code>LABVM</code>.</li>
+<li><code>LABVM</code> reaches <code>www.ubuntu.com:443</code> and returns the response back through the tunnel.</li>
+</ol>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Binding to privileged ports up to <code>1024</code> requires <code>sudo</code>.</p>
+</div>
+<p>Step 1: On <code>LABHOST</code>, create the tunnel to <code>LABVM</code> using local port <code>443</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Forward local port 443 through LABVM to www.ubuntu.com:443.</span>
+sudo<span class="w"> </span>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">443</span>:www.ubuntu.com:443<span class="w"> </span>ubuntu@<span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The SSH session stays open while the tunnel is active.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Because <code>sudo ssh</code> runs as <code>root</code>, it may not use the same SSH keys as your normal user. If that happens, authenticate with the <code>ubuntu</code> password on <code>LABVM</code>, or use an unprivileged local port such as <code>9000</code> without <code>sudo</code>.</p>
+</div>
+<p>Step 2: In another terminal on <code>LABHOST</code>, install <code>elinks</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install a text browser for tunnel verification.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>elinks
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Reading package lists... Done
+...
+Setting up elinks ...
+</code></pre></div>
+</details>
+<p>Step 3: Test the forwarded connection locally.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open the forwarded HTTPS endpoint through the local tunnel.</span>
+elinks<span class="w"> </span>https://127.0.0.1:443
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>A CTO&#39;s guide to real-time Linux
+Ubuntu 24.04 LTS Noble Numbat is available for download
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Exit <code>elinks</code> with <code>q</code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you only want to print the page content without opening the interactive browser interface, you can use <code>elinks -dump https://127.0.0.1:443</code>.</p>
+</div>
+<p>Step 4: Close the first SSH tunnel and recreate it on port <code>9000</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Close the current SSH tunnel.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Forward local port 9000 through LABVM to www.ubuntu.com:443.</span>
+sudo<span class="w"> </span>ssh<span class="w"> </span>-L<span class="w"> </span><span class="m">9000</span>:www.ubuntu.com:443<span class="w"> </span>ubuntu@<span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The SSH session stays open while the tunnel is active.
+</code></pre></div>
+</details>
+<p>Step 5: Test the new forwarded port.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open the forwarded HTTPS endpoint on local port 9000.</span>
+elinks<span class="w"> </span>https://127.0.0.1:9000
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Ubuntu | The latest version of Ubuntu is here
+</code></pre></div>
+</details>
+<p>Step 6: Close the SSH tunnel.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Exit the SSH session and close the tunnel.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Local forwarding means:</p>
+<ul>
+<li>you open a port on your local machine</li>
+<li>SSH carries that traffic through the tunnel</li>
+<li>the SSH server reaches the final remote service</li>
+</ul>
+</div>
+<h3 id="375-remote-port-forwarding-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.7.5 Remote Port Forwarding Lab<a class="headerlink" href="#375-remote-port-forwarding-lab" title="Permanent link">&para;</a></h3>
+<p>This lab exposes a service running on <code>LABHOST</code> to <code>LABVM</code> through an SSH remote port forward.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise demonstrates remote port forwarding. Success means <code>curl http://localhost:8080/test.txt</code> on <code>LABVM</code> returns <code>LABHOST</code>, proving the request reached the Apache service running on <code>LABHOST</code> through the SSH tunnel.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">How traffic flows</p>
+<ol>
+<li>The SSH tunnel is created between <code>LABHOST</code> and <code>LABVM</code>.</li>
+<li><code>LABHOST</code> exposes its local web service on port <code>8080</code>.</li>
+<li>SSH makes that service reachable on <code>LABVM</code> at <code>localhost:8080</code>.</li>
+<li>A request from <code>LABVM</code> to <code>http://localhost:8080/test.txt</code> is carried back through the tunnel to <code>LABHOST</code>, and the response returns the same way.</li>
+</ol>
+</div>
+<p>Step 1: Install <code>apache2</code> on <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install Apache on LABHOST.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>apache2
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Reading package lists... Done
+...
+Setting up apache2 ...
+</code></pre></div>
+</details>
+<p>Step 2: Move to the web root.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Change to Apache&#39;s default document root.</span>
+<span class="nb">cd</span><span class="w"> </span>/var/www/html
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 3: Create the test file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the test file used for remote forwarding verification.</span>
+sudo<span class="w"> </span>touch<span class="w"> </span>test.txt
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Write LABHOST into the test file.</span>
+sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;echo LABHOST &gt; /var/www/html/test.txt&#39;</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 4: Change Apache to listen on port <code>8080</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Update Apache&#39;s listen port from 80 to 8080.</span>
+sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;s/80/8080/&#39;</span><span class="w"> </span>/etc/apache2/ports.conf
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Restart Apache after changing the listening port.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>apache2
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 5: Open a remote forward from <code>LABHOST</code> to <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Expose LABHOST localhost:8080 on LABVM port 8080.</span>
+sudo<span class="w"> </span>ssh<span class="w"> </span>-R<span class="w"> </span><span class="m">8080</span>:localhost:8080<span class="w"> </span>ubuntu@<span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The SSH session stays open while the tunnel is active.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Leave this SSH session open. The next steps use a second terminal to connect to <code>LABVM</code> while the remote forward remains active.</p>
+</div>
+<p>Step 6: In another terminal on <code>LABHOST</code>, connect to <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open a second SSH session to LABVM for tunnel verification.</span>
+ssh<span class="w"> </span><span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<p>Step 7: On <code>LABVM</code>, install the tools needed to test the forwarded endpoint.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install curl and net-tools on LABVM.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>curl<span class="w"> </span>net-tools
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Reading package lists... Done
+...
+curl is already the newest version (...).
+Setting up net-tools (...)
+</code></pre></div>
+</details>
+<p>Step 8: Fetch the test page from the forwarded port.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Request the test page through the remote forward on LABVM.</span>
+curl<span class="w"> </span>-v<span class="w"> </span>http://localhost:8080/test.txt
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>&gt; GET /test.txt HTTP/1.1
+&lt; HTTP/1.1 200 OK
+&lt; Server: Apache/2.4.58 (Ubuntu)
+LABHOST
+</code></pre></div>
+</details>
+<p>Step 9: Exit the verification session back to <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Leave the LABVM verification session.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+Connection to 192.168.101.50 closed.
+</code></pre></div>
+</details>
+<p>Step 10: In the original terminal, close the SSH tunnel and return to the home directory on <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Exit the SSH session that is holding the remote port forward.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Return to the ubuntu home directory.</span>
+<span class="nb">cd</span><span class="w"> </span>~
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Remote forwarding means:</p>
+<ul>
+<li>a service on your local machine is published on the remote side</li>
+<li>the remote host connects to its own forwarded port</li>
+<li>SSH carries those requests back to your local service</li>
+</ul>
+</div>
+<h3 id="376-ssh-jump-host-access-with-proxyjump"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 3.7.6 SSH Jump Host Access With ProxyJump<a class="headerlink" href="#376-ssh-jump-host-access-with-proxyjump" title="Permanent link">&para;</a></h3>
+<p>This lab simulates access to an internal VM through <code>LABVM</code> as a jump host.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Use one terminal to <code>LABVM</code> for the VM-creation steps in this exercise, then return to <code>LABHOST</code> for the final <code>ProxyJump</code> tests. Success means <code>LABVM</code> can reach <code>INTERNALVM</code> directly and <code>LABHOST</code> can reach the same VM only through <code>ssh -J</code>.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">How traffic flows</p>
+<ol>
+<li><code>INTERNALVM</code> runs on a private libvirt network inside <code>LABVM</code>.</li>
+<li><code>LABVM</code> can reach <code>INTERNALVM</code> directly on that private network.</li>
+<li><code>LABHOST</code> can reach <code>LABVM</code>, but not <code>INTERNALVM</code> directly.</li>
+<li><code>ssh -J</code> uses <code>LABVM</code> as the jump host to carry the SSH connection from <code>LABHOST</code> to <code>INTERNALVM</code>.</li>
+</ol>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Even if <code>LABHOST</code> can reach <code>INTERNALVM</code> directly in your environment, this exercise assumes access is only allowed through <code>LABVM</code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In this lab, <code>INTERNALVM</code> uses <code>192.168.122.51</code> on the libvirt <code>default</code> network inside <code>LABVM</code>. That address matches <code>$INTERNALVMIP</code> from the earlier variable setup step.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In this section, the prepared VM files must be stored under <code>/var/lib/libvirt/images/</code> and <code>virt-install</code> must use <code>--connect qemu:///system</code> so the system libvirt daemon can access them.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code>LABVM</code> does not already have a suitable base image and <code>cloud-init-internal.iso</code>, create them there before running <code>virt-install</code>.</p>
+</div>
+<p>If you are not already on <code>LABVM</code>, connect now and keep that terminal open for the VM-creation and cleanup steps in this exercise.</p>
+<p>Use a separate <code>LABHOST</code> terminal for the steps explicitly labeled <code>On LABHOST</code> so you do not lose your place on <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to LABVM for the internal VM setup steps.</span>
+ssh<span class="w"> </span><span class="nv">$LABVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<p>Step 1: On <code>LABVM</code>, install the tools needed to create <code>INTERNALVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install the virtualization and cloud-image tools on LABVM.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>qemu-system<span class="w"> </span>libvirt-daemon-system<span class="w"> </span>virtinst<span class="w"> </span>cloud-image-utils
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Reading package lists... Done
+...
+Setting up virtinst ...
+Setting up cloud-image-utils ...
+</code></pre></div>
+</details>
+<p>Step 2: If <code>LABVM</code> is low on disk space, expand its root disk before continuing.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Run these commands only if <code>df -h /</code> on <code>LABVM</code> shows that the root filesystem is too full to hold the base image and <code>internalvm.img</code>.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># On LABHOST, increase LABVM&#39;s primary disk.</span>
+sudo<span class="w"> </span>virsh<span class="w"> </span>blockresize<span class="w"> </span>ubuntu<span class="w"> </span>vda<span class="w"> </span>32G
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Block device &#39;vda&#39; is resized
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># On LABVM, grow partition 1 to use the larger disk.</span>
+sudo<span class="w"> </span>growpart<span class="w"> </span>/dev/vda<span class="w"> </span><span class="m">1</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>CHANGED: partition=1 ...
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># On LABVM, grow the ext4 filesystem.</span>
+sudo<span class="w"> </span>resize2fs<span class="w"> </span>/dev/vda1
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The filesystem on /dev/vda1 is now ... blocks long.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># On LABVM, confirm the root filesystem now has free space.</span>
+df<span class="w"> </span>-h<span class="w"> </span>/
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1        30G   17G   14G  57% /
+</code></pre></div>
+</details>
+<p>Step 3: On <code>LABHOST</code>, copy the internal cloud-init source files to <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Copy the internal VM cloud-init source files to LABVM.</span>
+scp<span class="w"> </span>/home/ubuntu/user-data-internal<span class="w"> </span>/home/ubuntu/meta-data-internal<span class="w"> </span>ubuntu@<span class="nv">$LABVMIP</span>:/home/ubuntu/
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>user-data-internal  100% ...
+meta-data-internal  100% ...
+</code></pre></div>
+</details>
+<p>The transfer output can vary, but both files should copy successfully to <code>/home/ubuntu/</code> on <code>LABVM</code>.</p>
+<p>Step 4: On <code>LABVM</code>, prepare the internal VM disk and cloud-init ISO.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Download a fresh Ubuntu cloud image on LABVM.</span>
+curl<span class="w"> </span>-L<span class="w"> </span>-o<span class="w"> </span>/home/ubuntu/noble-server-cloudimg-amd64.img<span class="w"> </span>https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>100  600M  100  600M    0     0  ...
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the internal VM disk from the downloaded cloud image.</span>
+cp<span class="w"> </span>/home/ubuntu/noble-server-cloudimg-amd64.img<span class="w"> </span>/home/ubuntu/internalvm.img
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Write the nested-network configuration for INTERNALVM.</span>
+tee<span class="w"> </span>/home/ubuntu/network-config-internal<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">version: 2</span>
+<span class="s">ethernets:</span>
+<span class="s">  enp1s0:</span>
+<span class="s">    addresses:</span>
+<span class="s">      - 192.168.122.51/24</span>
+<span class="s">    routes:</span>
+<span class="s">      - to: default</span>
+<span class="s">        via: 192.168.122.1</span>
+<span class="s">    nameservers:</span>
+<span class="s">      addresses:</span>
+<span class="s">        - 8.8.8.8</span>
+<span class="s">        - 1.1.1.1</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>version: 2
+ethernets:
+  enp1s0:
+    addresses:
+      - 192.168.122.51/24
+    ...
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Build the internal cloud-init ISO.</span>
+cloud-localds<span class="w"> </span>-N<span class="w"> </span>/home/ubuntu/network-config-internal<span class="w"> </span>/home/ubuntu/cloud-init-internal.iso<span class="w"> </span>/home/ubuntu/user-data-internal<span class="w"> </span>/home/ubuntu/meta-data-internal
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the libvirt image directory if needed.</span>
+sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/var/lib/libvirt/images
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Move the prepared VM disk and ISO into libvirt storage.</span>
+sudo<span class="w"> </span>mv<span class="w"> </span>/home/ubuntu/internalvm.img<span class="w"> </span>/home/ubuntu/cloud-init-internal.iso<span class="w"> </span>/var/lib/libvirt/images/
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 5: Create the internal VM.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the internal VM attached to the internal libvirt network.</span>
+sudo<span class="w"> </span>virt-install<span class="w"> </span>--connect<span class="w"> </span>qemu:///system<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="w"> </span>internalvm<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ram<span class="w"> </span><span class="m">1024</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--vcpus<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/internalvm.img,format<span class="o">=</span>qcow2,bus<span class="o">=</span>virtio<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span>/var/lib/libvirt/images/cloud-init-internal.iso,device<span class="o">=</span>cdrom<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--os-variant<span class="w"> </span>ubuntu24.04<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--network<span class="w"> </span><span class="nv">network</span><span class="o">=</span>default,model<span class="o">=</span>virtio<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--graphics<span class="w"> </span>none<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--console<span class="w"> </span>pty,target_type<span class="o">=</span>serial<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--import<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--noautoconsole
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Starting install...
+Domain creation completed.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Wait for the VM to boot and cloud-init to finish before testing SSH access.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>virt-install</code> may warn that <code>1024 MiB</code> is lower than the recommended memory for <code>ubuntu24.04</code>. That warning is expected in this lab and the VM can still be created successfully.</p>
+</div>
+<p>Step 6: From <code>LABVM</code>, confirm that <code>INTERNALVM</code> responds on the expected address.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Ping INTERNALVM on the nested libvirt network.</span>
+ping<span class="w"> </span>-c<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="nv">$INTERNALVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>64 bytes from 192.168.122.51: icmp_seq=1 ttl=64 time=...
+64 bytes from 192.168.122.51: icmp_seq=2 ttl=64 time=...
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the ping fails immediately after <code>virt-install</code>, wait a little longer and try again. <code>INTERNALVM</code> may still be finishing cloud-init.</p>
+</div>
+<p>Step 7: From <code>LABVM</code>, confirm direct SSH access to <code>INTERNALVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect from LABVM to INTERNALVM.</span>
+ssh<span class="w"> </span>ubuntu@<span class="nv">$INTERNALVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@internalvm:~$
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In this lab, the <code>ubuntu</code> password on <code>INTERNALVM</code> is <code>ubuntu</code> if password authentication is still required.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The first SSH connection to <code>INTERNALVM</code> may also ask you to confirm the host key before the login prompt appears.</p>
+</div>
+<p>After you confirm the login works, run <code>exit</code> to return to <code>LABVM</code>. If that <code>LABVM</code> shell was itself opened from <code>LABHOST</code>, run <code>exit</code> there as well so you are back on <code>LABHOST</code> before the next step.</p>
+<p>Step 8: From <code>LABHOST</code>, connect to <code>INTERNALVM</code> through <code>LABVM</code> with <code>ProxyJump</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to INTERNALVM through LABVM as a jump host.</span>
+ssh<span class="w"> </span>-J<span class="w"> </span>ubuntu@<span class="nv">$LABVMIP</span><span class="w"> </span>ubuntu@<span class="nv">$INTERNALVMIP</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@internalvm:~$
+</code></pre></div>
+</details>
+<p>Step 9: Optionally add a reusable SSH alias for the jump configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Append an SSH alias that connects to INTERNALVM through LABVM.</span>
+tee<span class="w"> </span>-a<span class="w"> </span>~/.ssh/config<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<span class="s">Host internalvm</span>
+<span class="s">  HostName $INTERNALVMIP</span>
+<span class="s">  User ubuntu</span>
+<span class="s">  ProxyJump ubuntu@$LABVMIP</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Host internalvm
+  HostName 192.168.122.51
+  User ubuntu
+  ProxyJump ubuntu@192.168.101.50
+</code></pre></div>
+</details>
+<div class="highlight"><pre><span></span><code><span class="c1"># Restrict the SSH config file permissions after editing it.</span>
+chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>~/.ssh/config
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 10: Connect using the shortcut.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to INTERNALVM using the SSH alias.</span>
+ssh<span class="w"> </span>internalvm
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Welcome to Ubuntu 24.04 LTS ...
+ubuntu@internalvm:~$
+</code></pre></div>
+</details>
+<p>Step 11: Exit back to <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Exit the SSH session back to LABHOST.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+Connection to 192.168.122.51 closed.
+</code></pre></div>
+</details>
+<p>Step 12: On <code>LABVM</code>, stop <code>INTERNALVM</code> during cleanup.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use the <code>LABVM</code> terminal you kept open earlier for this cleanup step, or reconnect to <code>LABVM</code> first if needed.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Stop the nested libvirt VM when the jump-host exercise is complete.</span>
+virsh<span class="w"> </span>destroy<span class="w"> </span>internalvm
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Domain &#39;internalvm&#39; destroyed
+</code></pre></div>
+</details>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p><code>ProxyJump</code> is for segmented networks:</p>
+<ul>
+<li>you can reach the jump host directly</li>
+<li>the jump host can reach the internal target</li>
+<li>SSH stitches the path together with one command</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.sections", "navigation.expand", "content.code.copy"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      
+    
+  </body>
+</html>

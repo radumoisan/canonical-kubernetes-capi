@@ -1,0 +1,2593 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation site for the Ubuntu Server Advanced training">
+      
+      
+      
+      
+        <link rel="prev" href="../openssh/">
+      
+      
+        <link rel="next" href="../storage/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.3">
+    
+    
+      
+        <title>📋 Boot and System Init - Ubuntu Server Advanced</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.50c56a3b.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#boot-and-system-initialization" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Ubuntu Server Advanced" class="md-header__button md-logo" aria-label="Ubuntu Server Advanced" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Ubuntu Server Advanced
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              📋 Boot and System Init
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Ubuntu Server Advanced" class="md-nav__button md-logo" aria-label="Ubuntu Server Advanced" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Ubuntu Server Advanced
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    🏠 Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../virtualization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Virtualization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lxd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 LXD
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../openssh/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 OpenSSH
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    📋 Boot and System Init
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    📋 Boot and System Init
+  </span>
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#41-what-is-grub2" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.1 What Is GRUB2?
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 What Is GRUB2?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#grub2-and-lvm-root-setups" class="md-nav__link">
+    <span class="md-ellipsis">
+       GRUB2 And LVM Root Setups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#grub2-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+       GRUB2 Configuration Files
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#42-grub2-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.2 GRUB2 Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 GRUB2 Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#421-grub2-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.2.1 GRUB2 Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#422-console-connection" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.2.2 Console Connection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#423-using-hwe-kernels-to-test-alternate-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.2.3 Using HWE Kernels To Test Alternate Versions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#43-advanced-systemd-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3 Advanced systemd Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 Advanced systemd Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#431-systemd-units" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3.1 Systemd Units
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#432-managing-units-with-systemctl" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3.2 Managing Units With systemctl
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#433-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3.3 Logging
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#434-troubleshooting-systemd" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3.4 Troubleshooting systemd
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#44-systemd-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.4 systemd Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.4 systemd Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#441-manage-services" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.4.1 Manage Services
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#442-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.4.2 Logging
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#443-create-a-custom-service" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.4.3 Create A Custom Service
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#45-on-demand-processes" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.5 On Demand Processes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#46-on-demand-and-scheduled-tasks-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.6 On Demand And Scheduled Tasks Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.6 On Demand And Scheduled Tasks Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#part-1-systemd-timers-preferred-method" class="md-nav__link">
+    <span class="md-ellipsis">
+       Part 1: systemd Timers (Preferred Method)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#part-2-legacy-tools-at-and-batch" class="md-nav__link">
+    <span class="md-ellipsis">
+       Part 2: Legacy Tools - at And batch
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Storage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-filesystem-concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Filesystem Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zfs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 ZFS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-networking-concepts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Networking Concepts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-snap-packaging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 Advanced Snap Packaging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../advanced-system-topics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    📋 System Topics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#41-what-is-grub2" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.1 What Is GRUB2?
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.1 What Is GRUB2?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#grub2-and-lvm-root-setups" class="md-nav__link">
+    <span class="md-ellipsis">
+       GRUB2 And LVM Root Setups
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#grub2-configuration-files" class="md-nav__link">
+    <span class="md-ellipsis">
+       GRUB2 Configuration Files
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#42-grub2-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.2 GRUB2 Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.2 GRUB2 Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#421-grub2-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.2.1 GRUB2 Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#422-console-connection" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.2.2 Console Connection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#423-using-hwe-kernels-to-test-alternate-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.2.3 Using HWE Kernels To Test Alternate Versions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#43-advanced-systemd-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3 Advanced systemd Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.3 Advanced systemd Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#431-systemd-units" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3.1 Systemd Units
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#432-managing-units-with-systemctl" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3.2 Managing Units With systemctl
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#433-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3.3 Logging
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#434-troubleshooting-systemd" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.3.4 Troubleshooting systemd
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#44-systemd-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.4 systemd Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.4 systemd Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#441-manage-services" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.4.1 Manage Services
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#442-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.4.2 Logging
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#443-create-a-custom-service" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.4.3 Create A Custom Service
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#45-on-demand-processes" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.5 On Demand Processes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#46-on-demand-and-scheduled-tasks-lab" class="md-nav__link">
+    <span class="md-ellipsis">
+       4.6 On Demand And Scheduled Tasks Lab
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4.6 On Demand And Scheduled Tasks Lab">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#part-1-systemd-timers-preferred-method" class="md-nav__link">
+    <span class="md-ellipsis">
+       Part 1: systemd Timers (Preferred Method)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#part-2-legacy-tools-at-and-batch" class="md-nav__link">
+    <span class="md-ellipsis">
+       Part 2: Legacy Tools - at And batch
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="boot-and-system-initialization">Boot And System Initialization<a class="headerlink" href="#boot-and-system-initialization" title="Permanent link">&para;</a></h1>
+<p>This chapter covers GRUB2 boot configuration, systemd unit management, journald logging, and scheduled task tooling used in the lab.</p>
+<p>In this chapter you will:</p>
+<ul>
+<li>understand GRUB2 boot configuration</li>
+<li>recognize LVM-aware boot setups</li>
+<li>manage services and units with <code>systemd</code></li>
+<li>troubleshoot boot and service startup issues</li>
+<li>create custom services and timers</li>
+<li>schedule tasks with <code>systemd</code>, <code>at</code>, and <code>batch</code></li>
+</ul>
+<h2 id="41-what-is-grub2"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 4.1 What Is GRUB2?<a class="headerlink" href="#41-what-is-grub2" title="Permanent link">&para;</a></h2>
+<p>To understand how a modern Ubuntu system starts, it helps to think of boot as a relay race. Each stage passes control to the next until the operating system is fully loaded.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Background terms:</p>
+<ul>
+<li><code>GPT</code> (GUID Partition Table) is the modern partition layout standard. It replaces older MBR-based layouts and supports large disks and many partitions.</li>
+<li><code>UEFI</code> (Unified Extensible Firmware Interface) is the firmware on the motherboard. It replaces the older BIOS and can read filesystems such as FAT32.</li>
+</ul>
+</div>
+<p><strong>1. UEFI Firmware</strong></p>
+<p>When the machine powers on, the UEFI firmware starts first.</p>
+<ul>
+<li>It reads the EFI System Partition (<code>ESP</code>).</li>
+<li>It finds Ubuntu's GRUB2 <code>.efi</code> loader.</li>
+<li>It starts GRUB2.</li>
+</ul>
+<p><strong>2. GRUB2</strong></p>
+<p>GRUB2 is Ubuntu's default bootloader. It supports both UEFI/GPT and older BIOS/MBR systems.</p>
+<p>Its main job is to locate the operating system files and prepare the next hand-off.</p>
+<ul>
+<li>It reads its generated configuration from <code>grub.cfg</code>.</li>
+<li>It identifies the kernel to boot.</li>
+<li>It prepares the initrd.</li>
+</ul>
+<p>Menu behavior is usually controlled from <code>/etc/default/grub</code>.</p>
+<p><strong>3. Kernel And initrd</strong></p>
+<p>GRUB2 loads two important files into memory and then transfers control.</p>
+<ul>
+<li>The kernel (<code>vmlinuz</code>) is the core of the operating system.</li>
+<li>The <code>initrd</code> (initial RAM disk) is a temporary filesystem that includes the drivers and tools needed to reach the real root filesystem.</li>
+</ul>
+<p>After the kernel starts, it uses the initrd to find and mount the real Ubuntu root filesystem.</p>
+<p><strong>4. systemd And Userspace</strong></p>
+<p>Once the real root filesystem is available, the kernel starts <code>systemd</code> as PID 1.</p>
+<ul>
+<li><code>systemd</code> starts services and targets.</li>
+<li>The system reaches the normal multi-user or graphical state.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Older systems may use BIOS and MBR instead of UEFI and GPT. The overall hand-off is similar, but the initial bootloader code is loaded from the MBR rather than from an EFI System Partition.</p>
+</div>
+<h3 id="grub2-and-lvm-root-setups"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> GRUB2 And LVM Root Setups<a class="headerlink" href="#grub2-and-lvm-root-setups" title="Permanent link">&para;</a></h3>
+<p>Ubuntu can be installed with LVM-backed root filesystems. In those cases, GRUB2 must be able to read logical volumes so it can locate the kernel and initrd at boot time. It does that by loading the <code>lvm.mod</code> module.</p>
+<p>Keeping <code>/boot</code> on a non-LVM partition is still a common recommendation, but GRUB2 can boot systems that use LVM for <code>/</code> when the required modules are present.</p>
+<h3 id="grub2-configuration-files"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> GRUB2 Configuration Files<a class="headerlink" href="#grub2-configuration-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>/etc/default/grub</code>: default menu behavior and kernel command-line settings</li>
+<li><code>/etc/grub.d/</code>: helper scripts used to build the final menu</li>
+<li><code>/boot/grub/grub.cfg</code>: generated boot menu used at startup</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Do not edit <code>/boot/grub/grub.cfg</code> directly. Regenerate it from <code>/etc/default/grub</code> and <code>/etc/grub.d/</code>.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Regenerate the GRUB menu configuration.</span>
+sudo<span class="w"> </span>update-grub
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>Sourcing file /etc/default/grub
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-...
+Found initrd image: /boot/initrd.img-...
+done
+</code></pre></div>
+</details>
+<p>Typical GRUB2 workflow:</p>
+<ol>
+<li>Edit <code>/etc/default/grub</code> or files under <code>/etc/grub.d/</code>.</li>
+<li>Run <code>sudo update-grub</code>.</li>
+<li>Reboot if you need to test the new boot configuration.</li>
+</ol>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>The GRUB workflow is:</p>
+<ul>
+<li>change <code>/etc/default/grub</code> or <code>/etc/grub.d/</code></li>
+<li>regenerate <code>/boot/grub/grub.cfg</code> with <code>update-grub</code></li>
+<li>reboot only when you need to test the result</li>
+</ul>
+</div>
+<h2 id="42-grub2-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 4.2 GRUB2 Lab<a class="headerlink" href="#42-grub2-lab" title="Permanent link">&para;</a></h2>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Run this lab on <code>LABVM</code> unless a step explicitly says to switch back to <code>LABHOST</code> for the libvirt console.</p>
+</div>
+<h3 id="421-grub2-configuration"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.2.1 GRUB2 Configuration<a class="headerlink" href="#421-grub2-configuration" title="Permanent link">&para;</a></h3>
+<p>This lab reviews the active GRUB2 configuration and updates the menu behavior.</p>
+<p>Step 1: Connect to <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to LABVM as the ubuntu user over SSH.</span>
+ssh<span class="w"> </span>ubuntu@192.168.101.50
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ubuntu@192.168.101.50&#39;s password:
+Welcome to Ubuntu 24.04 LTS (GNU/Linux ...)
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use the explicit <code>ubuntu@192.168.101.50</code> form here. A local SSH alias such as <code>labvm</code> may connect as a different user.</p>
+</div>
+<p>Step 2: Inspect the current GRUB defaults.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display the current GRUB defaults file.</span>
+cat<span class="w"> </span>/etc/default/grub
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code># If you change this file, run &#39;update-grub&#39; afterwards to update
+# /boot/grub/grub.cfg.
+...
+GRUB_DEFAULT=0
+GRUB_TIMEOUT_STYLE=hidden
+GRUB_TIMEOUT=0
+GRUB_DISTRIBUTOR=`( . /etc/os-release; echo ${NAME:-Ubuntu} ) 2&gt;/dev/null || echo Ubuntu`
+GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet splash&quot;
+GRUB_CMDLINE_LINUX=&quot;&quot;
+</code></pre></div>
+</details>
+<p>Step 3: List the available boot menu entries.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List GRUB menu entries from the generated configuration.</span>
+sudo<span class="w"> </span>awk<span class="w"> </span>-F<span class="se">\&#39;</span><span class="w"> </span><span class="s1">&#39;$1==&quot;menuentry &quot; {print i++ &quot; : &quot; $2}&#39;</span><span class="w"> </span>/boot/grub/grub.cfg
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>0 : Ubuntu
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some systems will show more than one entry if multiple kernels are installed.</p>
+</div>
+<p>Step 4: Install <code>vim</code> (optional).</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install vim for editing GRUB settings.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>vim
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Reading package lists...
+Building dependency tree...
+Reading state information...
+vim is already the newest version (2:9.1.0016-1ubuntu7.10).
+0 upgraded, 0 newly installed, 0 to remove and 17 not upgraded.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Ubuntu ships with <code>nano</code> by default. Any text editor is fine here.</p>
+</div>
+<p>Step 5: Remove the cloud image GRUB drop-in if it is present.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Remove the cloud image GRUB defaults drop-in if it exists.</span>
+sudo<span class="w"> </span>rm<span class="w"> </span>-f<span class="w"> </span>/etc/default/grub.d/50-cloudimg-settings.cfg
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 6: Edit the main GRUB defaults file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Edit the GRUB defaults file so the menu stays visible and remembers the last selection.</span>
+sudo<span class="w"> </span>vim<span class="w"> </span>/etc/default/grub
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>&quot;/etc/default/grub&quot; ...
+</code></pre></div>
+</details>
+<p>Set these values while editing:</p>
+<div class="highlight"><pre><span></span><code><span class="na">GRUB_DEFAULT</span><span class="o">=</span><span class="s">&quot;saved&quot;</span>
+<span class="na">GRUB_SAVEDEFAULT</span><span class="o">=</span><span class="s">&quot;true&quot;</span>
+<span class="na">GRUB_TIMEOUT</span><span class="o">=</span><span class="s">10</span>
+<span class="na">GRUB_TIMEOUT_STYLE</span><span class="o">=</span><span class="s">&quot;menu&quot;</span>
+</code></pre></div>
+<p>These settings tell GRUB to remember the last selected entry and display the menu for 10 seconds.</p>
+<p>Step 7: Regenerate the boot menu.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Rebuild the generated GRUB configuration.</span>
+sudo<span class="w"> </span>update-grub
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Sourcing file `/etc/default/grub&#39;
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-6.8.0-107-generic
+Found initrd image: /boot/initrd.img-6.8.0-107-generic
+Found linux image: /boot/vmlinuz-6.8.0-106-generic
+Found initrd image: /boot/initrd.img-6.8.0-106-generic
+Warning: os-prober will not be executed to detect other bootable partitions.
+Systems on them will not be added to the GRUB boot configuration.
+Check GRUB_DISABLE_OS_PROBER documentation entry.
+Adding boot menu entry for UEFI Firmware Settings ...
+done
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On this VM, multiple installed kernels still produced a single top-level <code>0 : Ubuntu</code> menu entry. Additional kernels were grouped under advanced options rather than listed as separate top-level entries.</p>
+</div>
+<h3 id="422-console-connection"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.2.2 Console Connection<a class="headerlink" href="#422-console-connection" title="Permanent link">&para;</a></h3>
+<p>By default, the libvirt console may not show the GRUB menu. This lab switches GRUB to a serial-capable console setup so the menu is visible from <code>virsh console</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This section builds on the menu settings from <code>4.2.1</code>. Here you only add the serial-console-specific GRUB settings needed for <code>virsh console</code>.</p>
+</div>
+<p>Step 1: Edit <code>/etc/default/grub</code> and add the serial console settings on <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Edit the GRUB defaults file and add the serial-console settings for virsh console access.</span>
+sudo<span class="w"> </span>vim<span class="w"> </span>/etc/default/grub
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>&quot;/etc/default/grub&quot; ...
+</code></pre></div>
+</details>
+<p>Add or update these lines while editing:</p>
+<div class="highlight"><pre><span></span><code><span class="na">GRUB_CMDLINE_LINUX</span><span class="o">=</span><span class="s">&quot;console=tty0 console=ttyS0,115200n8 rootdelay=60&quot;</span>
+<span class="na">GRUB_TERMINAL</span><span class="o">=</span><span class="s">&quot;console serial&quot;</span>
+<span class="na">GRUB_SERIAL_COMMAND</span><span class="o">=</span><span class="s">&quot;serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1&quot;</span>
+</code></pre></div>
+<p>Step 2: Confirm the file contents.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show only the serial-console-related GRUB settings.</span>
+grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">&#39;^(GRUB_CMDLINE_LINUX|GRUB_TERMINAL|GRUB_SERIAL_COMMAND)=&#39;</span><span class="w"> </span>/etc/default/grub
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>GRUB_CMDLINE_LINUX=&quot;console=tty0 console=ttyS0,115200n8 rootdelay=60&quot;
+GRUB_TERMINAL=&quot;console serial&quot;
+GRUB_SERIAL_COMMAND=&quot;serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1&quot;
+</code></pre></div>
+</details>
+<p>Step 3: Regenerate the GRUB configuration.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Rebuild the generated GRUB configuration after editing defaults.</span>
+sudo<span class="w"> </span>update-grub
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Sourcing file `/etc/default/grub&#39;
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-6.8.0-107-generic
+Found initrd image: /boot/initrd.img-6.8.0-107-generic
+Found linux image: /boot/vmlinuz-6.8.0-106-generic
+Found initrd image: /boot/initrd.img-6.8.0-106-generic
+Warning: os-prober will not be executed to detect other bootable partitions.
+Systems on them will not be added to the GRUB boot configuration.
+Check GRUB_DISABLE_OS_PROBER documentation entry.
+Adding boot menu entry for UEFI Firmware Settings ...
+done
+</code></pre></div>
+</details>
+<p>Step 4: Exit <code>LABVM</code> and return to <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Exit the LABVM shell.</span>
+<span class="nb">exit</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>logout
+Connection to 192.168.101.50 closed.
+</code></pre></div>
+</details>
+<p>Step 5: Open the libvirt console from <code>LABHOST</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Attach to the LABVM serial console from the host.</span>
+virsh<span class="w"> </span>console<span class="w"> </span>ubuntu
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Connected to domain &#39;ubuntu&#39;
+Escape character is ^]
+
+ubuntu login:
+</code></pre></div>
+</details>
+<p>Log in on the console as <code>ubuntu</code> before running the reboot command in the next step.</p>
+<p>Step 6: Reboot from the console and watch for the GRUB menu.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reboot LABVM from the serial console.</span>
+sudo<span class="w"> </span>reboot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Broadcast message from root@ubuntu on pts/0 (...)
+
+The system will reboot now!
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the console shows <code>Press any key to continue...</code>, press <code>Enter</code>.</p>
+</div>
+<div class="admonition success">
+<p class="admonition-title">Success</p>
+<p>Success means:</p>
+<ul>
+<li>the GRUB menu was visible during boot</li>
+<li>the serial console showed the login prompt after reboot</li>
+</ul>
+</div>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>If the GRUB menu is not visible in <code>virsh console</code>:</p>
+<ul>
+<li>add serial console settings in <code>/etc/default/grub</code></li>
+<li>run <code>sudo update-grub</code></li>
+<li>reboot and reconnect through the libvirt console</li>
+</ul>
+</div>
+<h3 id="423-using-hwe-kernels-to-test-alternate-versions"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.2.3 Using HWE Kernels To Test Alternate Versions<a class="headerlink" href="#423-using-hwe-kernels-to-test-alternate-versions" title="Permanent link">&para;</a></h3>
+<p>Ubuntu LTS releases provide two supported kernel tracks:</p>
+<ul>
+<li>General Availability (GA): the default kernel series that ships with the LTS release</li>
+<li>Hardware Enablement (HWE): a newer supported kernel series backported from a more recent Ubuntu release</li>
+</ul>
+<p>This lab installs the HWE kernel so you can compare multiple supported kernels from the GRUB menu.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is the supported way to test newer Ubuntu kernel versions on an LTS release. It is different from using unsupported kernels from the Ubuntu Mainline PPA.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>The installed HWE kernel still uses the <code>-generic</code> suffix in <code>uname -r</code> and package names such as <code>linux-image-6.17.0-20-generic</code>. In this context, <code>hwe</code> refers to the Ubuntu kernel track selected by packages such as <code>linux-generic-hwe-24.04</code>, while <code>generic</code> is the kernel flavor.</p>
+</div>
+<p>Step 1: Check the currently running kernel on <code>LABVM</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the currently running kernel version.</span>
+uname<span class="w"> </span>-r
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>6.8.0-107-generic
+</code></pre></div>
+</details>
+<p>Step 2: Refresh package metadata.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Refresh the APT package index before installing the HWE kernel.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>update
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Hit:1 http://security.ubuntu.com/ubuntu noble-security InRelease
+Hit:2 http://archive.ubuntu.com/ubuntu noble InRelease
+Hit:3 http://archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:4 http://archive.ubuntu.com/ubuntu noble-backports InRelease
+...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+17 packages can be upgraded.
+</code></pre></div>
+</details>
+<p>Step 3: Install the HWE kernel meta-package.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install the Ubuntu 24.04 HWE kernel stack.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>--install-recommends<span class="w"> </span>linux-generic-hwe-24.04
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<p>```text
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.</p>
+<p>Reading package lists... Done
+Building dependency tree... Done
+Reading state information...
+The following NEW packages will be installed:
+  linux-generic-hwe-24.04
+  linux-image-6.17.0-20-generic
+  linux-image-generic-hwe-24.04
+  ...
+...
+Need to get 861 MB of archives.
+After this operation, 1000 MB of additional disk space will be used.
+ Setting up linux-image-6.17.0-20-generic ...
+ Setting up linux-generic-hwe-24.04 ...
+ Pending kernel upgrade
+ ```</p>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In this step, <code>linux-generic-hwe-24.04</code> is the HWE meta-package. It pulls in the actual bootable kernel image, which in this example is <code>linux-image-6.17.0-20-generic</code>.</p>
+<p>For the rest of this lab, the kernel you are looking for in GRUB and in <code>uname -r</code> is <code>6.17.0-20-generic</code>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This package install can take a while and may download several hundred megabytes. The important success signals are that the <code>linux-generic-hwe-24.04</code> meta-package installs and a new <code>linux-image-...-generic</code> package appears in the output.</p>
+</div>
+<p>Step 4: Check the installed HWE meta-packages.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show whether the Ubuntu 24.04 HWE meta-packages are installed and which version they select.</span>
+apt-cache<span class="w"> </span>policy<span class="w"> </span>linux-generic-hwe-24.04<span class="w"> </span>linux-image-generic-hwe-24.04
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>linux-generic-hwe-24.04:
+  Installed: 6.17.0-20.20~24.04.1
+  Candidate: 6.17.0-20.20~24.04.1
+  Version table:
+ *** 6.17.0-20.20~24.04.1 500
+        500 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     6.8.0-31.31 500
+        500 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages
+linux-image-generic-hwe-24.04:
+  Installed: 6.17.0-20.20~24.04.1
+  Candidate: 6.17.0-20.20~24.04.1
+  Version table:
+ *** 6.17.0-20.20~24.04.1 500
+        500 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     6.8.0-31.31 500
+        500 http://archive.ubuntu.com/ubuntu noble/main amd64 Packages
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Read this output as follows:</p>
+<ul>
+<li><code>Installed:</code> shows the HWE meta-package version currently installed on the system</li>
+<li><code>Candidate:</code> shows the version APT would install if you ran the command again now</li>
+<li>when <code>Installed:</code> and <code>Candidate:</code> match, the system is already on the current HWE track offered by your repositories</li>
+<li>the older <code>6.8.0-31.31</code> entry shown from <code>noble/main</code> is the original GA track package, not the HWE kernel you are installing here</li>
+</ul>
+</div>
+<p>Step 5: List installed kernel image packages.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List installed linux-image packages.</span>
+dpkg<span class="w"> </span>--list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>linux-image
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ii  linux-image-6.17.0-20-generic         ...
+ii  linux-image-6.8.0-106-generic         ...
+ii  linux-image-6.8.0-107-generic         ...
+ii  linux-image-generic-hwe-24.04         ...
+ii  linux-image-virtual                   ...
+</code></pre></div>
+</details>
+<p>Step 6: Check the GRUB menu entries again.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List the current GRUB menu entries after installing another kernel.</span>
+sudo<span class="w"> </span>awk<span class="w"> </span>-F<span class="se">\&#39;</span><span class="w"> </span><span class="s1">&#39;$1==&quot;menuentry &quot; {print i++ &quot; : &quot; $2}&#39;</span><span class="w"> </span>/boot/grub/grub.cfg
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>0 : Ubuntu
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Additional kernels are usually grouped under <code>Advanced options for Ubuntu</code>, so the top-level menu may still show only <code>0 : Ubuntu</code> even after the HWE kernel is installed.</p>
+</div>
+<p>Step 7: Edit GRUB so the menu remains visible long enough for selection.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Edit the GRUB defaults file with the default Ubuntu editor.</span>
+sudo<span class="w"> </span>nano<span class="w"> </span>/etc/default/grub
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>GNU nano ... /etc/default/grub
+</code></pre></div>
+</details>
+<p>Use these settings if they are not already present:</p>
+<div class="highlight"><pre><span></span><code><span class="na">GRUB_DEFAULT</span><span class="o">=</span><span class="s">&quot;saved&quot;</span>
+<span class="na">GRUB_SAVEDEFAULT</span><span class="o">=</span><span class="s">&quot;true&quot;</span>
+<span class="na">GRUB_TIMEOUT</span><span class="o">=</span><span class="s">10</span>
+<span class="na">GRUB_TIMEOUT_STYLE</span><span class="o">=</span><span class="s">&quot;menu&quot;</span>
+</code></pre></div>
+<p>Step 8: Regenerate the GRUB configuration if you changed the file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Rebuild the GRUB menu after adjusting the timeout settings.</span>
+sudo<span class="w"> </span>update-grub
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Sourcing file `/etc/default/grub&#39;
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-6.17.0-20-generic
+Found initrd image: /boot/initrd.img-6.17.0-20-generic
+Found linux image: /boot/vmlinuz-6.8.0-107-generic
+Found initrd image: /boot/initrd.img-6.8.0-107-generic
+Found linux image: /boot/vmlinuz-6.8.0-106-generic
+Found initrd image: /boot/initrd.img-6.8.0-106-generic
+Warning: os-prober will not be executed to detect other bootable partitions.
+Systems on them will not be added to the GRUB boot configuration.
+Check GRUB_DISABLE_OS_PROBER documentation entry.
+Adding boot menu entry for UEFI Firmware Settings ...
+done
+</code></pre></div>
+</details>
+<p>Step 9: Reboot and select a kernel from the GRUB menu.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reboot LABVM to choose a different kernel from GRUB.</span>
+sudo<span class="w"> </span>reboot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The system will reboot now!
+</code></pre></div>
+</details>
+<p>After the SSH session closes, you are back on <code>LABHOST</code>. Use the libvirt console in the next step so you can watch the GRUB menu and choose the HWE kernel.</p>
+<p>Step 10: Reattach from <code>LABHOST</code> using the libvirt console.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reconnect to the LABVM serial console.</span>
+virsh<span class="w"> </span>console<span class="w"> </span>ubuntu
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Connected to domain &#39;ubuntu&#39;
+Escape character is ^]
+
+ubuntu login:
+</code></pre></div>
+</details>
+<p>Reconnect as soon as the SSH session closes. If the system has already booted past the GRUB menu by the time you attach, reboot once from the console and watch the next boot.</p>
+<p>When the system finishes booting, log in on the console as <code>ubuntu</code> so you can run the next command.</p>
+<p>Step 11: Confirm which kernel is running after boot.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Verify the active kernel after the reboot.</span>
+uname<span class="w"> </span>-r
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>6.17.0-20-generic
+</code></pre></div>
+</details>
+<div class="admonition success">
+<p class="admonition-title">Success</p>
+<p>You should now be running the HWE kernel.</p>
+<p>A good confirmation is:</p>
+<ul>
+<li>the system boots normally after you select <code>6.17.0-20-generic</code> in GRUB</li>
+<li><code>uname -r</code> shows <code>6.17.0-20-generic</code></li>
+</ul>
+</div>
+<p>Step 12: Reboot again if you want to observe the menu or switch back.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reboot once more from the console.</span>
+sudo<span class="w"> </span>reboot
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The system will reboot now!
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use <code>Ctrl + ]</code> to leave the <code>virsh console</code> session.</p>
+</div>
+<p>For background on supported Ubuntu kernel tracks, see the <a href="https://ubuntu.com/kernel/lifecycle">Ubuntu Kernel Lifecycle</a>.</p>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>For Ubuntu kernel tracks, remember:</p>
+<ul>
+<li>GA is the default LTS kernel track</li>
+<li>HWE is a newer supported kernel track for the same LTS release</li>
+<li>installing the HWE meta-package gives you another supported kernel to test from GRUB</li>
+</ul>
+</div>
+<h2 id="43-advanced-systemd-usage"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 4.3 Advanced systemd Usage<a class="headerlink" href="#43-advanced-systemd-usage" title="Permanent link">&para;</a></h2>
+<p><code>systemd</code> is Ubuntu's init system and service manager. It is the first userspace process started by the kernel, and it is responsible for bringing the system up to its normal running state.</p>
+<p>This chapter focuses on four common <code>systemd</code> tasks:</p>
+<ul>
+<li>start and stop services</li>
+<li>enable services at boot</li>
+<li>inspect unit configuration</li>
+<li>review logs and boot timing</li>
+</ul>
+<p>Most of the things <code>systemd</code> manages are called units. A service is one kind of unit, but mounts, timers, sockets, and targets are units too.</p>
+<p>Packaged unit files are usually stored under <code>/lib/systemd/system/</code>. Local overrides and custom units belong under <code>/etc/systemd/system/</code>.</p>
+<p>When you need to change the behavior of a packaged service, prefer an override rather than editing the vendor unit directly. The <code>systemctl edit libvirtd.service</code> workflow creates or opens a drop-in file under <code>/etc/systemd/system/libvirtd.service.d/</code>.</p>
+<p>Use <code>systemctl cat</code> to see the full merged unit definition, including vendor content and local overrides.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display the full merged unit definition, including drop-ins.</span>
+systemctl<span class="w"> </span>cat<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code># /usr/lib/systemd/system/libvirtd.service
+[Unit]
+Description=libvirt legacy monolithic daemon
+...
+</code></pre></div>
+</details>
+<h3 id="431-systemd-units"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.3.1 Systemd Units<a class="headerlink" href="#431-systemd-units" title="Permanent link">&para;</a></h3>
+<p>Think of a unit as a small configuration file that tells <code>systemd</code> what to manage and how to manage it.</p>
+<p>The unit suffix tells you what kind of object it is.</p>
+<p>Common unit types include:</p>
+<ul>
+<li><code>*.service</code>: system services</li>
+<li><code>*.socket</code>: socket-activated services</li>
+<li><code>*.mount</code>: filesystem mount points</li>
+<li><code>*.timer</code>: scheduled tasks</li>
+<li><code>*.target</code>: groups of related units and boot states</li>
+</ul>
+<p>Most examples here use <code>*.service</code> units, but the same basic ideas apply to the others.</p>
+<p>Example unit file:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">Unit that runs the foo daemon</span>
+<span class="na">Documentation</span><span class="o">=</span><span class="s">man:foo(1)</span>
+<span class="na">Wants</span><span class="o">=</span><span class="s">network-online.target</span>
+<span class="na">After</span><span class="o">=</span><span class="s">network-online.target</span>
+
+<span class="k">[Service]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">forking</span>
+<span class="na">Environment</span><span class="o">=</span><span class="s">statedir=/var/cache/foo</span>
+<span class="na">ExecStartPre</span><span class="o">=</span><span class="s">/usr/bin/mkdir -p ${statedir}</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/foo-daemon --arg1 &quot;hello world&quot; --statedir ${statedir}</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+</code></pre></div>
+<p>Interpretation:</p>
+<ul>
+<li><code>[Unit]</code> says: "When started, this service depends on <code>network-online.target</code> and should start after it." </li>
+<li><code>[Service]</code> says: "Start <code>foo-daemon</code>, create <code>/var/cache/foo</code> first, and pass that path in as <code>${statedir}</code>." </li>
+<li><code>[Install]</code> says: "If enabled, hook this service into <code>multi-user.target</code> so it starts during normal boot." </li>
+</ul>
+<p><code>ExecStartPre=</code> runs before the main service process and is commonly used for setup tasks.</p>
+<p>Units can depend on other units. Use <code>systemctl list-dependencies</code> to see that relationship tree.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the dependency tree for a unit.</span>
+systemctl<span class="w"> </span>list-dependencies<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>libvirtd.service
+● ├─libvirtd-admin.socket
+● ├─libvirtd-ro.socket
+● ├─libvirtd.socket
+● ├─system.slice
+● ├─systemd-machined.service
+● ├─virtlockd.socket
+● ├─virtlogd.socket
+● └─sysinit.target
+...
+</code></pre></div>
+</details>
+<p><code>Requires=</code> means the dependency must be present for the unit to start. <code>Wants=</code> means the dependency is desirable but not strictly required.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the units that depend on a given unit.</span>
+systemctl<span class="w"> </span>list-dependencies<span class="w"> </span>--reverse<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>libvirtd.service
+● └─multi-user.target
+●   └─graphical.target
+</code></pre></div>
+</details>
+<p>Meaning:</p>
+<ul>
+<li>if the system boots to <code>graphical.target</code>, it also reaches <code>multi-user.target</code></li>
+<li>as part of that target, <code>libvirtd.service</code> is included</li>
+</ul>
+<h3 id="432-managing-units-with-systemctl"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.3.2 Managing Units With systemctl<a class="headerlink" href="#432-managing-units-with-systemctl" title="Permanent link">&para;</a></h3>
+<p><code>systemctl</code> is the main command used to work with units.</p>
+<p>The easiest way to think about these commands is:</p>
+<ul>
+<li><code>start</code>, <code>stop</code>, <code>restart</code>, and <code>reload</code> affect the current running system</li>
+<li><code>enable</code> and <code>disable</code> affect what happens at boot</li>
+<li><code>status</code> and <code>is-enabled</code> help you inspect the current state</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sudo systemctl start &lt;unit&gt;</code></td>
+<td>Start a unit immediately</td>
+</tr>
+<tr>
+<td><code>sudo systemctl stop &lt;unit&gt;</code></td>
+<td>Stop a running unit</td>
+</tr>
+<tr>
+<td><code>sudo systemctl restart &lt;unit&gt;</code></td>
+<td>Restart a unit, or start it if it is stopped</td>
+</tr>
+<tr>
+<td><code>sudo systemctl reload &lt;unit&gt;</code></td>
+<td>Reload the unit configuration without a full restart, if supported</td>
+</tr>
+<tr>
+<td><code>sudo systemctl enable &lt;unit&gt;</code></td>
+<td>Start the unit automatically at boot</td>
+</tr>
+<tr>
+<td><code>sudo systemctl disable &lt;unit&gt;</code></td>
+<td>Prevent the unit from starting automatically at boot</td>
+</tr>
+<tr>
+<td><code>sudo systemctl status &lt;unit&gt;</code></td>
+<td>Show current state, recent logs, and process details</td>
+</tr>
+<tr>
+<td><code>sudo systemctl is-enabled &lt;unit&gt;</code></td>
+<td>Check whether the unit is enabled at boot</td>
+</tr>
+</tbody>
+</table>
+<p><code>sudo systemctl enable --now myservice.service</code> is a useful shortcut because it enables the unit for future boots and starts it immediately.</p>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>The easiest <code>systemctl</code> split is:</p>
+<ul>
+<li><code>start</code>, <code>stop</code>, <code>restart</code>, and <code>reload</code> affect the running system now</li>
+<li><code>enable</code> and <code>disable</code> affect boot behavior</li>
+<li><code>status</code>, <code>show</code>, and <code>cat</code> help you inspect what systemd is doing</li>
+</ul>
+</div>
+<h3 id="433-logging"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.3.3 Logging<a class="headerlink" href="#433-logging" title="Permanent link">&para;</a></h3>
+<p><code>systemd-journald</code> collects logs from services, the kernel, and other system components.</p>
+<p>Unlike plain text logs under <code>/var/log</code>, the journal can be filtered by unit, time range, severity, and boot session.</p>
+<p>By default, the journal may only persist logs for the current boot if it is using <code>/run/log/journal/</code>. To keep logs across reboots, create <code>/var/log/journal/</code>.</p>
+<p><code>journalctl</code> is the main command used to query journal data. The lab in <code>4.4.2</code> covers the most useful filters.</p>
+<h3 id="434-troubleshooting-systemd"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.3.4 Troubleshooting systemd<a class="headerlink" href="#434-troubleshooting-systemd" title="Permanent link">&para;</a></h3>
+<p>Use <code>systemd-analyze</code> when you need to inspect boot timing or identify slow-starting services.</p>
+<p>This is most useful when a system feels slow during startup and you want to see which units took the most time.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show services ordered by the time they spent starting.</span>
+systemd-analyze<span class="w"> </span>blame
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>30.218s apt-daily-upgrade.service
+ 9.941s snapd.service
+ 1.056s systemd-networkd-wait-online.service
+ ...
+  30ms libvirtd.service
+</code></pre></div>
+</details>
+<p>The output is a good hint, but it is not always the full root cause. A slow unit may simply be waiting for another dependency.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Generate an SVG boot timeline in the current directory.</span>
+systemd-analyze<span class="w"> </span>plot<span class="w"> </span>&gt;<span class="w"> </span>plot.svg
+</code></pre></div>
+<details class="quote">
+<summary>Reference output</summary>
+<div class="highlight"><pre><span></span><code>No terminal output. A file named plot.svg is created in the current directory.
+</code></pre></div>
+</details>
+<p>Open <code>plot.svg</code> in a browser if you want a visual timeline of the boot sequence. If you run the command from your home directory on <code>LABHOST</code>, the file will usually be created as <code>~/plot.svg</code>.</p>
+<p>To make the journal persistent across reboots, create <code>/var/log/journal/</code> and then ask <code>journald</code> to reopen its files.</p>
+<h2 id="44-systemd-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 4.4 systemd Lab<a class="headerlink" href="#44-systemd-lab" title="Permanent link">&para;</a></h2>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Run this lab on <code>LABHOST</code> unless a step explicitly says to switch to <code>LABVM</code>.</p>
+</div>
+<h3 id="441-manage-services"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.4.1 Manage Services<a class="headerlink" href="#441-manage-services" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise reviews the core <code>systemctl</code> inspection and service-management commands. Success means you can recognize the difference between loaded, running, and failed units, and you can stop and start <code>libvirtd.service</code> without losing track of its socket-activated behavior.</p>
+</div>
+<p>Step 1: List units of type <code>service</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List all loaded service units.</span>
+systemctl<span class="w"> </span>list-units<span class="w"> </span>--type<span class="o">=</span>service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>UNIT                                     LOAD   ACTIVE SUB     DESCRIPTION
+apache2.service                          loaded active running The Apache HTTP Server
+cron.service                             loaded active running Regular background program processing daemon
+libvirtd.service                         loaded active running libvirt legacy monolithic daemon
+ssh.service                              loaded active running OpenBSD Secure Shell server
+...
+63 loaded units listed.
+</code></pre></div>
+</details>
+<p>Step 2: Show only running services.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List only service units that are currently running.</span>
+systemctl<span class="w"> </span>list-units<span class="w"> </span>--type<span class="o">=</span>service<span class="w"> </span>--state<span class="o">=</span>running
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>UNIT                        LOAD   ACTIVE SUB     DESCRIPTION
+dbus.service                loaded active running D-Bus System Message Bus
+libvirtd.service            loaded active running libvirt legacy monolithic daemon
+ssh.service                 loaded active running OpenBSD Secure Shell server
+...
+25 loaded units listed.
+</code></pre></div>
+</details>
+<p>Step 3: Search for services related to SSH.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Search the unit list for SSH-related entries.</span>
+systemctl<span class="w"> </span>-a<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>ssh
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ssh.service           loaded    active   running   OpenBSD Secure Shell server
+sshd-keygen.service   not-found inactive dead      sshd-keygen.service
+sshd.service          not-found inactive dead      sshd.service
+ssh.socket            loaded    active   running   OpenBSD Secure Shell server socket
+</code></pre></div>
+</details>
+<p>Step 4: Stop <code>libvirtd.service</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Stop the libvirt daemon.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>stop<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Stopping &#39;libvirtd.service&#39;, but its triggering units are still active:
+libvirtd.socket, libvirtd-ro.socket, libvirtd-admin.socket
+</code></pre></div>
+</details>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Stopping <code>libvirtd.service</code> can disconnect <code>LABVM</code> from the host-side management workflow.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On this host, <code>libvirtd</code> is socket-activated. Stopping <code>libvirtd.service</code> does not stop its sockets, so the service can be started again automatically if one of those sockets is used.</p>
+</div>
+<p>Step 5: Check the unit state after stopping it.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the current status of the libvirt daemon.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>○ libvirtd.service - libvirt legacy monolithic daemon
+     Loaded: loaded (/usr/lib/systemd/system/libvirtd.service; enabled; preset: enabled)
+     Active: inactive (dead)
+TriggeredBy: ● libvirtd.socket
+             ● libvirtd-ro.socket
+             ● libvirtd-admin.socket
+</code></pre></div>
+</details>
+<p>Step 6: Start <code>libvirtd.service</code> again.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start the libvirt daemon.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 7: Confirm it is running.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the current status after restarting libvirtd.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>● libvirtd.service - libvirt legacy monolithic daemon
+     Loaded: loaded (/usr/lib/systemd/system/libvirtd.service; enabled; preset: enabled)
+     Active: active (running)
+TriggeredBy: ● libvirtd.socket
+             ● libvirtd-ro.socket
+             ● libvirtd-admin.socket
+</code></pre></div>
+</details>
+<p>Step 8: Inspect the unit definition.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display the libvirtd unit definition and any drop-ins.</span>
+systemctl<span class="w"> </span>cat<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code># /usr/lib/systemd/system/libvirtd.service
+[Unit]
+Description=libvirt legacy monolithic daemon
+...
+</code></pre></div>
+</details>
+<p>Step 9: List the unit dependencies.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the dependency tree for libvirtd.</span>
+systemctl<span class="w"> </span>list-dependencies<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>libvirtd.service
+● ├─libvirtd-admin.socket
+● ├─libvirtd-ro.socket
+● ├─libvirtd.socket
+● ├─system.slice
+...
+</code></pre></div>
+</details>
+<p>Step 10: Show the low-level unit properties.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display detailed key-value properties for libvirtd.</span>
+systemctl<span class="w"> </span>show<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Type=notify
+Id=libvirtd.service
+Names=libvirtd.service
+ActiveState=active
+SubState=running
+UnitFileState=enabled
+...
+</code></pre></div>
+</details>
+<p>Step 11: Show failed units.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List units that are currently in a failed state.</span>
+systemctl<span class="w"> </span>--failed
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>UNIT                               LOAD   ACTIVE SUB    DESCRIPTION
+● lxd-installer@0-30818-1000.service loaded failed failed Helper to install lxd snap on demand
+...
+1 loaded units listed.
+</code></pre></div>
+</details>
+<p>Step 12: Show which services took the most time during boot.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show boot-time service startup delays.</span>
+systemd-analyze<span class="w"> </span>blame
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>30.218s apt-daily-upgrade.service
+ 9.941s snapd.service
+ 1.056s systemd-networkd-wait-online.service
+ ...
+  39ms libvirtd.service
+</code></pre></div>
+</details>
+<h3 id="442-logging"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.4.2 Logging<a class="headerlink" href="#442-logging" title="Permanent link">&para;</a></h3>
+<p><code>journald</code> collects system logs. These steps review common <code>journalctl</code> queries.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise shows the most useful <code>journalctl</code> filters for day-to-day troubleshooting. Success means you can view logs by boot, by kernel messages, and by individual service unit.</p>
+</div>
+<p>Step 1: Show all available journal entries.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display the full journal.</span>
+sudo<span class="w"> </span>journalctl
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Apr 09 11:55:20 ubuntu kernel: Linux version 6.8.0-107-generic ...
+Apr 09 11:55:20 ubuntu kernel: Command line: BOOT_IMAGE=/boot/vmlinuz-6.8.0-107-generic ...
+...
+</code></pre></div>
+</details>
+<p>Step 2: Show logs from the current boot only.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display journal entries from the current boot.</span>
+sudo<span class="w"> </span>journalctl<span class="w"> </span>-b
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Apr 09 12:15:11 playground-rdu kernel: Linux version 6.8.0-107-generic ...
+Apr 09 12:15:11 playground-rdu kernel: Command line: BOOT_IMAGE=/boot/vmlinuz-6.8.0-107-generic ...
+...
+</code></pre></div>
+</details>
+<p>Step 3: Show logs from the previous boot.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display journal entries from the previous boot.</span>
+journalctl<span class="w"> </span>-b<span class="w"> </span>-1
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Apr 09 11:55:20 ubuntu kernel: Linux version 6.8.0-107-generic ...
+Apr 09 11:55:20 ubuntu kernel: Command line: BOOT_IMAGE=/boot/vmlinuz-6.8.0-107-generic ...
+...
+</code></pre></div>
+</details>
+<p>Step 4: Show logs from two boots ago.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display journal entries from two boots ago.</span>
+journalctl<span class="w"> </span>-b<span class="w"> </span>-2
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No journal boot entry found from the specified boot offset (-2).
+</code></pre></div>
+</details>
+<p>Step 5: List the recorded boots.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List the boots stored in the journal.</span>
+journalctl<span class="w"> </span>--list-boots
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>IDX BOOT ID                          FIRST ENTRY                 LAST ENTRY
+ -1 17dac92429a141038bf502503f40dcf6 Thu 2026-04-09 11:55:20 UTC Thu 2026-04-09 12:14:57 UTC
+  0 886745b284a54c6b863d34a4489256aa Thu 2026-04-09 12:15:11 UTC Fri 2026-04-10 18:06:18 UTC
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The number of retained boots depends on how much journal history is available on your system. It is normal to see only the current boot (<code>0</code>) and one previous boot (<code>-1</code>) in a small lab environment.</p>
+</div>
+<p>Step 6: Show kernel messages from the current boot.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display kernel log messages from the current boot.</span>
+sudo<span class="w"> </span>journalctl<span class="w"> </span>-k
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Apr 09 12:15:11 playground-rdu kernel: Linux version 6.8.0-107-generic ...
+Apr 09 12:15:11 playground-rdu kernel: Command line: BOOT_IMAGE=/boot/vmlinuz-6.8.0-107-generic ...
+...
+</code></pre></div>
+</details>
+<p>Step 7: Show kernel messages from two boots ago.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display kernel log messages from two boots ago.</span>
+sudo<span class="w"> </span>journalctl<span class="w"> </span>-k<span class="w"> </span>-b<span class="w"> </span>-2
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No journal boot entry found from the specified boot offset (-2).
+</code></pre></div>
+</details>
+<p>Step 8: Search for denied AppArmor events.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Filter kernel logs for AppArmor denials.</span>
+sudo<span class="w"> </span>journalctl<span class="w"> </span>-k<span class="w"> </span>-b<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;apparmor=&quot;DENIED&quot;&#39;</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 9: Show logs for the SSH service.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display journal entries for ssh.service.</span>
+sudo<span class="w"> </span>journalctl<span class="w"> </span>-u<span class="w"> </span>ssh.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Apr 09 12:15:15 playground-rdu systemd[1]: Started ssh.service - OpenBSD Secure Shell server.
+Apr 09 12:15:15 playground-rdu sshd[834]: Server listening on 0.0.0.0 port 22.
+Apr 09 12:15:15 playground-rdu sshd[841]: Accepted publickey for ubuntu from 10.10.0.13 ...
+...
+</code></pre></div>
+</details>
+<p>Step 10: Show logs for the libvirt service.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Display journal entries for libvirtd.service.</span>
+sudo<span class="w"> </span>journalctl<span class="w"> </span>-u<span class="w"> </span>libvirtd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Apr 10 18:00:05 playground-rdu systemd[1]: Starting libvirtd.service - libvirt legacy monolithic daemon...
+Apr 10 18:00:05 playground-rdu systemd[1]: Started libvirtd.service - libvirt legacy monolithic daemon.
+Apr 10 18:00:06 playground-rdu dnsmasq[11358]: read /etc/hosts - 8 names
+...
+</code></pre></div>
+</details>
+<p>Step 11: Create the persistent journal directory (optional, if persistence is not enabled).</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the directory used for persistent journal storage.</span>
+sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/var/log/journal
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 12: Restart <code>systemd-journald</code> so it uses persistent storage (optional, if persistence is not enabled).</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Restart journald after enabling persistent log storage.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>systemd-journald
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Full system logs often require <code>sudo</code>. Unprivileged users usually only see their own session logs unless they are members of the <code>systemd-journal</code> group.</p>
+</div>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>The most useful <code>journalctl</code> filters are:</p>
+<ul>
+<li><code>-b</code> for a specific boot</li>
+<li><code>-k</code> for kernel messages</li>
+<li><code>-u &lt;unit&gt;</code> for one service</li>
+<li><code>--list-boots</code> to see which boot histories are available</li>
+</ul>
+</div>
+<h3 id="443-create-a-custom-service"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> 4.4.3 Create A Custom Service<a class="headerlink" href="#443-create-a-custom-service" title="Permanent link">&para;</a></h3>
+<p>This lab creates and manages a simple custom service on <code>LABVM</code>.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise builds a simple custom service from a shell script and manages it with <code>systemctl</code>. Success means <code>myservice.service</code> starts, shows <code>active (running)</code> in <code>systemctl status</code>, and writes its log messages to the journal.</p>
+</div>
+<p>Step 1: Connect to <code>LABVM</code> if you are not already there.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to LABVM as the ubuntu user over SSH.</span>
+ssh<span class="w"> </span>ubuntu@192.168.101.50
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ubuntu@192.168.101.50&#39;s password:
+Welcome to Ubuntu 24.04 LTS (GNU/Linux ...)
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use the explicit <code>ubuntu@192.168.101.50</code> form here so you connect as <code>ubuntu</code>.</p>
+</div>
+<p>Step 2: Create the service script file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the script file used by the custom service.</span>
+touch<span class="w"> </span>~/service.sh
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 3: Write the service script contents.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Write the service script that logs a start message and loops.</span>
+sudo<span class="w"> </span>tee<span class="w"> </span>~/service.sh<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">#!/bin/bash</span>
+
+<span class="s">DATE=$(date &#39;+%Y-%m-%d %H:%M:%S&#39;)</span>
+<span class="s">echo &quot;Service started at ${DATE}&quot;</span>
+
+<span class="s">while :</span>
+<span class="s">do</span>
+<span class="s">  echo &quot;Service is running...&quot;</span>
+<span class="s">  sleep 30</span>
+<span class="s">done</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>#!/bin/bash
+
+DATE=$(date &#39;+%Y-%m-%d %H:%M:%S&#39;)
+echo &quot;Service started at ${DATE}&quot;
+...
+</code></pre></div>
+</details>
+<p>Step 4: Make the script executable.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Mark the service script as executable.</span>
+sudo<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>~/service.sh
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 5: Create the unit file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the custom myservice unit definition.</span>
+sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/system/myservice.service<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">[Unit]</span>
+<span class="s">Description=This is an example of a simple systemd service.</span>
+
+<span class="s">[Service]</span>
+<span class="s">Type=simple</span>
+<span class="s">ExecStart=/bin/bash /home/ubuntu/service.sh</span>
+
+<span class="s">[Install]</span>
+<span class="s">WantedBy=multi-user.target</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>[Unit]
+Description=This is an example of a simple systemd service.
+...
+</code></pre></div>
+</details>
+<p>Step 6: Apply standard permissions to the unit file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Set the unit file mode.</span>
+sudo<span class="w"> </span>chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>/etc/systemd/system/myservice.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 7: Reload systemd so it notices the new unit.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reload systemd after creating the custom unit file.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>daemon-reload
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 8: Start the custom service.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Start the custom service immediately.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>myservice.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 9: Enable the service for future boots.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Enable the custom service at boot.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>myservice.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Created symlink /etc/systemd/system/multi-user.target.wants/myservice.service -&gt; /etc/systemd/system/myservice.service.
+</code></pre></div>
+</details>
+<p>Step 10: Review the service status.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the service status and recent log lines.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>myservice.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>● myservice.service - This is an example of a simple systemd service.
+     Loaded: loaded (/etc/systemd/system/myservice.service; enabled; preset: enabled)
+     Active: active (running)
+    Main PID: ... (bash)
+         ...
+Apr 10 18:14:07 ubuntu bash[1908]: Service started at 2026-04-10 18:14:07
+Apr 10 18:14:07 ubuntu bash[1908]: Service is running...
+</code></pre></div>
+</details>
+<p>Step 11: Review the service logs.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show journal entries for the custom service.</span>
+sudo<span class="w"> </span>journalctl<span class="w"> </span>-u<span class="w"> </span>myservice.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Apr 10 18:14:07 ubuntu systemd[1]: Started myservice.service - This is an example of a simple systemd service..
+Apr 10 18:14:07 ubuntu bash[1908]: Service started at 2026-04-10 18:14:07
+Apr 10 18:14:07 ubuntu bash[1908]: Service is running...
+Apr 10 18:14:37 ubuntu bash[1908]: Service is running...
+</code></pre></div>
+</details>
+<p>Step 12: Stop the service.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Stop the custom service.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>stop<span class="w"> </span>myservice.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 13: Disable the service.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Disable the custom service so it no longer starts at boot.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>disable<span class="w"> </span>myservice.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Removed &quot;/etc/systemd/system/multi-user.target.wants/myservice.service&quot;.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Create custom unit files under <code>/etc/systemd/system/</code>. Package-managed unit files under <code>/lib/systemd/system/</code> can be replaced by package updates.</p>
+</div>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>The custom service workflow is:</p>
+<ul>
+<li>write the script you want to run</li>
+<li>create a unit file in <code>/etc/systemd/system/</code></li>
+<li>start it with <code>systemctl start</code></li>
+<li>enable it with <code>systemctl enable</code> if it should survive reboot</li>
+</ul>
+</div>
+<h2 id="45-on-demand-processes"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 4.5 On Demand Processes<a class="headerlink" href="#45-on-demand-processes" title="Permanent link">&para;</a></h2>
+<p>Ubuntu provides two common ways to schedule work:</p>
+<ul>
+<li><code>systemd</code> timers: the modern and preferred method</li>
+<li><code>at</code> and <code>batch</code>: older tools that are still available</li>
+</ul>
+<p>For most administrative tasks on modern Ubuntu systems, prefer <code>systemd</code> timers. They support both recurring schedules and one-time execution, and they integrate cleanly with service units and the journal.</p>
+<p>A timer does not usually run the command by itself. Instead, it triggers a matching service unit.</p>
+<ul>
+<li>the timer answers: when should this run?</li>
+<li>the service answers: what should run?</li>
+</ul>
+<p>Typical uses include:</p>
+<ul>
+<li>running jobs on a schedule</li>
+<li>delaying work until after boot</li>
+<li>reacting to file creation or other events</li>
+</ul>
+<p>Example timer unit:</p>
+<p><code>/etc/systemd/system/foo.timer</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">Run foo weekly</span>
+
+<span class="k">[Timer]</span>
+<span class="na">OnCalendar</span><span class="o">=</span><span class="s">weekly</span>
+<span class="na">Persistent</span><span class="o">=</span><span class="s">true</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">timers.target</span>
+</code></pre></div>
+<p>Matching service unit:</p>
+<p><code>/etc/systemd/system/foo.service</code></p>
+<div class="highlight"><pre><span></span><code><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">Job that does something</span>
+
+<span class="k">[Service]</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/local/bin/foo-script.sh</span>
+</code></pre></div>
+<p>In this example:</p>
+<ul>
+<li><code>foo.timer</code> says to run weekly</li>
+<li><code>foo.service</code> says which command should be executed</li>
+</ul>
+<p><code>systemd</code> can also trigger work from events such as file creation, network availability, device presence, or user login.</p>
+<p>The hands-on timer examples are in <code>4.6</code>.</p>
+<p>Legacy scheduling tools are still available when needed:</p>
+<ul>
+<li><code>at</code>: run a one-time job at a specific time</li>
+<li><code>batch</code>: run a job when system load is low enough</li>
+<li><code>atq</code>: list queued jobs</li>
+<li><code>atrm</code>: remove queued jobs</li>
+</ul>
+<p>Use these mainly when you need a quick one-off scheduled job and do not need a full <code>systemd</code> unit.</p>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>Keep the split simple:</p>
+<ul>
+<li>a timer answers when something should run</li>
+<li>a service answers what should run</li>
+<li><code>at</code> and <code>batch</code> are older tools for quick one-off jobs</li>
+</ul>
+</div>
+<h2 id="46-on-demand-and-scheduled-tasks-lab"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 1-5 5v11l5-4.5V1m2 4v13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V6c-1.45-1.1-3.55-1.5-5.5-1.5-1.95 0-4.05.4-5.5 1.5v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1M10 18.41C8.75 18.09 7.5 18 6.5 18c-1.06 0-2.32.19-3.5.5V7.13c.91-.4 2.14-.63 3.5-.63 1.36 0 2.59.23 3.5.63v11.28Z"/></svg></span> 4.6 On Demand And Scheduled Tasks Lab<a class="headerlink" href="#46-on-demand-and-scheduled-tasks-lab" title="Permanent link">&para;</a></h2>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Run Part 1 on <code>LABHOST</code>. Run Part 2 on <code>LABVM</code>.</p>
+</div>
+<h3 id="part-1-systemd-timers-preferred-method"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> Part 1: systemd Timers (Preferred Method)<a class="headerlink" href="#part-1-systemd-timers-preferred-method" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise shows three ways <code>systemd</code> can trigger work: existing timers, transient timers from <code>systemd-run</code>, and path-triggered services. Success means you can list active timers, create a marker file with a transient timer, and trigger <code>mywatch.service</code> by creating <code>/tmp/watchme</code>.</p>
+</div>
+<p>Step 1: List the currently scheduled timers.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List all timers currently known to systemd.</span>
+systemctl<span class="w"> </span>list-timers
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>NEXT                            LEFT LAST                              PASSED UNIT                           ACTIVATES
+Fri 2026-04-10 18:30:00 UTC     6min Fri 2026-04-10 18:20:11 UTC 2min 49s ago sysstat-collect.timer          sysstat-collect.service
+Fri 2026-04-10 18:45:01 UTC    22min Fri 2026-04-10 17:22:06 UTC            - fwupd-refresh.timer            fwupd-refresh.service
+...
+apt-daily-upgrade.timer        ...     ...     ...        apt-daily-upgrade.service
+14 timers listed.
+</code></pre></div>
+</details>
+<p>Step 2: Schedule a one-time transient job with <code>systemd-run</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Schedule a one-time command that creates a marker file.</span>
+sudo<span class="w"> </span>systemd-run<span class="w"> </span>--on-active<span class="o">=</span><span class="m">1</span><span class="w"> </span>/bin/touch<span class="w"> </span>/tmp/has_ran_from_systemd
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Running timer as unit: run-rf81f619e49514311954073645a8ad902.timer
+Will run service as unit: run-rf81f619e49514311954073645a8ad902.service
+</code></pre></div>
+</details>
+<p>Wait a moment before the next step so the transient timer has time to run.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Confirm that the transient timer created the marker file.</span>
+ls<span class="w"> </span>-l<span class="w"> </span>/tmp/has_ran_from_systemd
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>-rw-r--r-- 1 root root 0 Apr 10 18:20 /tmp/has_ran_from_systemd
+</code></pre></div>
+</details>
+<p>The earlier example in <code>4.5</code> can also be used here to create a recurring <code>foo.timer</code> and matching <code>foo.service</code>.</p>
+<p>Step 3: Create the path unit that watches for <code>/tmp/watchme</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a path unit that triggers when /tmp/watchme exists.</span>
+sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/system/mywatch.path<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">[Unit]</span>
+<span class="s">Description=Watch for file creation in /tmp/watchme</span>
+
+<span class="s">[Path]</span>
+<span class="s">PathExists=/tmp/watchme</span>
+<span class="s">Unit=mywatch.service</span>
+
+<span class="s">[Install]</span>
+<span class="s">WantedBy=multi-user.target</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>[Unit]
+Description=Watch for file creation in /tmp/watchme
+...
+</code></pre></div>
+</details>
+<p>Step 4: Create the service that runs when the file appears.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the service triggered by the watched path.</span>
+sudo<span class="w"> </span>tee<span class="w"> </span>/etc/systemd/system/mywatch.service<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">[Unit]</span>
+<span class="s">Description=Triggered when /tmp/watchme is created</span>
+
+<span class="s">[Service]</span>
+<span class="s">Type=oneshot</span>
+<span class="s">ExecStart=/bin/sh -c &#39;echo &quot;The file appeared!&quot; &gt; /tmp/watched.log&#39;</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>[Unit]
+Description=Triggered when /tmp/watchme is created
+...
+</code></pre></div>
+</details>
+<p>Step 5: Reload systemd so it notices the new path and service units.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Reload systemd after creating the path and service units.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>daemon-reload
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 6: Enable and start the path-based trigger.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Enable and start the path unit.</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>mywatch.path
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Created symlink /etc/systemd/system/multi-user.target.wants/mywatch.path -&gt; /etc/systemd/system/mywatch.path.
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>After the path unit is active, creating <code>/tmp/watchme</code> should trigger <code>mywatch.service</code> and write to <code>/tmp/watched.log</code>.</p>
+</div>
+<p>Step 7: Create the watched file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the watched file to trigger the path unit.</span>
+touch<span class="w"> </span>/tmp/watchme
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 8: Verify that the path-triggered service ran.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Verify that the path-triggered service ran.</span>
+cat<span class="w"> </span>/tmp/watched.log
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>The file appeared!
+</code></pre></div>
+</details>
+<h3 id="part-2-legacy-tools-at-and-batch"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 20v2H3c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h18c1.1 0 2 .9 2 2v8.1l-.2-.2c-.5-.5-1.1-.8-1.8-.8V6H3v14h8m10.4-6.7 1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2s.3.1.4.2m-.3 3.6-6 6.1H13v-2.1l6.1-6.1 2 2.1Z"/></svg></span> Part 2: Legacy Tools - at And batch<a class="headerlink" href="#part-2-legacy-tools-at-and-batch" title="Permanent link">&para;</a></h3>
+<p>Before starting Part 2, switch from <code>LABHOST</code> to <code>LABVM</code>.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exercise demonstrates the legacy one-time scheduling tools. Success means <code>at</code> creates marker files at the requested time, <code>at -f</code> runs the saved script, and <code>batch</code> queues a job that runs when system load is low enough.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Connect to LABVM for the legacy scheduling steps.</span>
+ssh<span class="w"> </span>ubuntu@192.168.101.50
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ubuntu@192.168.101.50&#39;s password:
+Welcome to Ubuntu 24.04 LTS (GNU/Linux ...)
+ubuntu@ubuntu:~$
+</code></pre></div>
+</details>
+<p>Step 1: Install the <code>at</code> package.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install the at daemon and client tools.</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>at
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>Reading package lists... Done
+Building dependency tree... Done
+The following NEW packages will be installed:
+  at
+...
+Setting up at ...
+</code></pre></div>
+</details>
+<p>Step 2: Open an interactive <code>at</code> session for a near-term one-time job.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Open an interactive at prompt for two minutes from now.</span>
+at<span class="w"> </span>now+2minutes
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>warning: commands will be executed using /bin/sh
+job 1 at Fri Apr 10 18:25:00 2026
+at&gt;
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At the <code>at&gt;</code> prompt, type <code>touch /tmp/has_ran_from_at_interactive</code> and then press <code>Ctrl + D</code> to save the job.</p>
+</div>
+<p>Step 3: Queue a one-time command from the shell.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Queue a command that creates a marker file in one minute.</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;touch /tmp/has_ran_from_atd&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>at<span class="w"> </span>now+1minute
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>warning: commands will be executed using /bin/sh
+job 1 at Fri Apr 10 18:24:00 2026
+</code></pre></div>
+</details>
+<p>Step 4: List the queued <code>at</code> jobs.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># List pending at jobs.</span>
+atq
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>1       Fri Apr 10 18:25:00 2026 a ubuntu
+2       Fri Apr 10 18:24:00 2026 a ubuntu
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Job numbers and scheduled times will vary. If the command runs before you check, <code>atq</code> may already be empty.</p>
+</div>
+<p>Step 5: Check <code>/tmp</code> for the created files after the scheduled time passes.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check whether the marker files created by at are present.</span>
+ls<span class="w"> </span>-l<span class="w"> </span>/tmp/has_ran_from_at*
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>-rw-rw-r-- 1 ubuntu ubuntu 0 Apr 10 18:24 /tmp/has_ran_from_atd
+-rw-rw-r-- 1 ubuntu ubuntu 0 Apr 10 18:25 /tmp/has_ran_from_at_interactive
+</code></pre></div>
+</details>
+<p>Step 6: Create the script file used by a later <code>at -f</code> job.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create the script file for the at -f example.</span>
+touch<span class="w"> </span>~/job.sh
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 7: Write the job script.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Write a script that removes the earlier marker file.</span>
+sudo<span class="w"> </span>tee<span class="w"> </span>~/job.sh<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<span class="s">#!/bin/bash</span>
+
+<span class="s">rm /tmp/has_ran_from_atd</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>#!/bin/bash
+
+rm /tmp/has_ran_from_atd
+</code></pre></div>
+</details>
+<p>Step 8: Make the job script executable.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Mark the at job script as executable.</span>
+chmod<span class="w"> </span>+x<span class="w"> </span>~/job.sh
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>No output.
+</code></pre></div>
+</details>
+<p>Step 9: Schedule the script to run in one minute.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Queue the saved job script to run in one minute.</span>
+at<span class="w"> </span>now+1minute<span class="w"> </span>-f<span class="w"> </span>~/job.sh
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>warning: commands will be executed using /bin/sh
+job 2 at Fri Apr 10 18:27:00 2026
+</code></pre></div>
+</details>
+<p>Step 10: Check whether the earlier marker file was removed.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check whether the earlier at marker file has been removed.</span>
+ls<span class="w"> </span>-l<span class="w"> </span>/tmp/has_ran_from_atd
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ls: cannot access &#39;/tmp/has_ran_from_atd&#39;: No such file or directory
+</code></pre></div>
+</details>
+<p>Step 11: Submit a job with <code>batch</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>batch</code> is configurable, but through <code>atd</code>, not through the <code>batch</code> command itself. By default, <code>batch</code> jobs run when the load average drops below <code>1.5</code>, unless <code>atd</code> was started with a different threshold.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># Queue a command that runs when system load is low enough.</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;touch /tmp/has_ran_from_batch&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>batch
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>warning: commands will be executed using /bin/sh
+job 3 at Fri Apr 10 18:27:00 2026
+</code></pre></div>
+</details>
+<p>Step 12: Check <code>/tmp</code> for the <code>batch</code> marker file.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Confirm the marker file created by batch.</span>
+ls<span class="w"> </span>-l<span class="w"> </span>/tmp/has_ran_from_batch
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>-rw-rw-r-- 1 ubuntu ubuntu 0 Apr 10 18:27 /tmp/has_ran_from_batch
+</code></pre></div>
+</details>
+<p>Step 13: Check how <code>atd</code> was started to see whether a custom batch load threshold is set.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Show the atd start command and look for a custom -l load threshold.</span>
+systemctl<span class="w"> </span>show<span class="w"> </span>-p<span class="w"> </span>ExecStart<span class="w"> </span>atd.service
+</code></pre></div>
+<details class="example">
+<summary>Expected result</summary>
+<div class="highlight"><pre><span></span><code>ExecStart={ path=/usr/sbin/atd ; argv[]=/usr/sbin/atd -f ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }
+</code></pre></div>
+</details>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the <code>ExecStart</code> line includes <code>-l &lt;value&gt;</code>, that value is the batch load-average threshold. If no <code>-l</code> option is present, <code>atd</code> is using its default threshold of <code>1.5</code>.</p>
+</div>
+<div class="admonition pied-piper">
+<p class="admonition-title">Takeaway</p>
+<p>For scheduled work on Ubuntu:</p>
+<ul>
+<li>prefer <code>systemd</code> timers for modern recurring or structured jobs</li>
+<li>use <code>systemd-run</code> for quick transient jobs</li>
+<li>use <code>at</code> for a one-time legacy job</li>
+<li>use <code>batch</code> when the job should wait for lower system load</li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.sections", "navigation.expand", "content.code.copy"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      
+    
+  </body>
+</html>
