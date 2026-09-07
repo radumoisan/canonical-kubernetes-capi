@@ -17,6 +17,7 @@ nav:
   - "⑤ Autoscaling": 5-autoscaling.md
   - "⑥ Authentication and Authorization": 6-authentication-and-authorization.md
   - "⑦ Helm": 7-helm.md
+  - "⑧ Upgrading Canonical Kubernetes": 8-upgrading-canonical-kubernetes.md
 
 markdown_extensions:
   - tables

@@ -1,14 +1,12 @@
-# CAPI Lab Tracker
+# CAPI Lab Migration Tracker
 
-Track preparation and validation for the active Kubernetes CAPI lab sequence in `ref-labs/`.
+Tracks migration status for the active Kubernetes CAPI lab sequence in `ref-labs/`.
 
 ## Status Model
 
 - `Not started`
 - `In progress`
 - `Migrated`
-- `Validated`
-- `Complete`
 
 ## Active Labs
 
@@ -19,4 +17,4 @@ Track preparation and validation for the active Kubernetes CAPI lab sequence in 
 - `5_autoscaling_gce.md`: `Migrated`
 - `6_auth_gce.md`: `Migrated`
 - `7_helm_gce.md`: `Migrated`
-- `8_upgrading_gce.md`: `Not started`
+- `8_upgrading_gce.md`: `Migrated`
