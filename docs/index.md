@@ -2,7 +2,7 @@
 
 This site contains the Canonical Kubernetes Cluster API training material, organized one chapter per page.
 
-Start with [Chapter 1: Kubernetes Basics](1-kubernetes-basics.md). Remaining chapters will be published in order.
+Start with [Chapter 1: Kubernetes Basics](1-kubernetes-basics.md), then [Chapter 2: Networking](2-networking.md). Remaining chapters will be published in order.
 
 ## Copyright
 
