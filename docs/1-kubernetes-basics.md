@@ -4,12 +4,13 @@ Kubernetes is an open-source infrastructure for automating deployment, scaling, 
 applications. Originally built by Google, it is currently maintained by the Cloud Native Computing Foundation.
 
 A Kubernetes cluster includes these primary components:
-  * control plane components:
+
+* control plane components:
     * etcd distributed key-value store
     * the API server
     * the scheduler
     * the controller manager
-  * node components:
+* node components:
     * the kubelet
     * the kube-proxy network proxy
     * a container runtime, such as containerd
@@ -726,19 +727,19 @@ kubectl get pods -A -o wide
     metallb-system   metallb-speaker-rwz22                 1/1     Running   0          80m   10.107.242.63   k8s-worker1   <none>           <none>
     ```
 
-A kubeconfig file can define multiple clusters, users, and contexts, allowing users to switch between clusters. For more information, see:
+A kubeconfig file can define multiple clusters, users, and contexts, allowing users to switch between clusters. For more
+information about managing multiple cluster contexts, see the
+[Kubernetes multi-cluster access documentation](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters).
 
-https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters
+!!! note "Kubeconfig terminology"
+    `Kubeconfig` is a generic term for a file that configures access to a cluster. The file does not need to be named
+    `kubeconfig`.
 
-**Note**: `Kubeconfig` is a generic term for a file that configures access to a cluster. The file does not need to be named `kubeconfig`.
+For instructions on installing `kubectl` on other systems, see the
+[Kubernetes tools installation guide](https://kubernetes.io/docs/tasks/tools/).
 
-For information on how to install `kubectl` on other systems, please visit the links:
-
-https://kubernetes.io/docs/tasks/tools/
-
-Good documentation on `kubectl` can be found here:
-
-https://kubernetes.io/docs/reference/kubectl/
+For complete command documentation, see the
+[`kubectl` reference](https://kubernetes.io/docs/reference/kubectl/).
 
 Also, let's add command autocompletion for `kubectl`:
 

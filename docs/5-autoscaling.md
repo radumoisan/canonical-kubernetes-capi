@@ -20,15 +20,15 @@ supports the scale subresource. Its control loop periodically reads Pod metrics,
 configured target, and updates the target workload.
 
 The autoscaling process has three main steps:
-  * Collect metrics for the Pods managed by the target workload.
-  * Calculate the replica count required to meet the configured target.
-  * Update the desired replica count of the target workload.
+
+* Collect metrics for the Pods managed by the target workload.
+* Calculate the replica count required to meet the configured target.
+* Update the desired replica count of the target workload.
 
 ![roles](assets/hpa2.png)
 
-For more information about the resource metrics pipeline, visit:
-
-https://kubernetes.io/docs/tasks/debug-application-cluster/resource-metrics-pipeline/
+For more information, see the
+[Kubernetes resource metrics pipeline documentation](https://kubernetes.io/docs/tasks/debug-application-cluster/resource-metrics-pipeline/).
 
 ## :material-book-open-page-variant-outline: 5.1 Autoscale a Deployment resource
 
@@ -204,7 +204,6 @@ kubectl delete hpa nginx-hpa
 ??? example "Expected result"
     The HorizontalPodAutoscaler is deleted.
 
-For more information on HPAs, please visit:
-
-https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/
-https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+For more information, see the
+[Horizontal Pod Autoscaling walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/)
+and the [Horizontal Pod Autoscaling documentation](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/).

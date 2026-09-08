@@ -9,12 +9,13 @@ Kubernetes volumes make data available to containers in a Pod. A volume can be m
 Some volume types are ephemeral and tied to the Pod's lifetime, while persistent storage can outlive individual Pods.
 
 Kubernetes supports many volume types. Examples include:
-  * `emptyDir`: starts empty when a Pod is assigned to a node and exists as long as that Pod remains on the node. Its data survives container restarts but is deleted when the Pod is removed. By default, it uses the storage medium that backs the node's ephemeral storage.
-  * `hostPath`: mounts a file or directory from the host node's filesystem. It can provide access to host resources such as `/sys`, but it ties the Pod to a specific node and can introduce security risks.
-  * `fc`: mounts an existing Fibre Channel block storage volume into a Pod.
-  * `image`: makes an OCI object, such as a container image or artifact, available to a Pod as a read-only volume.
-  * `nfs`: mounts an existing NFS share into a Pod.
-  * `iscsi`: mounts an existing iSCSI volume into a Pod.
+
+* `emptyDir`: starts empty when a Pod is assigned to a node and exists as long as that Pod remains on the node. Its data survives container restarts but is deleted when the Pod is removed. By default, it uses the storage medium that backs the node's ephemeral storage.
+* `hostPath`: mounts a file or directory from the host node's filesystem. It can provide access to host resources such as `/sys`, but it ties the Pod to a specific node and can introduce security risks.
+* `fc`: mounts an existing Fibre Channel block storage volume into a Pod.
+* `image`: makes an OCI object, such as a container image or artifact, available to a Pod as a read-only volume.
+* `nfs`: mounts an existing NFS share into a Pod.
+* `iscsi`: mounts an existing iSCSI volume into a Pod.
 
 Let's create a Pod with two containers and a shared `emptyDir` volume. The manifest is available at
 `~/resources/multi-container-pod.yaml`:
@@ -134,16 +135,18 @@ kubectl delete pod two-containers
 ![roles](assets/config_map.png)
 
 There are four ways to use a ConfigMap to configure a container in a Pod:
-  * Set the container command and arguments.
-  * Set environment variables for the container.
-  * Mount ConfigMap keys as files in a read-only volume.
-  * Run code in the Pod that uses the Kubernetes API to read the ConfigMap.
+
+* Set the container command and arguments.
+* Set environment variables for the container.
+* Mount ConfigMap keys as files in a read-only volume.
+* Run code in the Pod that uses the Kubernetes API to read the ConfigMap.
 
 When a ConfigMap mounted as a volume is updated, its projected keys are eventually updated. The kubelet checks the mounted ConfigMap
 during periodic synchronization. ConfigMaps consumed as environment variables are not updated automatically and require a Pod restart.
 
-**NOTE**: A `ConfigMap` does not provide secrecy or encryption. For confidential data, use a `Secret` and configure appropriate
-access controls and encryption at rest.
+!!! warning "ConfigMaps are not secret storage"
+    A `ConfigMap` does not provide secrecy or encryption. For confidential data, use a `Secret` and configure appropriate
+    access controls and encryption at rest.
 
 Create a `ConfigMap` with literal values:
 
@@ -231,9 +234,8 @@ kubectl delete pod configmap-pod
 ??? example "Expected result"
     The Pod is deleted.
 
-For more information on `ConfigMaps`, please visit:
-
-https://kubernetes.io/docs/concepts/configuration/configmap/
+For more information, see the
+[Kubernetes ConfigMap documentation](https://kubernetes.io/docs/concepts/configuration/configmap/).
 
 ## :material-book-open-page-variant-outline: 4.3 Secrets
 
@@ -251,8 +253,9 @@ kubectl create secret generic bob-secret --from-literal=username='bob' \
 ??? example "Expected result"
     The Secret is created.
 
-**NOTE**: `kubectl create secret` encodes the supplied literal values. In a manifest, use `stringData` for unencoded strings or
-`data` for base64-encoded values.
+!!! note "Secret value encoding"
+    `kubectl create secret` encodes the supplied literal values. In a manifest, use `stringData` for unencoded strings or
+    `data` for base64-encoded values.
 
 Inspect the Secret metadata:
 
@@ -269,9 +272,8 @@ kubectl get secret bob-secret
 `type: Opaque` means that the Secret has no required structure and can contain arbitrary key-value pairs.
 Other Secret types include `kubernetes.io/service-account-token`, `kubernetes.io/dockercfg`,
 `kubernetes.io/dockerconfigjson`, `kubernetes.io/basic-auth`, `kubernetes.io/ssh-auth`, and `kubernetes.io/tls`.
-For more information about Secret types, visit:
-
-https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
+For more information, see the
+[Kubernetes Secret types documentation](https://kubernetes.io/docs/concepts/configuration/secret/#secret-types).
 
 ```bash
 # Describe the Secret.
@@ -393,7 +395,8 @@ that need durable storage should be able to request it without depending directl
 of storage and its provisioner, while a `PersistentVolumeClaim` requests storage. The provisioner can then create a
 `PersistentVolume` dynamically.
 
-**NOTE**: This chapter abbreviates PersistentVolumes as `PVs`, PersistentVolumeClaims as `PVCs`, and StorageClasses as `SCs`.
+!!! note "Terminology"
+    This chapter abbreviates PersistentVolumes as `PVs`, PersistentVolumeClaims as `PVCs`, and StorageClasses as `SCs`.
 
 `PVs` are cluster storage resources whose lifecycle is independent of any Pod. A workload requests storage through a `PVC`,
 which Kubernetes binds to a suitable `PV`.
@@ -435,11 +438,9 @@ kubectl describe sc csi-rawfile-default
     Events:                <none>
     ```
 
-For more info on storage classes please visit:
-
-https://kubernetes.io/docs/concepts/storage/storage-classes/
-
-https://documentation.ubuntu.com/canonical-kubernetes/latest/snap/howto/storage/
+For more information, see the
+[Kubernetes StorageClass documentation](https://kubernetes.io/docs/concepts/storage/storage-classes/) and the
+[Canonical Kubernetes storage documentation](https://documentation.ubuntu.com/canonical-kubernetes/latest/snap/howto/storage/).
 
 The cluster can now dynamically provision volumes in response to workload requests.
 

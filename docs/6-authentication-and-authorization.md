@@ -10,11 +10,12 @@ that contains a short-lived ServiceAccount token, the cluster CA certificate, an
 requests; authorization rules determine which operations the Pod may perform.
 
 Kubernetes distinguishes user accounts from service accounts for several reasons:
-  * User accounts represent people and are managed externally to the cluster.
-  * Service accounts represent Pods and the processes running in them.
-  * User identities are cluster-wide rather than namespaced.
-  * Service accounts are namespaced.
-  * Auditing requirements for people and workloads may differ.
+
+* User accounts represent people and are managed externally to the cluster.
+* Service accounts represent Pods and the processes running in them.
+* User identities are cluster-wide rather than namespaced.
+* Service accounts are namespaced.
+* Auditing requirements for people and workloads may differ.
 
 Each namespace has a `default` `SA`. Create separate `SAs` to follow least privilege, granting each workload only the API
 permissions it requires.
@@ -209,8 +210,9 @@ curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
 The responses contain API discovery information. The CA certificate validates the server, the token authenticates the request as
 the default ServiceAccount, and authorization rules control subsequent access to API resources.
 
-**NOTE**: A Pod's `serviceAccountName` is set when the Pod is created and cannot be changed later. Each Pod uses one `SA`, but
-multiple Pods in a namespace can use the same `SA`.
+!!! note "ServiceAccount assignment"
+    A Pod's `serviceAccountName` is set when the Pod is created and cannot be changed later. Each Pod uses one `SA`, but
+    multiple Pods in a namespace can use the same `SA`.
 
 Return to the student machine:
 
@@ -234,10 +236,11 @@ kubectl delete pod curl
 
 Role-based access control (`RBAC`) authorizes Kubernetes API requests based on permissions granted to subjects such as users, groups,
 and ServiceAccounts. RBAC uses four principal authorization resource kinds:
-  * `Role`: contains additive permission rules for resources in one namespace. RBAC has no `deny` rules.
-  * `ClusterRole`: contains rules that can cover cluster-scoped resources or be reused in any namespace.
-  * `RoleBinding`: grants a `Role` or `ClusterRole` to subjects within one namespace.
-  * `ClusterRoleBinding`: grants a `ClusterRole` to subjects across the cluster.
+
+* `Role`: contains additive permission rules for resources in one namespace. RBAC has no `deny` rules.
+* `ClusterRole`: contains rules that can cover cluster-scoped resources or be reused in any namespace.
+* `RoleBinding`: grants a `Role` or `ClusterRole` to subjects within one namespace.
+* `ClusterRoleBinding`: grants a `ClusterRole` to subjects across the cluster.
 
 ![roles](assets/roles_bindings.png)
 

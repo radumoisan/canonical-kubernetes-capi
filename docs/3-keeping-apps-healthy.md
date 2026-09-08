@@ -42,9 +42,10 @@ cat ~/resources/nginx-rs.yaml
     ```
 
 The three most important fields are:
-  * replica count: the desired number of Pod replicas
-  * label selector: identifies the Pods managed by the ReplicaSet
-  * Pod template: defines the new Pod replicas
+
+* replica count: the desired number of Pod replicas
+* label selector: identifies the Pods managed by the ReplicaSet
+* Pod template: defines the new Pod replicas
 
 Create the `rs`:
 
@@ -281,9 +282,10 @@ cat ~/resources/nginx-deploy.yaml
     ```
 
 As with a ReplicaSet, the most important fields are:
-  * replica count: the desired number of Pod replicas
-  * label selector: identifies the Pods managed by the Deployment
-  * Pod template: defines the new Pod replicas
+
+* replica count: the desired number of Pod replicas
+* label selector: identifies the Pods managed by the Deployment
+* Pod template: defines the new Pod replicas
 
 
 Create the Deployment:
@@ -387,7 +389,9 @@ kubectl set image deploy nginx-deploy nginx=nginx:1.29
     deployment.extensions/nginx-deploy image updated
     ```
 
-**NOTE**: Alternatively, edit the Deployment interactively with `kubectl edit deploy nginx-deploy`. The `kubectl edit` command supports many Kubernetes resource types.
+!!! tip "Alternative editing method"
+    You can also edit the Deployment interactively with `kubectl edit deploy nginx-deploy`. The `kubectl edit` command
+    supports many Kubernetes resource types.
 
 Check Deployment status:
 
@@ -484,8 +488,9 @@ The Deployment is up to date and uses the `nginx:1.29` image. The rollout proces
 The same Services continue to select these Pods because the `app=nginx` label is unchanged.
 
 Deployments support two update strategies:
-  * `Recreate`: terminates all old Pods before creating new Pods
-  * `RollingUpdate`: gradually replaces old Pods with new Pods according to the rollout settings
+
+* `Recreate`: terminates all old Pods before creating new Pods
+* `RollingUpdate`: gradually replaces old Pods with new Pods according to the rollout settings
 
 `RollingUpdate` is the default strategy and allows old and new versions to overlap. It can avoid downtime when the application supports mixed versions and the readiness checks, capacity, and rollout settings are appropriate. `Recreate` normally causes a period without available Pods.
 

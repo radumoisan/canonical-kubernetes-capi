@@ -7,16 +7,17 @@ Canonical Kubernetes also supports rollout upgrades. During a rollout, CAPI crea
 Kubernetes version and removes the old machines one at a time. Rollout upgrades are recommended for highly available
 clusters. This lab uses an in-place upgrade because its control plane is not highly available.
 
-Before upgrading, make sure that:
+!!! warning "Upgrade prerequisites"
+    Before upgrading, make sure that:
 
-* the cluster is healthy
-* you have reviewed the upgrade notes for the installed and target versions
-* you have read the release notes for the target version
-* the target version is supported by the Canonical Kubernetes CAPI provider
+    * the cluster is healthy
+    * you have reviewed the upgrade notes for the installed and target versions
+    * you have read the release notes for the target version
+    * the target version is supported by the Canonical Kubernetes CAPI provider
 
 ## :material-book-open-page-variant-outline: 8.1 Rollout upgrade Kubernetes
 
-!!! warning "Warning"
+!!! warning "Reference only"
     This section is for reference only. Do not run these commands in the lab environment.
 
 Upgrade the control plane before the worker nodes.
@@ -201,8 +202,11 @@ kubectl get machines
     ```
 
 Canonical Kubernetes is installed from the `k8s` snap on the control plane and worker nodes. The nodes currently track
-the `1.35-classic/stable` channel. At the time of this lab, a `1.36-classic/stable` channel is not available, so the
-upgrade targets `1.36-classic/candidate`.
+the `1.35-classic/stable` channel.
+
+!!! warning "Candidate release channel"
+    At the time of this lab, a `1.36-classic/stable` channel is not available, so the upgrade targets
+    `1.36-classic/candidate`.
 
 To upgrade the control plane, annotate its `Machine` resource. From the output above, its name is
 `myk8scluster-control-plane-qqdlb`:
@@ -388,6 +392,7 @@ For a highly available cluster, prefer rollout upgrades so that CAPI manages the
 specifications.
 
 For more information, see:
-[https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/rollout-upgrades/](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/rollout-upgrades/)
-[https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/in-place-upgrades/](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/in-place-upgrades/)
-[https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/reference/annotations/](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/reference/annotations/)
+
+* [CAPI rollout upgrade documentation](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/rollout-upgrades/)
+* [CAPI in-place upgrade documentation](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/in-place-upgrades/)
+* [CAPI upgrade annotations reference](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/reference/annotations/)

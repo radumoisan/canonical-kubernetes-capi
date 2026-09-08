@@ -113,13 +113,12 @@ helm show values bitnami/wordpress
     The Wordpress chart values are displayed.
 
 Chart values can be overridden at install time with `--set`, as used below, or with a YAML values file supplied through `-f`
-or `--values`, e.g. `helm install -f config.yaml stable/wordpress`. The Helm documentation explains both methods:
+or `--values`, e.g. `helm install -f config.yaml stable/wordpress`. For details, see the
+[Helm chart customization documentation](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing).
 
-https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing
-
-The chart repository documents its installation and supported configuration options:
-
-https://github.com/bitnami/charts/tree/master/bitnami/wordpress/#installing-the-chart
+See the
+[Bitnami WordPress chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/wordpress/#installing-the-chart)
+for installation and supported configuration options.
 
 Install the chart as a release named `my-wordpress-blog`:
 
@@ -134,9 +133,10 @@ helm install my-wordpress-blog \
 ??? example "Expected result"
     The `my-wordpress-blog` release is installed.
 
-The explicit `mariadb.auth.rootPassword` gives this exercise a predictable database credential. These simple passwords are
-for training only. In real deployments, use securely generated credentials managed through Secrets and avoid passing them
-on the command line.
+!!! warning "Training credentials only"
+    The explicit `mariadb.auth.rootPassword` gives this exercise a predictable database credential. These simple passwords
+    are for training only. In real deployments, use securely generated credentials managed through Secrets and avoid
+    passing them on the command line.
 
 The installation output includes useful information about accessing the application and retrieving its credentials. Display
 this information again with the `status` command:
@@ -191,10 +191,9 @@ This section demonstrated how a chart installs a complete application stack as o
 
 ## :material-book-open-page-variant-outline: 7.2 Deployment Chart
 
-Kubernetes deploys container images rather than application source code. This repository contains a simple Node.js web app
-and its `Dockerfile`:
-
-https://github.com/cloudbase/kubernetes-tools
+Kubernetes deploys container images rather than application source code. The
+[Kubernetes tools repository](https://github.com/cloudbase/kubernetes-tools) contains a simple Node.js web app and its
+`Dockerfile`:
 
 ```bash
 # Clone the Kubernetes tools repository.
@@ -255,7 +254,7 @@ curl localhost:80
 Return to the first terminal and stop the container with `CTRL+C`.
 
 !!! warning "Demonstration ends here"
-    **NOTE**: Demonstration ends here.
+    Resume the exercise with the next step.
 
 Create a Helm chart scaffold, then configure its image repository, image tag, and replica count in `values.yaml`:
 
@@ -314,8 +313,7 @@ helm install web-app-stateless web-app-0.1.0.tgz
 ??? example "Expected result"
     The `web-app-stateless` release is installed.
 
-For more information about Helm templates, see:
-https://docs.helm.sh/chart_template_guide/
+For more information, see the [Helm chart template guide](https://docs.helm.sh/chart_template_guide/).
 
 Verify the web app Pods are running. Other Pods in the namespace may also appear:
 
@@ -417,7 +415,7 @@ docker tag <username>/web-app-stateful <username>/web-app-stateful:v1
     The stateful web app image is tagged.
 
 !!! warning "Demonstration ends here"
-    **NOTE**: Demonstration ends here.
+    Resume the exercise with the next step.
 
 When a Pod is scheduled, the kubelet pulls the public image onto that node if it is not already cached there.
 
@@ -717,6 +715,11 @@ kubectl create token headlamp --namespace kube-system
     eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1...
     ```
 
-Enter this token when Headlamp prompts for authentication. It grants full control of the cluster, so treat it as a sensitive
-credential and use this configuration only for the lab. Open a tunneled browser session to `http://<EXTERNAL-IP>`, replacing
-the placeholder with the LoadBalancer address reported above.
+Enter this token when Headlamp prompts for authentication.
+
+!!! danger "Cluster-admin token"
+    The token grants full control of the cluster, so treat it as a sensitive credential and use this configuration only for
+    the lab.
+
+Open a tunneled browser session to `http://<EXTERNAL-IP>`, replacing the placeholder with the LoadBalancer address reported
+above.
