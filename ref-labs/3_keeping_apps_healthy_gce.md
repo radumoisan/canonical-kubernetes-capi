@@ -2,17 +2,17 @@
 
 ## 3.1 ReplicaSets
 
-A `ReplicaSet` enables us to achieve high availability by ensuring that a specified number of pod replicas are running at any one time.
-In other words, a `ReplicaSet` makes sure that a pod or a homogeneous set of pods is always up and available.
+A ReplicaSet maintains a specified number of Pod replicas. This helps an application tolerate Pod deletion or failure, but availability also depends on scheduling and application health.
 
-If there are too many pods, the `ReplicaSet` terminates the additional pods. If there are too few, the `ReplicaSet` starts more pods.
-Unlike manually created pods, the pods maintained by a `ReplicaSet` are automatically replaced if they fail, are deleted, or are terminated.
+If there are too many Pods, the ReplicaSet terminates the excess Pods. If there are too few, it creates replacements. Container failures are normally handled by the `kubelet`, which restarts containers within the existing Pod according to its restart policy.
 
-`ReplicaSet` is often abbreviated to `rs` as a shortcut in `kubectl` commands.
+ReplicaSets and Deployments maintain Pod count; they do not determine whether application code is healthy. Readiness probes control whether a Pod receives Service traffic, while liveness probes can cause an unresponsive container to restart.
+
+`ReplicaSet` is often abbreviated as `rs` in `kubectl` commands.
 
 ![service](assets/service1.png)
 
-Now we'll create a `ReplicaSet` with this `~/resources/nginx-rs.yaml` definition:
+Create a ReplicaSet from the `~/resources/nginx-rs.yaml` definition:
 
 ```bash
 cat ~/resources/nginx-rs.yaml
@@ -39,10 +39,10 @@ spec:
         - containerPort: 80
 ```
 
-The 3 most important things here are:
-  * replica count: which specifies the desired number of pods that should be running
-  * label selector: which determines what pods are in the ReplicaSets’s scope
-  * pod template: which is used when creating new pod replicas
+The three most important fields are:
+  * replica count: the desired number of Pod replicas
+  * label selector: identifies the Pods managed by the ReplicaSet
+  * Pod template: defines the new Pod replicas
 
 Create the `rs`:
 
@@ -101,9 +101,7 @@ nginx-rs-6vldg   1/1     Running   0          55s
 nginx-rs-b9s4g   1/1     Running   0          55s
 ```
 
-Now the application is highly available. They now need a Service to be accessed. We can recreate any type of Service that we
-have used before. This is possible because of the Labels and Selectors. The newly create pods have the `app=nginx` label
-and the Services we create before point to that label.
+The ReplicaSet now maintains three replicas. To access them consistently, recreate the LoadBalancer Service from Chapter 2. Its selector matches the `app=nginx` label and routes traffic to eligible Ready endpoints.
 
 Recreate the `LoadBalancer` service:
 
@@ -111,7 +109,7 @@ Recreate the `LoadBalancer` service:
 kubectl create -f ~/resources/loadbalancer-service.yaml
 ```
 
-Then, get the LoadBalancer IP address with:
+Get the LoadBalancer address:
 
 ```bash
 kubectl get svc nginx-loadbalancer
@@ -121,7 +119,7 @@ NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)       
 nginx-loadbalancer   LoadBalancer   10.152.188.44   10.219.64.11   8080:31731/TCP   21s
 ```
 
-Then, try accessing the website a few times:
+Use the `EXTERNAL-IP` reported by your cluster to access the website. Substitute it in the following command if it differs from the example:
 
 ```bash
 curl -s 10.219.64.11:8080 | pandoc -f html -t plain
@@ -141,9 +139,9 @@ features and capabilities please refer to f5.com/nginx.
 Thank you for using nginx.
 ```
 
-The traffic will now be load balanced between the 3 pods.
+The Service can now distribute connections across the three eligible Pods.
 
-To verify that, we can go through the logs of each pod. To do that, run:
+Inspect each Pod's access log to see which Pods received requests. Repeated requests may not reach every Pod:
 
 ```bash
 kubectl get pods
@@ -159,8 +157,7 @@ kubectl logs nginx-rs-6vldg
 kubectl logs nginx-rs-b9s4g
 ```
 
-You can try to delete a Pod to see what happens. A new Pod should take its place in a few seconds. List the pods and
-choose one to delete:
+Delete a Pod to observe the ReplicaSet restore its desired replica count. First, list the Pods and choose one to delete:
 
 ```bash
 kubectl get pods
@@ -170,7 +167,7 @@ kubectl get pods
 kubectl delete pod nginx-rs-47z7s
 ```
 
-List the pods again, there is a new pod only some seconds old:
+List the Pods again. A replacement Pod should appear with a recent age:
 
 ```bash
 kubectl get pods
@@ -194,17 +191,14 @@ kubectl delete svc nginx-loadbalancer
 
 ## 3.2 Deployments
 
-All the functionality we have worked with so far can already cover a wide variety of app deployment use cases, but there is more
-Kubernetes can do. It can also provide a clan way for applications that run in pods to be upgraded from version to version,
-with NO downtime. This is provided through declarative updates for Pods and ReplicaSets.
+ReplicaSets cover many application deployment use cases, while Deployments add controlled, declarative updates. A Deployment can update an application from one version to another, often without downtime when the application and update settings support it.
 
-Kubernetes provides the `Deployment` resource that sits on top of `ReplicaSets`, a declarative way to update Pods. You describe
-a desired state in a Deployment object, and the Deployment controller changes the actual state to the desired state at a controlled rate.
+The Deployment controller manages ReplicaSets, which manage Pods, and changes the observed state toward the desired state described in the Deployment.
 
 ![deployment](assets/deployment.png)
 
 
-Let's take a look on how a Deployment definition looks like, the file is `~/resources/nginx-deploy.yaml`:
+Display the Deployment definition in `~/resources/nginx-deploy.yaml`:
 
 ```bash
 cat ~/resources/nginx-deploy.yaml
@@ -233,10 +227,10 @@ spec:
         - containerPort: 80
 ```
 
-Again, like in the case of `ReplicaSets`, the most important things are:
-  * replica count: which specifies the desired number of pods that should be running
-  * label selector: which determines what pods are in the ReplicaSets’s scope
-  * pod template: which is used when creating new pod replicas
+As with a ReplicaSet, the most important fields are:
+  * replica count: the desired number of Pod replicas
+  * label selector: identifies the Pods managed by the Deployment
+  * Pod template: defines the new Pod replicas
 
 
 Create the Deployment:
@@ -245,7 +239,7 @@ Create the Deployment:
 kubectl create -f ~/resources/nginx-deploy.yaml
 ```
 
-Inspect what was creates:
+Inspect what was created:
 
 ```bash
 kubectl get deploy nginx-deploy -o wide
@@ -305,8 +299,7 @@ nginx-deploy-7f9c8bf8cd-tqx4m   1/1     Running   0          39s
 ...
 ```
 
-So far everything looks similar to the  `ReplicaSets` case. The addition lies in how easily upgrades can be made. First, check the
-rollout status. Initially, it should only tell that the deployment was created:
+So far, the result resembles a ReplicaSet. A Deployment also provides controlled rollouts and revision history. Check the initial rollout status; it should report successful completion:
 
 ```bash
 kubectl rollout status deploy nginx-deploy
@@ -315,8 +308,7 @@ kubectl rollout status deploy nginx-deploy
 deployment "nginx-deploy" successfully rolled out
 ```
 
-A Deployment `rollout` is a mechanism which allows performing application rolling upgrades. The rollout is triggered if and only if
-the Deployment pod template is changed, for example if the image version is changed.
+A Deployment rollout is triggered when its Pod template changes, such as when the container image changes. Scaling a Deployment changes its replica count but does not create a new revision.
 
 ![deployment](assets/rolling_upgrade.png)
 
@@ -329,8 +321,7 @@ kubectl set image deploy nginx-deploy nginx=nginx:1.29
 deployment.extensions/nginx-deploy image updated
 ```
 
-**NOTE**: Alternatively, the Deployment definition can be changed with `kubectl edit deploy nginx-deploy` in an interactive manner.
-This stands true for all Kubernetes resource types.
+**NOTE**: Alternatively, edit the Deployment interactively with `kubectl edit deploy nginx-deploy`. The `kubectl edit` command supports many Kubernetes resource types.
 
 Check Deployment status:
 
@@ -414,21 +405,17 @@ Events:
   Normal  ScalingReplicaSet  59s    deployment-controller  Scaled down replica set nginx-deploy-7f9c8bf8cd from 1 to 0
 ```
 
-As can be seen everything is up-to-date and running. The image in use is `nginx:1.29`. The scaling process can also be viewed
-on the deployment description `Events` section.
+The Deployment is up to date and uses the `nginx:1.29` image. The rollout process is also recorded in the `Events` section of the Deployment description.
 
-The same Services can be associated with the pods, same as before.
+The same Services continue to select these Pods because the `app=nginx` label is unchanged.
 
-It's important to mention that there are two strategies for upgrading apps with Deployments:
-  * `recreate` strategy: old pods are deleted before new ones are created
-  * `RollingUpdate` strategy: replace pods step by step
+Deployments support two update strategies:
+  * `Recreate`: terminates all old Pods before creating new Pods
+  * `RollingUpdate`: gradually replaces old Pods with new Pods according to the rollout settings
 
-The default one is `RollingUpdate`, the one we used in our case. This works if the application supports two versions of it running at
-the same time, for a brief period. The major advantage of this strategy is that there is no downtime. With the `recreate` strategy
-there is a downtime brief period between when then the last old version pod was deleted and the first new version pod comes up.
+`RollingUpdate` is the default strategy and allows old and new versions to overlap. It can avoid downtime when the application supports mixed versions and the readiness checks, capacity, and rollout settings are appropriate. `Recreate` normally causes a period without available Pods.
 
-But let's say there is an issue with the current application version that was rolled out. Another powerful feature of `Deployments` is
-that they can be rolled back to a previous revision if there are any issues.
+If an update causes problems, a Deployment can be manually rolled back to a previous revision.
 
 Check and inspect the revision history:
 
@@ -486,7 +473,7 @@ Pod Template:
 
 Revision `1` is the initial deployment version. Revision `2` is the upgraded version.
 
-Rollback to the initial state:
+Roll back to the Pod template recorded in revision `1`. This creates a new revision rather than deleting the revision history:
 
 ```bash
 kubectl rollout undo deploy nginx-deploy --to-revision=1
@@ -495,7 +482,7 @@ kubectl rollout undo deploy nginx-deploy --to-revision=1
 deployment.extensions/nginx-deploy
 ```
 
-Check how the Deployment looks like, it should have `nginx:1.28`, the old version:
+Check the Deployment. It should now use the previous `nginx:1.28` image:
 
 ```bash
 kubectl describe deploy nginx-deploy
@@ -545,7 +532,7 @@ Events:
   Normal  ScalingReplicaSet  13s (x4 over 15s)  deployment-controller  (combined from similar events): Scaled down replica set nginx-deploy-578c8ff859 from 1 to 0
 ```
 
-If we check for `ReplicaSets`, we can see the `rs` that backs the `Deployment`:
+List the ReplicaSets managed by the Deployment. The current ReplicaSet has three replicas, while the previous one remains at zero for revision history:
 
 ```bash
 kubectl get rs
@@ -556,7 +543,7 @@ nginx-deploy-578c8ff859   0         0         0       2m55s
 nginx-deploy-7f9c8bf8cd   3         3         3       4m12s
 ```
 
-Concluding this chapter, we'll need to cleanup the whole deployment:
+To conclude the chapter, clean up the Deployment:
 
 ```bash
 kubectl delete deploy nginx-deploy
