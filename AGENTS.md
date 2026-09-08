@@ -11,7 +11,8 @@ This repository supports Kubernetes Cluster API (CAPI) training.
 - Treat `ref-labs/_README.md` and `ref-labs/acknowledgements.md` as supporting references.
 - Treat `ref-labs/k8s_lab_azure.md` and `ref-labs/k8s_lab_gce_deprecated.md` as legacy background only.
 - Preserve the technical intent of active labs and keep wording practical and concise.
-- Do not include secret values in documentation or tracking files.
+- Plaintext credentials, secret values, bearer tokens, private keys, and certificates are allowed when they are intentional training examples, lab-created values used by an exercise, or user-approved active lab data.
+- Do not include unrelated production credentials, guessed secrets, or unapproved sensitive data.
 
 ## Protected Paths
 
@@ -39,13 +40,15 @@ This repository supports Kubernetes Cluster API (CAPI) training.
 - Before each command, state the exact student-facing command and its purpose in one sentence.
 - Wait for explicit approval before executing each command; treat `go` as approval.
 - After execution, verify the result and explain its meaning before continuing.
-- Do not update `commands.md` during live interactive training.
+- Do not record commands executed by the user or student in `commands.md`.
+- Record successful training commands executed by an agent, including during live interactive training.
 
 ## Tracking Files
 
 - `migration.md` tracks CAPI lab preparation and validation status.
-- `playground.md` records approved internal lab context without credentials or secret values.
-- Outside live training, record only successfully executed training commands in `commands.md` using the exact executed command string.
+- `playground.md` records approved internal lab context and may include plaintext active lab credentials and required student assignment details. These approved values may be committed when requested.
+- Record only successfully executed training commands run by an agent in `commands.md`, including during live interactive training, using the exact executed command string.
+- Preserve plaintext secret literals that are part of a training command. Do not record external connection-wrapper credentials that are not part of the student-facing exercise.
 - Do not record failed, exploratory, or corrected commands.
 - Mark a lab complete only after its commands have been validated and results documented.
 

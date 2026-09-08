@@ -128,7 +128,7 @@ kubectl describe secret default-serviceaccount-secret
     ====
     ca.crt:     1139 bytes
     namespace:  7 bytes
-    token:      <redacted>
+    token:      eyJhbGciOiJSUzI1NiIsImtpZCI6Ik....
     ```
 
 Now create the `alpine` pod and see if the token is mounted:

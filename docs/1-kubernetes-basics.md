@@ -145,7 +145,7 @@ Now that both LXD and MAAS are installed, let's do the initial MAAS setup and in
 
 ```bash
 # Create the MAAS administrator.
-sudo maas createadmin --username=admin --password="<maas-admin-password>" --email=admin@example.com
+sudo maas createadmin --username=admin --password=ubuntu --email=admin@example.com
 ```
 ??? example "Expected result"
     The MAAS administrator is created.

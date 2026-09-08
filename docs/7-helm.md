@@ -128,8 +128,8 @@ Time to install the chart:
 # Install the Wordpress chart.
 helm install my-wordpress-blog \
   --set wordpressUsername=admin \
-  --set wordpressPassword="<wordpress-password>" \
-  --set mariadb.auth.rootPassword="<mariadb-root-password>" \
+  --set wordpressPassword=password \
+  --set mariadb.auth.rootPassword=secretpassword \
     bitnami/wordpress
 ```
 ??? example "Expected result"
@@ -708,7 +708,7 @@ kubectl create token headlamp --namespace kube-system
 ```
 ??? example "Expected result"
     ```text
-    <redacted>
+    eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1...
     ```
 
 You can now use this token to authenticate to Headlamp. Open a tunneled browser session to `http://10.237.75.130` (Loadbalancer IP). You will be asked for a token to authenticate.

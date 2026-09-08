@@ -250,7 +250,7 @@ There are two ways to create secrets, from CLI using `kubectl` or from a file de
 ```bash
 # Create a Secret with username and password values.
 kubectl create secret generic bob-secret --from-literal=username='bob' \
---from-literal=password='<replace-with-a-strong-password>'
+--from-literal=password='Passw0rd'
 ```
 ??? example "Expected result"
     The Secret is created.
@@ -291,7 +291,7 @@ kubectl describe secret bob-secret
 
     Data
     ====
-    password:  <password-length> bytes
+    password:  8 bytes
     username:  3 bytes
     ```
 
@@ -355,7 +355,7 @@ printenv | grep SECRET
 ```
 ??? example "Expected result"
     ```text
-    SECRET_PASSWORD=<redacted>
+    SECRET_PASSWORD=Passw0rd
     SECRET_USERNAME=bob
     ```
 
