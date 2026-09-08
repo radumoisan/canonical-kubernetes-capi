@@ -22,7 +22,7 @@ kubectl config current-context
     myk8scluster-admin@myk8scluster
     ```
 
-!!! note "Example output"
+!!! info ""
     Generated resource names, IP addresses, ports, and ages in expected results come from the validated lab environment
     and may differ in your environment. Use the values reported by your commands.
 
@@ -402,8 +402,10 @@ Kubernetes can inject environment variables for existing Services into newly cre
 
 Canonical Kubernetes uses CoreDNS for cluster DNS. Pods are configured through `/etc/resolv.conf` to send cluster-domain queries to the DNS Service.
 
-CoreDNS runs in Pods in the `kube-system` namespace. For more information, see the
-[CoreDNS documentation](https://coredns.io).
+CoreDNS runs in Pods in the `kube-system` namespace.
+
+!!! info ""
+    For more information, see the [CoreDNS documentation](https://coredns.io).
 
 A Service receives a DNS record such as `service-name.namespace.svc.cluster.local`. For example, the `nginx` Service in the `default` namespace can be reached as `nginx.default.svc.cluster.local`, or simply as `nginx` from the same namespace.
 
@@ -659,7 +661,7 @@ A `LoadBalancer` Service requests an externally reachable address from the platf
 
 ![loadbalancer](assets/loadbalancer2.png)
 
-!!! note "Diagram values"
+!!! warning ""
     The IP addresses and ports in the diagram differ from those used in the exercise.
 
 Create a `LoadBalancer` Service for the nginx application:
@@ -946,7 +948,7 @@ curl -s http://<ingress-address>/red
     red-microservice
     ```
 
-!!! note "Environment-specific address"
+!!! warning ""
     Your LoadBalancer IP address may differ from the example output.
 
 After testing, remove the application Pods, Services, and Ingress.
@@ -980,5 +982,6 @@ kubectl delete -f ~/resources/ingress.yaml
     ingress.networking.k8s.io "bluered-ingress" deleted from default namespace
     ```
 
-For more information, see the [Kubernetes Ingress documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/)
-and the [Cilium Ingress documentation](https://docs.cilium.io/en/stable/network/servicemesh/ingress/).
+!!! info ""
+    For more information, see the [Kubernetes Ingress documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+    and the [Cilium Ingress documentation](https://docs.cilium.io/en/stable/network/servicemesh/ingress/).
