@@ -84,7 +84,7 @@ Apply the configuration with:
 kubectl apply -f metallb.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The IPAddressPool is configured.
 
 Verify the configuration has been applied with:
 
@@ -122,7 +122,7 @@ Apply the configuration with:
 kubectl apply -f metallb-l2advertisement.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The L2Advertisement is configured.
 
 Also, cilium-ingress endpointslice will need a patch:
 
@@ -134,7 +134,7 @@ kubectl label endpointslice cilium-ingress \
   --overwrite
 ```
 ??? example "Expected result"
-    No output.
+    The EndpointSlice label is applied.
 
 Now, let's take a look at the existing services:
 
@@ -188,7 +188,7 @@ cat ~/resources/nginx-pod.yaml
 kubectl create -f ~/resources/nginx-pod.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The nginx Pod is created.
 
 Now it's time to create the Service. The Service definition file should be found under `~/resources/nginx-service.yaml`. Let's
 examine the contents and create the Service:
@@ -216,7 +216,7 @@ cat ~/resources/nginx-service.yaml
 kubectl create -f ~/resources/nginx-service.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The nginx Service is created.
 
 The service should now be visible:
 
@@ -254,7 +254,7 @@ lxc shell k8s-ctrl
 apt install -y pandoc
 ```
 ??? example "Expected result"
-    No output.
+    Pandoc is installed successfully.
 
 ```bash
 # Probe nginx from the k8s-ctrl node.
@@ -297,7 +297,7 @@ lxc shell k8s-worker1
 apt install -y pandoc
 ```
 ??? example "Expected result"
-    No output.
+    Pandoc is installed successfully.
 
 ```bash
 # Probe nginx from the k8s-worker1 node.
@@ -397,14 +397,14 @@ kubectl exec -it shell -- /bin/bash
 apt update
 ```
 ??? example "Expected result"
-    No output.
+    Package information is updated successfully.
 
 ```bash
 # Install curl and pandoc in the shell pod.
 apt install curl pandoc -y
 ```
 ??? example "Expected result"
-    No output.
+    Curl and pandoc are installed successfully.
 
 ```bash
 # Probe nginx using service discovery.
@@ -481,7 +481,7 @@ cat ~/resources/nodeport-service.yaml
 kubectl create -f ~/resources/nodeport-service.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The NodePort Service is created.
 
 Inspect the service:
 
@@ -506,7 +506,7 @@ First, install the required `pandoc` so you can interpret HTML output of `curl`:
 sudo apt update && sudo apt install -y pandoc
 ```
 ??? example "Expected result"
-    No output.
+    Package information is updated and pandoc is installed successfully.
 
 Then, find out the IP address of your nodes, control plane and worker:
 
@@ -597,7 +597,7 @@ cat ~/resources/loadbalancer-service.yaml
 kubectl create -f ~/resources/loadbalancer-service.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The LoadBalancer Service is created.
 
 It will take a couple of seconds for `MetalLB` to allocate a Load Balancer. Take a look at services:
 
@@ -631,14 +631,14 @@ Cleanup the resources created so far:
 kubectl delete svc nginx nginx-loadbalancer nginx-nodeport
 ```
 ??? example "Expected result"
-    No output.
+    The nginx Services are deleted.
 
 ```bash
 # Delete the nginx and shell pods.
 kubectl delete pod nginx shell
 ```
 ??? example "Expected result"
-    No output.
+    The nginx and shell Pods are deleted.
 
 ## :material-numeric-2-circle-outline: 2.4 Ingress controllers
 
@@ -761,21 +761,21 @@ Create the objects:
 kubectl create -f ~/resources/blue-app.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The blue microservice objects are created.
 
 ```bash
 # Create the red microservice objects.
 kubectl create -f ~/resources/red-app.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The red microservice objects are created.
 
 ```bash
 # Create the Ingress object.
 kubectl create -f ~/resources/ingress.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The Ingress is created.
 
 The Ingress Controller is created:
 
@@ -800,21 +800,21 @@ After everything is tested, remove the Ingress and pods.
 kubectl delete -f ~/resources/blue-app.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The blue microservice objects are deleted.
 
 ```bash
 # Delete the red microservice objects.
 kubectl delete -f ~/resources/red-app.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The red microservice objects are deleted.
 
 ```bash
 # Delete the Ingress object.
 kubectl delete -f ~/resources/ingress.yaml
 ```
 ??? example "Expected result"
-    No output.
+    The Ingress is deleted.
 
 For more Ingress related information regarding Canonical Kubernetes, please visit:
 

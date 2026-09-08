@@ -38,21 +38,21 @@ First, install MAAS and LXD:
 sudo snap install maas --channel=3.6/stable
 ```
 ??? example "Expected result"
-    No output.
+    The MAAS snap is installed.
 
 ```bash
 # Install the MAAS test database.
 sudo snap install maas-test-db --channel=3.6/stable
 ```
 ??? example "Expected result"
-    No output.
+    The MAAS test database snap is installed.
 
 ```bash
 # Install LXD.
 sudo snap install lxd --channel=5.21/stable
 ```
 ??? example "Expected result"
-    No output.
+    The LXD snap is installed.
 
 Next, initialize LXD and disable IPv6:
 
@@ -108,28 +108,28 @@ net.ipv6.conf.default.disable_ipv6 = 1
 EOF
 ```
 ??? example "Expected result"
-    No output.
+    The IPv6 sysctl settings are echoed to the terminal.
 
 ```bash
 # Reload sysctl settings.
 sudo sysctl -p
 ```
 ??? example "Expected result"
-    No output.
+    The configured sysctl settings are displayed.
 
 ```bash
 # Disable IPv6 for all interfaces.
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
 ```
 ??? example "Expected result"
-    No output.
+    The all-interface IPv6 setting is displayed as `1`.
 
 ```bash
 # Disable IPv6 for default interfaces.
 sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
 ```
 ??? example "Expected result"
-    No output.
+    The default-interface IPv6 setting is displayed as `1`.
 
 Next, let's also initialize MAAS:
 
@@ -139,7 +139,7 @@ IP_ADDRESS=$(hostname -I | awk '{print $1}')
 sudo maas init region+rack --database-uri maas-test-db:/// --maas-url http://${IP_ADDRESS}:5240/MAAS
 ```
 ??? example "Expected result"
-    No output.
+    MAAS initializes successfully.
 
 Now that both LXD and MAAS are installed, let's do the initial MAAS setup and integrate it with LXD. Your local host will be registered as a LXD host inside MAAS:
 
@@ -148,7 +148,7 @@ Now that both LXD and MAAS are installed, let's do the initial MAAS setup and in
 sudo maas createadmin --username=admin --password="<maas-admin-password>" --email=admin@example.com
 ```
 ??? example "Expected result"
-    No output.
+    The MAAS administrator is created.
 
 ```bash
 # Save the MAAS API key.
@@ -162,21 +162,21 @@ sudo maas apikey --username=admin > ~/maas-apikey
 maas login deployprofile http://${IP_ADDRESS}:5240/MAAS - < ~/maas-apikey
 ```
 ??? example "Expected result"
-    No output.
+    The MAAS CLI login succeeds.
 
 ```bash
 # Import boot resources.
 maas deployprofile boot-resources import
 ```
 ??? example "Expected result"
-    No output.
+    Boot-resource import starts.
 
 ```bash
 # Register the local LXD host.
 maas deployprofile vm-hosts create type=lxd power_address=https://127.0.0.1:8443 project=default name=localhost
 ```
 ??? example "Expected result"
-    No output.
+    The local LXD host is registered in MAAS.
 
 ```bash
 # Save the LXD host certificate.
@@ -190,14 +190,14 @@ maas deployprofile vm-host parameters 1 | jq -r '.certificate' > /tmp/maas.crt
 sudo lxc config trust add /tmp/maas.crt
 ```
 ??? example "Expected result"
-    No output.
+    The MAAS certificate is trusted by LXD.
 
 ```bash
 # Refresh the LXD host in MAAS.
 maas deployprofile vm-host refresh 1
 ```
 ??? example "Expected result"
-    No output.
+    The LXD host refresh is requested.
 
 ```bash
 # Generate an SSH key pair.
@@ -211,7 +211,7 @@ ssh-keygen -t rsa -N "" -q -f ~/.ssh/id_rsa
 maas deployprofile sshkeys create key="`cat ~/.ssh/id_rsa.pub`"
 ```
 ??? example "Expected result"
-    No output.
+    The SSH public key is added to MAAS.
 
 LXD has it's own network and but DNS and DHCP will be handled by MAAS. To configure MAAS to work with LXD's network, run:
 
@@ -315,7 +315,7 @@ maas "$PROFILE" vlan update "$FABRIC_ID" "$VID" \
 maas "$PROFILE" maas set-config name=upstream_dns value="1.1.1.1"
 ```
 ??? example "Expected result"
-    No output.
+    The updated MAAS configuration is displayed.
 
 ```bash
 # Configure systemd-resolved to use the local MAAS DNS server.
@@ -340,35 +340,35 @@ Finally, let's create the VMs required by our setup:
 maas deployprofile vm-host update 1 cpu_over_commit_ratio=2
 ```
 ??? example "Expected result"
-    No output.
+    The VM host CPU overcommit ratio is updated.
 
 ```bash
 # Create the management VM.
 maas deployprofile vm-host compose 1 cores=2 memory=4096 storage="1:40(default)" hostname=cluster-ctrl architecture="amd64/generic" interfaces=eth0:subnet=$SUBNET_ID
 ```
 ??? example "Expected result"
-    No output.
+    The management VM is created.
 
 ```bash
 # Create the Kubernetes control-plane VM.
 maas deployprofile vm-host compose 1 cores=4 memory=8192 storage="1:80(default)" hostname=k8s-ctrl architecture="amd64/generic" interfaces=eth0:subnet=$SUBNET_ID
 ```
 ??? example "Expected result"
-    No output.
+    The Kubernetes control-plane VM is created.
 
 ```bash
 # Create the first Kubernetes worker VM.
 maas deployprofile vm-host compose 1 cores=4 memory=8192 storage="1:80(default)" hostname=k8s-worker1 architecture="amd64/generic" interfaces=eth0:subnet=$SUBNET_ID
 ```
 ??? example "Expected result"
-    No output.
+    The first Kubernetes worker VM is created.
 
 ```bash
 # Create the second Kubernetes worker VM.
 maas deployprofile vm-host compose 1 cores=4 memory=8192 storage="1:80(default)" hostname=k8s-worker2 architecture="amd64/generic" interfaces=eth0:subnet=$SUBNET_ID
 ```
 ??? example "Expected result"
-    No output.
+    The second Kubernetes worker VM is created.
 
 VMs are created and commissioned automatically. Before we can proceed, we need to tag those machines:
 
@@ -413,7 +413,7 @@ CLUSTERCTL_SYSTEM_ID=$(maas "$PROFILE" machines read \
 maas "$PROFILE" machine deploy "$CLUSTERCTL_SYSTEM_ID" distro_series="ubuntu/noble"
 ```
 ??? example "Expected result"
-    No output.
+    Deployment of the management machine starts.
 
 After the machine gets deployed with Ubuntu Noble (24.04), we will need to install the necessary tools to have Cluster API up and running:
 
@@ -431,14 +431,14 @@ CLUSTERCTL_IP=$(maas "$PROFILE" machine read "$CLUSTERCTL_SYSTEM_ID" \
 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLUSTERCTL_IP "sudo snap install k8s --classic --channel=1.35-classic/stable"
 ```
 ??? example "Expected result"
-    No output.
+    Canonical Kubernetes is installed on the management machine.
 
 ```bash
 # Bootstrap Canonical Kubernetes on the management machine.
 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLUSTERCTL_IP "sudo k8s bootstrap && sudo k8s status --wait-ready"
 ```
 ??? example "Expected result"
-    No output.
+    Canonical Kubernetes bootstraps and reports ready on the management machine.
 
 ```bash
 # Create the management cluster kubeconfig.
@@ -452,7 +452,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLU
 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLUSTERCTL_IP "curl -L https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.13.5/clusterctl-linux-amd64 -o clusterctl"
 ```
 ??? example "Expected result"
-    No output.
+    `clusterctl` is downloaded to the management machine.
 
 ```bash
 # Install clusterctl on the management machine.
@@ -617,7 +617,7 @@ exit
 sudo snap install kubectl --channel=1.35/stable --classic
 ```
 ??? example "Expected result"
-    No output.
+    The kubectl snap is installed.
 
 Then, check `kubectl` has access to the cluster:
 
@@ -677,7 +677,7 @@ scp $CLUSTERCTL_IP:~/.kube/config ~/.kube/
 sudo snap install kubectl --channel=1.35/stable --classic
 ```
 ??? example "Expected result"
-    No output.
+    The kubectl snap is installed.
 
 Once you have both config files and `kubectl` client, you can inspect both management and deployed clusters.
 
@@ -954,7 +954,7 @@ export KUBECONFIG=~/.kube/myk8scluster_config
 kubectl create -f ~/resources/nginx-pod.yaml
 ```
 ??? example "Expected result"
-    No output.
+    `pod/nginx` is created.
 
 List the pods and describe the newly created pod, try to understand what is in there and talk with the trainer on the bits
 that you do not understand:
@@ -980,7 +980,7 @@ Delete the pod:
 kubectl delete pod nginx
 ```
 ??? example "Expected result"
-    No output.
+    `pod "nginx"` is deleted.
 
 That's good for a simple web server, but what if persistent storage is needed? The container file system only lives as
 long as the container does. Volumes should be used for any persistent storage needs.
@@ -1022,7 +1022,7 @@ export KUBECONFIG=~/.kube/myk8scluster_config
 kubectl create -f ~/resources/redis-volume-pod.yaml
 ```
 ??? example "Expected result"
-    No output.
+    `pod/redis` is created.
 
 ```bash
 # Describe the redis pod.
@@ -1049,6 +1049,6 @@ Finally, delete the pod:
 kubectl delete pod redis
 ```
 ??? example "Expected result"
-    No output.
+    `pod "redis"` is deleted.
 
 ![bundle](assets/pod2.png)

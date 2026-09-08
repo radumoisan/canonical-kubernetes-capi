@@ -205,56 +205,55 @@ cd ~ && git clone https://github.com/cloudbase/kubernetes-tools.git
 There are two ways to get the image, either build it or pull it from `DockerHub`. I am going to demonstrate how to built it, you don't
 have to do it because the image is going to be pulled from `DockerHub`.
 
-??? warning "Warning"
+!!! warning "Demonstration only"
     **NOTE**: do not run the commands in the following box, only for demonstration, the images are already on DockerHub. You
     can skip the next few commands until you see "Demonstration ends here".
 
-    ```bash
-    # only for demonstration
-    cd ~/kubernetes-tools/web-app/
-    ```
-    ??? example "Expected result"
-        The working directory changes to the web app directory.
+```bash
+# only for demonstration
+cd ~/kubernetes-tools/web-app/
+```
+??? example "Expected result"
+    The working directory changes to the web app directory.
 
-    ```bash
-    # Build the web app image for demonstration.
-    docker build -t <username>/web-app .
-    ```
-    ??? example "Expected result"
-        The web app image is built.
+```bash
+# Build the web app image for demonstration.
+docker build -t <username>/web-app .
+```
+??? example "Expected result"
+    The web app image is built.
 
-    ```bash
-    # Tag the web app image for demonstration.
-    docker tag <username>/web-app <username>/web-app:v1
-    ```
-    ??? example "Expected result"
-        The web app image is tagged.
+```bash
+# Tag the web app image for demonstration.
+docker tag <username>/web-app <username>/web-app:v1
+```
+??? example "Expected result"
+    The web app image is tagged.
 
 The image is already public on `DockerHub`. It will automatically get pulled on all Kubernetes Nodes upon Pod creation.
 
 Because the image is used with a complex environment like Kubernetes, it's useful to test it beforehand on it's own:
 
-??? warning "Warning"
-    ```bash
-    # Run the web app container for demonstration.
-    docker run -p 80:80 <username>/web-app:v1
-    ```
-    ??? example "Expected result"
-        The web app container runs and listens on port `80`.
+```bash
+# Run the web app container for demonstration.
+docker run -p 80:80 <username>/web-app:v1
+```
+??? example "Expected result"
+    The web app container runs and listens on port `80`.
 
 Open another tab on your public machine and test the container:
 
-??? warning "Warning"
-    ```bash
-    # Test the web app container for demonstration.
-    curl localhost:80
-    ```
-    ??? example "Expected result"
-        The web app response is displayed.
+```bash
+# Test the web app container for demonstration.
+curl localhost:80
+```
+??? example "Expected result"
+    The web app response is displayed.
 
 Go back on the first tab and kill the container with `CTRL+C`.
 
-**NOTE**: Demonstration ends here.
+!!! warning "Demonstration ends here"
+    **NOTE**: Demonstration ends here.
 
 Create a helm chart template and modify `values.yaml` to point to the correct image (`repository` and `tag`) and `replicaCount`:
 
@@ -391,32 +390,33 @@ helm delete web-app-stateless
 The Docker image can be built as before. I will only demonstrate how to do this, the image is already public so no need for you
 to to this:
 
-??? warning "Warning"
+!!! warning "Demonstration only"
     **NOTE**: do not run the commands in the following box, only for demonstration, the images are already on DockerHub. You
     can skip the next few commands until you see "Demonstration ends here".
 
-    ```bash
-    # only for demonstration
-    cd ~/kubernetes-tools/web-app-stateful/image
-    ```
-    ??? example "Expected result"
-        The working directory changes to the stateful web app image directory.
+```bash
+# only for demonstration
+cd ~/kubernetes-tools/web-app-stateful/image
+```
+??? example "Expected result"
+    The working directory changes to the stateful web app image directory.
 
-    ```bash
-    # Build the stateful web app image for demonstration.
-    docker build -t <username>/web-app-stateful .
-    ```
-    ??? example "Expected result"
-        The stateful web app image is built.
+```bash
+# Build the stateful web app image for demonstration.
+docker build -t <username>/web-app-stateful .
+```
+??? example "Expected result"
+    The stateful web app image is built.
 
-    ```bash
-    # Tag the stateful web app image for demonstration.
-    docker tag <username>/web-app-stateful <username>/web-app-stateful:v1
-    ```
-    ??? example "Expected result"
-        The stateful web app image is tagged.
+```bash
+# Tag the stateful web app image for demonstration.
+docker tag <username>/web-app-stateful <username>/web-app-stateful:v1
+```
+??? example "Expected result"
+    The stateful web app image is tagged.
 
-**NOTE**: Demonstration ends here.
+!!! warning "Demonstration ends here"
+    **NOTE**: Demonstration ends here.
 
 The image is already public on `DockerHub`. It will automatically get pulled on all Kubernetes Nodes upon Pod creation.
 
@@ -473,6 +473,8 @@ Open another terminal tab on your student machine. List your apps to get the nam
 helm list
 ```
 ??? example "Expected result"
+    Partial output includes:
+
     ```text
     web-app-stateful
     ```

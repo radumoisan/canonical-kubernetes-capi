@@ -291,7 +291,7 @@ kubectl describe secret bob-secret
 
     Data
     ====
-    password:  8 bytes
+    password:  <password-length> bytes
     username:  3 bytes
     ```
 

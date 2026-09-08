@@ -1,2 +1,5 @@
 # Generated site output
 site/
+
+# Student inventories can contain credentials
+students_*.json
