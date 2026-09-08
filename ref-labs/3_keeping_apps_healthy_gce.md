@@ -151,10 +151,10 @@ NAME             READY   STATUS    RESTARTS   AGE
 nginx-rs-47z7s   1/1     Running   0          33m
 nginx-rs-6vldg   1/1     Running   0          33m
 nginx-rs-b9s4g   1/1     Running   0          33m
+```
 
-kubectl logs nginx-rs-47z7s
-kubectl logs nginx-rs-6vldg
-kubectl logs nginx-rs-b9s4g
+```bash
+kubectl logs -l app=nginx --prefix=true
 ```
 
 Delete a Pod to observe the ReplicaSet restore its desired replica count. First, list the Pods and choose one to delete:
@@ -164,7 +164,7 @@ kubectl get pods
 ```
 
 ```bash
-kubectl delete pod nginx-rs-47z7s
+kubectl delete pod <pod-name>
 ```
 
 List the Pods again. A replacement Pod should appear with a recent age:

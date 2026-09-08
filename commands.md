@@ -1947,3 +1947,708 @@ kubectl delete -f ~/resources/ingress.yaml
     ```text
     ingress.networking.k8s.io "bluered-ingress" deleted from default namespace
     ```
+
+### 2026-09-08 - Chapter 3 validation
+
+Select the workload cluster kubeconfig.
+
+```bash
+export KUBECONFIG=~/.kube/myk8scluster_config
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the active Kubernetes context.
+
+```bash
+kubectl config current-context
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-admin@myk8scluster
+    ```
+
+Display the ReplicaSet definition.
+
+```bash
+cat ~/resources/nginx-rs.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: apps/v1
+    kind: ReplicaSet
+    metadata:
+      name: nginx-rs
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+        spec:
+          containers:
+          - name: nginx
+            image: nginx:latest
+            ports:
+            - containerPort: 80
+    ```
+
+Create the ReplicaSet.
+
+```bash
+kubectl create -f ~/resources/nginx-rs.yaml
+```
+
+??? example "Expected result"
+    ```text
+    replicaset.apps/nginx-rs created
+    ```
+
+Wait for the ReplicaSet to report three Ready replicas.
+
+```bash
+kubectl wait --for=jsonpath='{.status.readyReplicas}'=3 replicaset/nginx-rs --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    replicaset.apps/nginx-rs condition met
+    ```
+
+List the ReplicaSet.
+
+```bash
+kubectl get rs nginx-rs -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME       DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES         SELECTOR
+    nginx-rs   3         3         3       55s   nginx        nginx:latest   app=nginx
+    ```
+
+Describe the ReplicaSet.
+
+```bash
+kubectl describe rs nginx-rs
+```
+
+??? example "Expected result"
+    ```text
+    Name:         nginx-rs
+    Namespace:    default
+    Selector:     app=nginx
+    Labels:       <none>
+    Annotations:  <none>
+    Replicas:     3 current / 3 desired
+    Pods Status:  3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+    Pod Template:
+      Labels:  app=nginx
+      Containers:
+       nginx:
+        Image:         nginx:latest
+        Port:          80/TCP
+        Host Port:     0/TCP
+        Environment:   <none>
+        Mounts:        <none>
+      Volumes:         <none>
+      Node-Selectors:  <none>
+      Tolerations:     <none>
+    Events:
+      Type    Reason            Age   From                   Message
+      ----    ------            ----  ----                   -------
+      Normal  SuccessfulCreate  79s   replicaset-controller  Created pod: nginx-rs-vgmmg
+      Normal  SuccessfulCreate  79s   replicaset-controller  Created pod: nginx-rs-t98pg
+      Normal  SuccessfulCreate  79s   replicaset-controller  Created pod: nginx-rs-qd655
+    ```
+
+List the ReplicaSet pods.
+
+```bash
+kubectl get pods
+```
+
+??? example "Expected result"
+    ```text
+    NAME             READY   STATUS    RESTARTS   AGE
+    nginx-rs-qd655   1/1     Running   0          119s
+    nginx-rs-t98pg   1/1     Running   0          119s
+    nginx-rs-vgmmg   1/1     Running   0          119s
+    ```
+
+Create the LoadBalancer service.
+
+```bash
+kubectl create -f ~/resources/loadbalancer-service.yaml
+```
+
+??? example "Expected result"
+    ```text
+    service/nginx-loadbalancer created
+    ```
+
+Wait for the LoadBalancer service to receive an IP address.
+
+```bash
+kubectl wait --for=jsonpath='{.status.loadBalancer.ingress[0].ip}' service/nginx-loadbalancer --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    service/nginx-loadbalancer condition met
+    ```
+
+List the LoadBalancer service.
+
+```bash
+kubectl get svc nginx-loadbalancer
+```
+
+??? example "Expected result"
+    ```text
+    NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)          AGE
+    nginx-loadbalancer   LoadBalancer   10.152.159.80   10.107.242.11   8080:30600/TCP   57s
+    ```
+
+Probe nginx through the LoadBalancer.
+
+```bash
+curl -s 10.107.242.11:8080 | pandoc -f html -t plain
+```
+
+??? example "Expected result"
+    ```text
+    Welcome to nginx!
+
+    If you see this page, nginx is successfully installed and working.
+    Further configuration is required for the web server, reverse proxy, API
+    gateway, load balancer, content cache, or other features.
+
+    For online documentation and support please refer to nginx.org.
+    To engage with the community please visit community.nginx.org.
+    For enterprise grade support, professional services, additional security
+    features and capabilities please refer to f5.com/nginx.
+
+    Thank you for using nginx.
+    ```
+
+List the ReplicaSet pods before inspecting their logs.
+
+```bash
+kubectl get pods
+```
+
+??? example "Expected result"
+    ```text
+    NAME             READY   STATUS    RESTARTS   AGE
+    nginx-rs-qd655   1/1     Running   0          4m27s
+    nginx-rs-t98pg   1/1     Running   0          4m27s
+    nginx-rs-vgmmg   1/1     Running   0          4m27s
+    ```
+
+View prefixed logs from all ReplicaSet pods.
+
+```bash
+kubectl logs -l app=nginx --prefix=true
+```
+
+??? example "Expected result"
+    ```text
+    [pod/nginx-rs-qd655/nginx] 10.1.0.173 - - [08/Sep/2026:15:33:46 +0000] "GET / HTTP/1.1" 200 896 "-" "curl/8.5.0" "-"
+    [pod/nginx-rs-t98pg/nginx] 2026/09/08 15:29:58 [notice] 1#1: nginx/1.31.5
+    [pod/nginx-rs-vgmmg/nginx] 2026/09/08 15:29:51 [notice] 1#1: nginx/1.31.5
+    ```
+
+List the ReplicaSet pods before deleting one.
+
+```bash
+kubectl get pods
+```
+
+??? example "Expected result"
+    ```text
+    NAME             READY   STATUS    RESTARTS   AGE
+    nginx-rs-qd655   1/1     Running   0          6m9s
+    nginx-rs-t98pg   1/1     Running   0          6m9s
+    nginx-rs-vgmmg   1/1     Running   0          6m9s
+    ```
+
+Delete one ReplicaSet pod.
+
+```bash
+kubectl delete pod nginx-rs-qd655
+```
+
+??? example "Expected result"
+    ```text
+    pod "nginx-rs-qd655" deleted from default namespace
+    ```
+
+Wait for the ReplicaSet to restore three Ready replicas.
+
+```bash
+kubectl wait --for=jsonpath='{.status.readyReplicas}'=3 replicaset/nginx-rs --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    replicaset.apps/nginx-rs condition met
+    ```
+
+List the ReplicaSet pods after self-healing.
+
+```bash
+kubectl get pods
+```
+
+??? example "Expected result"
+    ```text
+    NAME             READY   STATUS    RESTARTS   AGE
+    nginx-rs-t98pg   1/1     Running   0          7m30s
+    nginx-rs-vgmmg   1/1     Running   0          7m30s
+    nginx-rs-x26xp   1/1     Running   0          52s
+    ```
+
+Delete the ReplicaSet.
+
+```bash
+kubectl delete rs nginx-rs
+```
+
+??? example "Expected result"
+    ```text
+    replicaset.apps "nginx-rs" deleted from default namespace
+    ```
+
+Delete the LoadBalancer service.
+
+```bash
+kubectl delete svc nginx-loadbalancer
+```
+
+??? example "Expected result"
+    ```text
+    service "nginx-loadbalancer" deleted from default namespace
+    ```
+
+Check for remaining nginx ReplicaSets and Pods.
+
+```bash
+kubectl get rs,pod -l app=nginx -o name
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Check for the deleted LoadBalancer service.
+
+```bash
+kubectl get svc nginx-loadbalancer -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the Deployment definition.
+
+```bash
+cat ~/resources/nginx-deploy.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-deploy
+      labels:
+        app: nginx
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+        spec:
+          containers:
+          - name: nginx
+            image: nginx:1.28
+            ports:
+            - containerPort: 80
+    ```
+
+Create the Deployment.
+
+```bash
+kubectl create -f ~/resources/nginx-deploy.yaml
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps/nginx-deploy created
+    ```
+
+Wait for the Deployment rollout to complete.
+
+```bash
+kubectl rollout status deploy nginx-deploy --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    deployment "nginx-deploy" successfully rolled out
+    ```
+
+List the Deployment.
+
+```bash
+kubectl get deploy nginx-deploy -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME           READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS   IMAGES       SELECTOR
+    nginx-deploy   3/3     3            3           101s   nginx        nginx:1.28   app=nginx
+    ```
+
+Describe the Deployment before updating it.
+
+```bash
+kubectl describe deploy nginx-deploy
+```
+
+??? example "Expected result"
+    ```text
+    Name:                   nginx-deploy
+    Namespace:              default
+    CreationTimestamp:      Tue, 08 Sep 2026 15:42:35 +0000
+    Labels:                 app=nginx
+    Annotations:            deployment.kubernetes.io/revision: 1
+    Selector:               app=nginx
+    Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+    StrategyType:           RollingUpdate
+    MinReadySeconds:        0
+    RollingUpdateStrategy:  25% max unavailable, 25% max surge
+    Pod Template:
+      Labels:  app=nginx
+      Containers:
+       nginx:
+        Image:         nginx:1.28
+        Port:          80/TCP
+        Host Port:     0/TCP
+        Environment:   <none>
+        Mounts:        <none>
+      Volumes:         <none>
+      Node-Selectors:  <none>
+      Tolerations:     <none>
+    Conditions:
+      Type           Status  Reason
+      ----           ------  ------
+      Available      True    MinimumReplicasAvailable
+      Progressing    True    NewReplicaSetAvailable
+    OldReplicaSets:  <none>
+    NewReplicaSet:   nginx-deploy-65dfbbb4d7 (3/3 replicas created)
+    Events:
+      Type    Reason             Age   From                   Message
+      ----    ------             ----  ----                   -------
+      Normal  ScalingReplicaSet  2m8s  deployment-controller  Scaled up replica set nginx-deploy-65dfbbb4d7 from 0 to 3
+    ```
+
+List the Deployment pods before updating the image.
+
+```bash
+kubectl get pods
+```
+
+??? example "Expected result"
+    ```text
+    NAME                            READY   STATUS    RESTARTS   AGE
+    nginx-deploy-65dfbbb4d7-2l7ss   1/1     Running   0          2m57s
+    nginx-deploy-65dfbbb4d7-8l7dt   1/1     Running   0          2m57s
+    nginx-deploy-65dfbbb4d7-ctln7   1/1     Running   0          2m57s
+    ```
+
+Update the Deployment nginx image.
+
+```bash
+kubectl set image deploy nginx-deploy nginx=nginx:1.29
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps/nginx-deploy image updated
+    ```
+
+Wait for the updated Deployment rollout to complete.
+
+```bash
+kubectl rollout status deploy nginx-deploy --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    Waiting for deployment "nginx-deploy" rollout to finish: 1 old replicas are pending termination...
+    Waiting for deployment "nginx-deploy" rollout to finish: 1 old replicas are pending termination...
+    deployment "nginx-deploy" successfully rolled out
+    ```
+
+List Deployments after updating the image.
+
+```bash
+kubectl get deploy -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME           READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES       SELECTOR
+    nginx-deploy   3/3     3            3           4m36s   nginx        nginx:1.29   app=nginx
+    ```
+
+List the Deployment pods after updating the image.
+
+```bash
+kubectl get pods
+```
+
+??? example "Expected result"
+    ```text
+    NAME                            READY   STATUS    RESTARTS   AGE
+    nginx-deploy-86c8cd48f6-9s9q7   1/1     Running   0          73s
+    nginx-deploy-86c8cd48f6-mk992   1/1     Running   0          91s
+    nginx-deploy-86c8cd48f6-xxzgj   1/1     Running   0          82s
+    ```
+
+Describe the Deployment after updating the image.
+
+```bash
+kubectl describe deploy nginx-deploy
+```
+
+??? example "Expected result"
+    ```text
+    Name:                   nginx-deploy
+    Namespace:              default
+    CreationTimestamp:      Tue, 08 Sep 2026 15:42:35 +0000
+    Labels:                 app=nginx
+    Annotations:            deployment.kubernetes.io/revision: 2
+    Selector:               app=nginx
+    Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+    StrategyType:           RollingUpdate
+    MinReadySeconds:        0
+    RollingUpdateStrategy:  25% max unavailable, 25% max surge
+    Pod Template:
+      Labels:  app=nginx
+      Containers:
+       nginx:
+        Image:         nginx:1.29
+        Port:          80/TCP
+        Host Port:     0/TCP
+        Environment:   <none>
+        Mounts:        <none>
+      Volumes:         <none>
+      Node-Selectors:  <none>
+      Tolerations:     <none>
+    Conditions:
+      Type           Status  Reason
+      ----           ------  ------
+      Available      True    MinimumReplicasAvailable
+      Progressing    True    NewReplicaSetAvailable
+    OldReplicaSets:  nginx-deploy-65dfbbb4d7 (0/0 replicas created)
+    NewReplicaSet:   nginx-deploy-86c8cd48f6 (3/3 replicas created)
+    Events:
+      Type    Reason             Age    From                   Message
+      ----    ------             ----   ----                   -------
+      Normal  ScalingReplicaSet  5m41s  deployment-controller  Scaled up replica set nginx-deploy-65dfbbb4d7 from 0 to 3
+      Normal  ScalingReplicaSet  2m6s   deployment-controller  Scaled up replica set nginx-deploy-86c8cd48f6 from 0 to 1
+      Normal  ScalingReplicaSet  117s   deployment-controller  Scaled down replica set nginx-deploy-65dfbbb4d7 from 3 to 2
+      Normal  ScalingReplicaSet  117s   deployment-controller  Scaled up replica set nginx-deploy-86c8cd48f6 from 1 to 2
+      Normal  ScalingReplicaSet  108s   deployment-controller  Scaled down replica set nginx-deploy-65dfbbb4d7 from 2 to 1
+      Normal  ScalingReplicaSet  108s   deployment-controller  Scaled up replica set nginx-deploy-86c8cd48f6 from 2 to 3
+      Normal  ScalingReplicaSet  98s    deployment-controller  Scaled down replica set nginx-deploy-65dfbbb4d7 from 1 to 0
+    ```
+
+List the Deployment revision history.
+
+```bash
+kubectl rollout history deploy nginx-deploy
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps/nginx-deploy
+    REVISION  CHANGE-CAUSE
+    1         <none>
+    2         <none>
+    ```
+
+Inspect Deployment revision 1.
+
+```bash
+kubectl rollout history deploy nginx-deploy --revision=1
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps/nginx-deploy with revision #1
+    Pod Template:
+      Labels:	app=nginx
+      pod-template-hash=65dfbbb4d7
+      Containers:
+       nginx:
+        Image:	nginx:1.28
+        Port:	80/TCP
+        Host Port:	0/TCP
+        Environment:	<none>
+        Mounts:	<none>
+      Volumes:	<none>
+      Node-Selectors:	<none>
+      Tolerations:	<none>
+    ```
+
+Inspect Deployment revision 2.
+
+```bash
+kubectl rollout history deploy nginx-deploy --revision=2
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps/nginx-deploy with revision #2
+    Pod Template:
+      Labels:	app=nginx
+      pod-template-hash=86c8cd48f6
+      Containers:
+       nginx:
+        Image:	nginx:1.29
+        Port:	80/TCP
+        Host Port:	0/TCP
+        Environment:	<none>
+        Mounts:	<none>
+      Volumes:	<none>
+      Node-Selectors:	<none>
+      Tolerations:	<none>
+    ```
+
+Roll back the Deployment to revision 1.
+
+```bash
+kubectl rollout undo deploy nginx-deploy --to-revision=1
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps/nginx-deploy rolled back
+    ```
+
+Wait for the rolled-back Deployment to become available.
+
+```bash
+kubectl rollout status deploy nginx-deploy --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    deployment "nginx-deploy" successfully rolled out
+    ```
+
+Describe the rolled-back Deployment.
+
+```bash
+kubectl describe deploy nginx-deploy
+```
+
+??? example "Expected result"
+    ```text
+    Name:                   nginx-deploy
+    Namespace:              default
+    CreationTimestamp:      Tue, 08 Sep 2026 15:42:35 +0000
+    Labels:                 app=nginx
+    Annotations:            deployment.kubernetes.io/revision: 3
+    Selector:               app=nginx
+    Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+    StrategyType:           RollingUpdate
+    MinReadySeconds:        0
+    RollingUpdateStrategy:  25% max unavailable, 25% max surge
+    Pod Template:
+      Labels:  app=nginx
+      Containers:
+       nginx:
+        Image:         nginx:1.28
+        Port:          80/TCP
+        Host Port:     0/TCP
+        Environment:   <none>
+        Mounts:        <none>
+      Volumes:         <none>
+      Node-Selectors:  <none>
+      Tolerations:     <none>
+    Conditions:
+      Type           Status  Reason
+      ----           ------  ------
+      Available      True    MinimumReplicasAvailable
+      Progressing    True    NewReplicaSetAvailable
+    OldReplicaSets:  nginx-deploy-86c8cd48f6 (0/0 replicas created)
+    NewReplicaSet:   nginx-deploy-65dfbbb4d7 (3/3 replicas created)
+    Events:
+      Type    Reason             Age                From                   Message
+      ----    ------             ----               ----                   -------
+      Normal  ScalingReplicaSet  9m54s              deployment-controller  Scaled up replica set nginx-deploy-65dfbbb4d7 from 0 to 3
+      Normal  ScalingReplicaSet  6m19s              deployment-controller  Scaled up replica set nginx-deploy-86c8cd48f6 from 0 to 1
+      Normal  ScalingReplicaSet  6m10s              deployment-controller  Scaled down replica set nginx-deploy-65dfbbb4d7 from 3 to 2
+      Normal  ScalingReplicaSet  6m10s              deployment-controller  Scaled up replica set nginx-deploy-86c8cd48f6 from 1 to 2
+      Normal  ScalingReplicaSet  6m1s               deployment-controller  Scaled down replica set nginx-deploy-65dfbbb4d7 from 2 to 1
+      Normal  ScalingReplicaSet  6m1s               deployment-controller  Scaled up replica set nginx-deploy-86c8cd48f6 from 2 to 3
+      Normal  ScalingReplicaSet  5m51s              deployment-controller  Scaled down replica set nginx-deploy-65dfbbb4d7 from 1 to 0
+      Normal  ScalingReplicaSet  52s                deployment-controller  Scaled up replica set nginx-deploy-65dfbbb4d7 from 0 to 1
+      Normal  ScalingReplicaSet  50s                deployment-controller  Scaled down replica set nginx-deploy-86c8cd48f6 from 3 to 2
+      Normal  ScalingReplicaSet  46s (x4 over 50s)  deployment-controller  (combined from similar events): Scaled down replica set nginx-deploy-86c8cd48f6 from 1 to 0
+    ```
+
+List the ReplicaSets after the rollback.
+
+```bash
+kubectl get rs
+```
+
+??? example "Expected result"
+    ```text
+    NAME                      DESIRED   CURRENT   READY   AGE
+    nginx-deploy-65dfbbb4d7   3         3         3       11m
+    nginx-deploy-86c8cd48f6   0         0         0       8m12s
+    ```
+
+Delete the Deployment.
+
+```bash
+kubectl delete deploy nginx-deploy
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps "nginx-deploy" deleted from default namespace
+    ```
+
+Check for remaining nginx Deployments, ReplicaSets, and Pods.
+
+```bash
+kubectl get deploy,rs,pod -l app=nginx -o name
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
