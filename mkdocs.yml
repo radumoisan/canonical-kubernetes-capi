@@ -11,7 +11,7 @@ theme:
 nav:
   - "📄 Home": index.md
   - "📋 Kubernetes Basics": 1-kubernetes-basics.md
-  - "⏳ Networking": 2-networking.md
+  - "📋 Networking": 2-networking.md
   - "⏳ Keeping apps healthy": 3-keeping-apps-healthy.md
   - "⏳ Storage and User Data": 4-storage-and-user-data.md
   - "⏳ Autoscaling": 5-autoscaling.md

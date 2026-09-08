@@ -1,12 +1,38 @@
 # :material-numeric-2-circle: 2. Networking
 
+Select the workload cluster kubeconfig before running this chapter's `kubectl` commands:
+
+```bash
+# Select the workload cluster kubeconfig.
+export KUBECONFIG=~/.kube/myk8scluster_config
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Verify that `kubectl` targets the workload cluster:
+
+```bash
+# Display the current Kubernetes context.
+kubectl config current-context
+```
+??? example "Expected result"
+    ```text
+    myk8scluster-admin@myk8scluster
+    ```
+
+!!! note "Example output"
+    Generated resource names, IP addresses, ports, and ages in expected results come from the validated lab environment
+    and may differ in your environment. Use the values reported by your commands.
+
 ## :material-book-open-page-variant-outline: 2.1 Exposing apps using Services and Labels
 
 The applications created so far are not exposed outside the cluster. Directly addressing Pods is unreliable for several reasons:
 
-  * Pods are ephemeral.
-  * Kubernetes assigns IP addresses to Pods after they are scheduled, so clients should not rely on addresses known in advance.
-  * Applications can scale across multiple Pods, and clients should not need to track their addresses or locations.
+* Pods are ephemeral.
+* Kubernetes assigns IP addresses to Pods after they are scheduled, so clients should not rely on addresses known in advance.
+* Applications can scale across multiple Pods, and clients should not need to track their addresses or locations.
 
 Kubernetes provides the `Service` resource to give clients a stable way to reach these Pods.
 
@@ -17,10 +43,11 @@ A Service provides a stable access point for a group of Pods. Most Services rece
 ![service](assets/service1.png)
 
 There are four Service types:
-  * `ClusterIP`: exposes the Service on an internal virtual IP address.
-  * `NodePort`: exposes the Service on a static port on every node.
-  * `LoadBalancer`: requests an externally reachable address from the platform's load-balancer implementation.
-  * `ExternalName`: maps the Service to an external DNS name by returning a CNAME record. It does not configure proxying.
+
+* `ClusterIP`: exposes the Service on an internal virtual IP address.
+* `NodePort`: exposes the Service on a static port on every node.
+* `LoadBalancer`: requests an externally reachable address from the platform's load-balancer implementation.
+* `ExternalName`: maps the Service to an external DNS name by returning a CNAME record. It does not configure proxying.
 
 Labels are key-value metadata attached to objects such as Pods. A Service selector identifies the Pods that provide its endpoints.
 
@@ -43,7 +70,8 @@ spec:
   - XX.XX.XX.10-XX.XX.XX.40
 ```
 
-Replace `XX.XX.XX` with the first three octets of the LXD bridge's IPv4 address shown by:
+For the validated `/24` LXD bridge network, replace `XX.XX.XX` with the first three octets of the bridge's IPv4 address
+shown by:
 
 ```bash
 # Display the LXD bridge address.
@@ -52,8 +80,8 @@ ip add sh dev lxdbr0
 ??? example "Expected result"
     ```text
     3: lxdbr0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
-        link/ether 00:16:3e:d9:14:a7 brd ff:ff:ff:ff:ff:ff
-        inet 10.219.64.1/24 scope global lxdbr0
+        link/ether 00:16:3e:47:9e:4b brd ff:ff:ff:ff:ff:ff
+        inet 10.107.242.1/24 scope global lxdbr0
            valid_lft forever preferred_lft forever
     ```
 
@@ -67,8 +95,10 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 10.219.64.10-10.219.64.40
+  - 10.107.242.10-10.107.242.40
 ```
+
+This pool is inside the `.1-.50` range reserved in Chapter 1, so MAAS does not allocate these addresses to cluster machines.
 
 Apply the configuration with:
 
@@ -77,7 +107,9 @@ Apply the configuration with:
 kubectl apply -f metallb.yaml
 ```
 ??? example "Expected result"
-    The IPAddressPool is configured.
+    ```text
+    ipaddresspool.metallb.io/lb-pool created
+    ```
 
 Verify the configuration has been applied with:
 
@@ -86,14 +118,31 @@ Verify the configuration has been applied with:
 kubectl get IPAddressPool -n metallb-system
 ```
 ??? example "Expected result"
-    The IPAddressPool is displayed.
+    ```text
+    NAME      AUTO ASSIGN   AVOID BUGGY IPS   ADDRESSES
+    lb-pool   true          false             ["10.107.242.10-10.107.242.40"]
+    ```
 
 ```bash
 # Describe the MetalLB IP address pool.
 kubectl describe IPAddressPool -n metallb-system lb-pool
 ```
 ??? example "Expected result"
-    IPAddressPool details are displayed.
+    ```text
+    Name:         lb-pool
+    Namespace:    metallb-system
+    API Version:  metallb.io/v1beta1
+    Kind:         IPAddressPool
+    Spec:
+      Addresses:
+        10.107.242.10-10.107.242.40
+      Auto Assign:       true
+      Avoid Buggy I Ps:  false
+    Status:
+      assignedIPv4:   1
+      availableIPv4:  30
+    Events:           <none>
+    ```
 
 Also, create a L2Advertisement - `metallb-l2advertisement.yaml`:
 
@@ -115,19 +164,23 @@ Apply the configuration with:
 kubectl apply -f metallb-l2advertisement.yaml
 ```
 ??? example "Expected result"
-    The L2Advertisement is configured.
+    ```text
+    l2advertisement.metallb.io/lb-pool created
+    ```
 
-The `cilium-ingress` EndpointSlice also needs the Service label:
+The automatically managed `cilium-ingress` EndpointSlice should have the Service label. Verify it without relying on its generated name:
 
 ```bash
-# Label the cilium-ingress endpoint slice.
-kubectl label endpointslice cilium-ingress \
-  -n kube-system \
-  kubernetes.io/service-name=cilium-ingress \
-  --overwrite
+# Verify the cilium-ingress endpoint slice Service label.
+kubectl get endpointslice -n kube-system \
+  -l kubernetes.io/service-name=cilium-ingress \
+  --show-labels
 ```
 ??? example "Expected result"
-    The EndpointSlice label is applied.
+    ```text
+    NAME                   ADDRESSTYPE   PORTS   ENDPOINTS         AGE     LABELS
+    cilium-ingress-qwp8x   IPv4          9999    192.192.192.192   3h28m   app.kubernetes.io/managed-by=Helm,endpointslice.kubernetes.io/managed-by=endpointslicemirroring-controller.k8s.io,kubernetes.io/service-name=cilium-ingress
+    ```
 
 Now, let's take a look at the existing services:
 
@@ -137,20 +190,21 @@ kubectl get svc --all-namespaces
 ```
 ??? example "Expected result"
     ```text
-    NAMESPACE        NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
-    default          kubernetes                          ClusterIP      10.152.0.1       <none>        443/TCP                      68m
-    kube-system      cilium-ingress                      LoadBalancer   10.152.84.241    10.219.64.10  80:31695/TCP,443:31146/TCP   68m
-    kube-system      ck-storage-rawfile-csi-controller   ClusterIP      None             <none>        <none>                       68m
-    kube-system      ck-storage-rawfile-csi-node         ClusterIP      10.152.211.218   <none>        9100/TCP                     68m
-    kube-system      coredns                             ClusterIP      10.152.27.35     <none>        53/UDP,53/TCP                68m
-    kube-system      hubble-peer                         ClusterIP      10.152.17.16     <none>        443/TCP                      68m
-    kube-system      metrics-server                      ClusterIP      10.152.75.38     <none>        443/TCP                      68m
-    metallb-system   metallb-webhook-service             ClusterIP      10.152.195.15    <none>        443/TCP                      68m
+    NAMESPACE        NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                      AGE
+    default          kubernetes                          ClusterIP      10.152.0.1       <none>          443/TCP                      3h29m
+    kube-system      cilium-ingress                      LoadBalancer   10.152.181.41    10.107.242.10   80:31285/TCP,443:30697/TCP   3h28m
+    kube-system      ck-storage-rawfile-csi-controller   ClusterIP      None             <none>          <none>                       3h29m
+    kube-system      ck-storage-rawfile-csi-node         ClusterIP      10.152.43.17     <none>          9100/TCP                     3h29m
+    kube-system      coredns                             ClusterIP      10.152.17.81     <none>          53/UDP,53/TCP                3h29m
+    kube-system      hubble-peer                         ClusterIP      10.152.53.109    <none>          443/TCP                      3h29m
+    kube-system      metrics-server                      ClusterIP      10.152.210.241   <none>          443/TCP                      3h29m
+    metallb-system   metallb-webhook-service             ClusterIP      10.152.84.215    <none>          443/TCP                      3h29m
     ```
 
 This output lists Services used by cluster components and applications. Only the `cilium-ingress` Service has the `LoadBalancer` type. A ClusterIP is an internal virtual address implemented by the cluster networking data plane and is normally reachable only from the cluster network. Adding `-o wide` displays each Service selector, when present.
 
-**NOTE**: Workload controllers such as Deployments and ReplicaSets also use selectors to associate with Pods.
+!!! note "Selectors"
+    Workload controllers such as Deployments and ReplicaSets also use selectors to associate with Pods.
 
 Redeploy `nginx` with a label. Display `~/resources/nginx-pod.yaml` and note the `labels` field:
 
@@ -159,7 +213,7 @@ Redeploy `nginx` with a label. Display `~/resources/nginx-pod.yaml` and note the
 cat ~/resources/nginx-pod.yaml
 ```
 ??? example "Expected result"
-    ```text
+    ```yaml
     apiVersion: v1
     kind: Pod
     metadata:
@@ -179,7 +233,18 @@ cat ~/resources/nginx-pod.yaml
 kubectl create -f ~/resources/nginx-pod.yaml
 ```
 ??? example "Expected result"
-    The nginx Pod is created.
+    ```text
+    pod/nginx created
+    ```
+
+```bash
+# Wait for the nginx pod to become Ready.
+kubectl wait --for=condition=Ready pod/nginx --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    pod/nginx condition met
+    ```
 
 Now it's time to create the Service. The Service definition file should be found under `~/resources/nginx-service.yaml`. Let's
 examine the contents and create the Service:
@@ -189,7 +254,7 @@ examine the contents and create the Service:
 cat ~/resources/nginx-service.yaml
 ```
 ??? example "Expected result"
-    ```text
+    ```yaml
     apiVersion: v1
     kind: Service
     metadata:
@@ -207,7 +272,9 @@ cat ~/resources/nginx-service.yaml
 kubectl create -f ~/resources/nginx-service.yaml
 ```
 ??? example "Expected result"
-    The nginx Service is created.
+    ```text
+    service/nginx created
+    ```
 
 The service should now be visible:
 
@@ -217,12 +284,13 @@ kubectl get svc -o wide
 ```
 ??? example "Expected result"
     ```text
-    NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-    kubernetes   ClusterIP   10.152.0.1      <none>        443/TCP    70m   <none>
-    nginx        ClusterIP   10.152.95.221   <none>        8080/TCP   5s    app=nginx
+    NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE     SELECTOR
+    kubernetes   ClusterIP   10.152.0.1      <none>        443/TCP    3h32m   <none>
+    nginx        ClusterIP   10.152.46.161   <none>        8080/TCP   26s     app=nginx
     ```
 
-The application can now be accessed through the Service from within the cluster, but not from outside it.
+The application can now be accessed through the Service from within the cluster, but it is not exposed to external
+clients.
 
 The following probes demonstrate internal Service connectivity. External access methods are introduced later in this chapter.
 
@@ -233,18 +301,22 @@ In the default Kubernetes network model, nodes can reach Pods without NAT unless
 lxc shell k8s-ctrl
 ```
 ??? example "Expected result"
-    A shell opens on the k8s-ctrl node.
+    ```shell
+    root@k8s-ctrl:~#
+    ```
 
 ```bash
 # Install pandoc on the k8s-ctrl node.
 apt install -y pandoc
 ```
 ??? example "Expected result"
-    Pandoc is installed successfully.
+    ```text
+    Setting up pandoc (3.1.3+ds-2) ...
+    ```
 
 ```bash
 # Probe nginx from the k8s-ctrl node.
-curl -s 10.152.95.221:8080 | pandoc -f html -t plain
+curl -s 10.152.46.161:8080 | pandoc -f html -t plain
 ```
 ??? example "Expected result"
     ```text
@@ -267,7 +339,9 @@ curl -s 10.152.95.221:8080 | pandoc -f html -t plain
 exit
 ```
 ??? example "Expected result"
-    The student machine shell resumes.
+    ```shell
+    ubuntu@radumoisan:~$
+    ```
 
 Repeat the probe from another worker node:
 
@@ -276,18 +350,22 @@ Repeat the probe from another worker node:
 lxc shell k8s-worker1
 ```
 ??? example "Expected result"
-    A shell opens on the k8s-worker1 node.
+    ```shell
+    root@k8s-worker1:~#
+    ```
 
 ```bash
 # Install pandoc on the k8s-worker1 node.
 apt install -y pandoc
 ```
 ??? example "Expected result"
-    Pandoc is installed successfully.
+    ```text
+    Setting up pandoc (3.1.3+ds-2) ...
+    ```
 
 ```bash
 # Probe nginx from the k8s-worker1 node.
-curl -s 10.152.95.221:8080 | pandoc -f html -t plain
+curl -s 10.152.46.161:8080 | pandoc -f html -t plain
 ```
 ??? example "Expected result"
     ```text
@@ -312,7 +390,9 @@ Go back to the student machine:
 exit
 ```
 ??? example "Expected result"
-    The student machine shell resumes.
+    ```shell
+    ubuntu@radumoisan:~$
+    ```
 
 ## :material-book-open-page-variant-outline: 2.2 Service discovery
 
@@ -322,7 +402,8 @@ Kubernetes can inject environment variables for existing Services into newly cre
 
 Canonical Kubernetes uses CoreDNS for cluster DNS. Pods are configured through `/etc/resolv.conf` to send cluster-domain queries to the DNS Service.
 
-CoreDNS runs in Pods in the `kube-system` namespace. More information is available at https://coredns.io.
+CoreDNS runs in Pods in the `kube-system` namespace. For more information, see the
+[CoreDNS documentation](https://coredns.io).
 
 A Service receives a DNS record such as `service-name.namespace.svc.cluster.local`. For example, the `nginx` Service in the `default` namespace can be reached as `nginx.default.svc.cluster.local`, or simply as `nginx` from the same namespace.
 
@@ -337,8 +418,8 @@ kubectl get pods -n kube-system | { head -n 1; grep "coredns"; }
 ??? example "Expected result"
     ```text
     NAME                                  READY   STATUS    RESTARTS   AGE
-    coredns-7b7cc6b5fc-hbbbg              1/1     Running   0          63m
-    coredns-7b7cc6b5fc-nmrb6              1/1     Running   0          63m
+    coredns-c4fd9db5c-t5f84               1/1     Running   0          3h36m
+    coredns-c4fd9db5c-ww2bj               1/1     Running   0          3h36m
     ```
 
 The Pod can be created without a Pod definition file:
@@ -348,14 +429,31 @@ The Pod can be created without a Pod definition file:
 kubectl run shell -i --tty --image ubuntu -- /bin/bash
 ```
 ??? example "Expected result"
-    An interactive shell opens in the pod.
+    ```shell
+    All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+    If you don't see a command prompt, try pressing enter.
+    root@shell:/#
+    ```
 
 ```bash
 # Exit the shell pod.
 exit
 ```
 ??? example "Expected result"
-    The student machine shell resumes.
+    ```shell
+    ubuntu@radumoisan:~$
+    ```
+
+Exiting stops the container's main shell, and the Pod restarts it. Wait for the Pod to become Ready again:
+
+```bash
+# Wait for the shell pod to become Ready again.
+kubectl wait --for=condition=Ready pod/shell --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    pod/shell condition met
+    ```
 
 After which we can reconnect to the pod:
 
@@ -364,21 +462,30 @@ After which we can reconnect to the pod:
 kubectl exec -it shell -- /bin/bash
 ```
 ??? example "Expected result"
-    An interactive shell opens in the pod.
+    ```shell
+    root@shell:/#
+    ```
 
 ```bash
 # Update package information in the shell pod.
 apt update
 ```
 ??? example "Expected result"
-    Package information is updated successfully.
+    ```text
+    Fetched 26.0 MB in 4s (7026 kB/s)
+    24 packages can be upgraded. Run 'apt list --upgradable' to see them.
+    ```
 
 ```bash
 # Install curl and pandoc in the shell pod.
 apt install curl pandoc -y
 ```
 ??? example "Expected result"
-    Curl and pandoc are installed successfully.
+    ```text
+    Setting up pandoc (3.7.0.2+ds-1) ...
+    Setting up curl (8.18.0-1ubuntu2.4) ...
+    Processing triggers for ca-certificates (20260601~26.04.1) ...
+    ```
 
 ```bash
 # Probe nginx using service discovery.
@@ -405,7 +512,9 @@ curl -s nginx:8080 | pandoc -f html -t plain
 exit
 ```
 ??? example "Expected result"
-    The student machine shell resumes.
+    ```shell
+    ubuntu@radumoisan:~$
+    ```
 
 Here `nginx` is the name of the Service:
 
@@ -416,8 +525,8 @@ kubectl get svc -o wide
 ??? example "Expected result"
     ```text
     NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-    kubernetes   ClusterIP   10.152.0.1      <none>        443/TCP    95m   <none>
-    nginx        ClusterIP   10.152.95.221   <none>        8080/TCP   25m   app=nginx
+    kubernetes   ClusterIP   10.152.0.1      <none>        443/TCP    4h    <none>
+    nginx        ClusterIP   10.152.46.161   <none>        8080/TCP   27m   app=nginx
     ```
 
 ## :material-book-open-page-variant-outline: 2.3 NodePort and LoadBalancer Services
@@ -435,7 +544,7 @@ This is a `NodePort` Service definition for the nginx application:
 cat ~/resources/nodeport-service.yaml
 ```
 ??? example "Expected result"
-    ```text
+    ```yaml
     apiVersion: v1
     kind: Service
     metadata:
@@ -455,7 +564,9 @@ cat ~/resources/nodeport-service.yaml
 kubectl create -f ~/resources/nodeport-service.yaml
 ```
 ??? example "Expected result"
-    The NodePort Service is created.
+    ```text
+    service/nginx-nodeport created
+    ```
 
 Inspect the service:
 
@@ -465,10 +576,10 @@ kubectl get svc -o wide
 ```
 ??? example "Expected result"
     ```text
-    NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE   SELECTOR
-    kubernetes       ClusterIP   10.152.0.1      <none>        443/TCP          96m   <none>
-    nginx            ClusterIP   10.152.95.221   <none>        8080/TCP         25m   app=nginx
-    nginx-nodeport   NodePort    10.152.57.213   <none>        8080:30111/TCP   5s    app=nginx
+    NAME             TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE    SELECTOR
+    kubernetes       ClusterIP   10.152.0.1       <none>        443/TCP          4h3m   <none>
+    nginx            ClusterIP   10.152.46.161    <none>        8080/TCP         31m    app=nginx
+    nginx-nodeport   NodePort    10.152.132.179   <none>        8080:30111/TCP   29s    app=nginx
     ```
 
 The `nodePort: 30111` field selects the port exposed on each node. A client connects to `<NodeIP>:30111`:
@@ -480,7 +591,13 @@ First, install `pandoc` to render the HTML output from `curl` as text:
 sudo apt update && sudo apt install -y pandoc
 ```
 ??? example "Expected result"
-    Package information is updated and pandoc is installed successfully.
+    ```text
+    6 packages can be upgraded. Run 'apt list --upgradable' to see them.
+    The following NEW packages will be installed:
+      liblua5.4-0 pandoc pandoc-data
+    Setting up pandoc (3.1.3+ds-2) ...
+    Processing triggers for man-db (2.12.0-4build2) ...
+    ```
 
 Then, identify the IP addresses of the control plane and worker nodes:
 
@@ -493,17 +610,17 @@ lxc list -c n,4
     +--------------+--------------------------+
     |     NAME     |           IPV4           |
     +--------------+--------------------------+
-    | cluster-ctrl | 10.219.64.21 (eth0)      |
-    |              | 10.1.0.177 (cilium_host) |
+    | cluster-ctrl | 10.107.242.61 (eth0)     |
+    |              | 10.1.0.36 (cilium_host)  |
     +--------------+--------------------------+
-    | k8s-ctrl     | 10.219.64.22 (eth0)      |
-    |              | 10.1.0.44 (cilium_host)  |
+    | k8s-ctrl     | 10.107.242.62 (eth0)     |
+    |              | 10.1.0.173 (cilium_host) |
     +--------------+--------------------------+
-    | k8s-worker1  | 10.219.64.23 (eth0)      |
-    |              | 10.1.1.202 (cilium_host) |
+    | k8s-worker1  | 10.107.242.63 (eth0)     |
+    |              | 10.1.1.85 (cilium_host)  |
     +--------------+--------------------------+
-    | k8s-worker2  | 10.219.64.24 (eth0)      |
-    |              | 10.1.2.3 (cilium_host)   |
+    | k8s-worker2  | 10.107.242.64 (eth0)     |
+    |              | 10.1.2.216 (cilium_host) |
     +--------------+--------------------------+
     ```
 
@@ -511,7 +628,7 @@ Lastly, use the IP address of any reachable node whose name starts with `k8s-` t
 
 ```bash
 # Probe nginx through the NodePort.
-curl -s 10.219.64.24:30111 | pandoc -f html -t plain
+curl -s 10.107.242.64:30111 | pandoc -f html -t plain
 ```
 ??? example "Expected result"
     ```text
@@ -529,18 +646,21 @@ curl -s 10.219.64.24:30111 | pandoc -f html -t plain
     Thank you for using nginx.
     ```
 
-**NOTE**: Firewall and routing rules must allow access to port `30111` on the selected node.
+!!! warning "NodePort access"
+    Firewall and routing rules must allow access to port `30111` on the selected node.
 
 Consider these NodePort characteristics in production:
-  * Only one Service can use a given NodePort.
-  * The default NodePort range is 30000 to 32767, although it is configurable.
-  * Clients or an external load balancer must use reachable node addresses and handle node availability.
+
+* Only one Service can use a given NodePort.
+* The default NodePort range is 30000 to 32767, although it is configurable.
+* Clients or an external load balancer must use reachable node addresses and handle node availability.
 
 A `LoadBalancer` Service requests an externally reachable address from the platform's load-balancer implementation. Cloud providers commonly supply this integration. In this local deployment, Cilium and MetalLB provide it, and the allocated address is not necessarily public.
 
 ![loadbalancer](assets/loadbalancer2.png)
 
-**NOTE** the IPs and ports from the diagram differ from the exercise ones.
+!!! note "Diagram values"
+    The IP addresses and ports in the diagram differ from those used in the exercise.
 
 Create a `LoadBalancer` Service for the nginx application:
 
@@ -549,7 +669,7 @@ Create a `LoadBalancer` Service for the nginx application:
 cat ~/resources/loadbalancer-service.yaml
 ```
 ??? example "Expected result"
-    ```text
+    ```yaml
     apiVersion: v1
     kind: Service
     metadata:
@@ -568,9 +688,11 @@ cat ~/resources/loadbalancer-service.yaml
 kubectl create -f ~/resources/loadbalancer-service.yaml
 ```
 ??? example "Expected result"
-    The LoadBalancer Service is created.
+    ```text
+    service/nginx-loadbalancer created
+    ```
 
-MetalLB may take a few seconds to allocate an address. List the Services:
+MetalLB may take a few seconds to allocate an address. Repeat the following command until `nginx-loadbalancer` has an `EXTERNAL-IP` instead of `<pending>`:
 
 ```bash
 # List services.
@@ -578,21 +700,34 @@ kubectl get svc
 ```
 ??? example "Expected result"
     ```text
-    NAME                 TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE     SELECTOR
-    kubernetes           ClusterIP      10.152.0.1       <none>        443/TCP          98m     <none>
-    nginx                ClusterIP      10.152.95.221    <none>        8080/TCP         28m     app=nginx
-    nginx-loadbalancer   LoadBalancer   10.152.170.223   10.219.64.11  8080:32294/TCP   4s      app=nginx
-    nginx-nodeport       NodePort       10.152.57.213    <none>        8080:30111/TCP   2m46s   app=nginx
+    NAME                 TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)          AGE
+    kubernetes           ClusterIP      10.152.0.1       <none>          443/TCP          4h10m
+    nginx                ClusterIP      10.152.46.161    <none>          8080/TCP         38m
+    nginx-loadbalancer   LoadBalancer   10.152.20.193    10.107.242.11   8080:30364/TCP   30s
+    nginx-nodeport       NodePort       10.152.132.179   <none>          8080:30111/TCP   7m20s
     ```
 
-The `EXTERNAL-IP` column shows the address allocated by MetalLB. In this example, the endpoint is `10.219.64.11:8080`. If your cluster reports a different address, substitute it in the browser and the following command:
+The `EXTERNAL-IP` column shows the address allocated by MetalLB. In this example, the endpoint is `10.107.242.11:8080`. If your cluster reports a different address, substitute it in the browser and the following command:
 
 ```bash
 # Probe nginx through the LoadBalancer.
-curl -s 10.219.64.11:8080 | pandoc -f html -t plain
+curl -s 10.107.242.11:8080 | pandoc -f html -t plain
 ```
 ??? example "Expected result"
-    The nginx page is displayed.
+    ```text
+    Welcome to nginx!
+
+    If you see this page, nginx is successfully installed and working.
+    Further configuration is required for the web server, reverse proxy, API
+    gateway, load balancer, content cache, or other features.
+
+    For online documentation and support please refer to nginx.org.
+    To engage with the community please visit community.nginx.org.
+    For enterprise grade support, professional services, additional security
+    features and capabilities please refer to f5.com/nginx.
+
+    Thank you for using nginx.
+    ```
 
 Clean up the resources created so far:
 
@@ -601,14 +736,21 @@ Clean up the resources created so far:
 kubectl delete svc nginx nginx-loadbalancer nginx-nodeport
 ```
 ??? example "Expected result"
-    The nginx Services are deleted.
+    ```text
+    service "nginx" deleted from default namespace
+    service "nginx-loadbalancer" deleted from default namespace
+    service "nginx-nodeport" deleted from default namespace
+    ```
 
 ```bash
 # Delete the nginx and shell pods.
 kubectl delete pod nginx shell
 ```
 ??? example "Expected result"
-    The nginx and shell Pods are deleted.
+    ```text
+    pod "nginx" deleted from default namespace
+    pod "shell" deleted from default namespace
+    ```
 
 ## :material-book-open-page-variant-outline: 2.4 Ingress controllers
 
@@ -626,11 +768,11 @@ kubectl get pods -A -o wide | awk 'NR==1 || tolower($0) ~ /cilium/'
 ```
 ??? example "Expected result"
     ```text
-    NAMESPACE        NAME                                  READY   STATUS    RESTARTS      AGE    IP             NODE          NOMINATED NODE   READINESS GATES
-    kube-system      cilium-4v7dx                          1/1     Running   0             29m    10.219.64.23   k8s-worker1   <none>           <none>
-    kube-system      cilium-6glws                          1/1     Running   0             29m    10.219.64.22   k8s-ctrl      <none>           <none>
-    kube-system      cilium-m5mlm                          1/1     Running   0             29m    10.219.64.24   k8s-worker2   <none>           <none>
-    kube-system      cilium-operator-54487fb5d6-4bmvk      1/1     Running   0             29m    10.219.64.22   k8s-ctrl      <none>           <none>
+    NAMESPACE        NAME                                  READY   STATUS    RESTARTS   AGE     IP              NODE          NOMINATED NODE   READINESS GATES
+    kube-system      cilium-2k597                          1/1     Running   0          4h18m   10.107.242.62   k8s-ctrl      <none>           <none>
+    kube-system      cilium-lxtbw                          1/1     Running   0          4h8m    10.107.242.63   k8s-worker1   <none>           <none>
+    kube-system      cilium-operator-77968f785f-gpmlz      1/1     Running   0          4h18m   10.107.242.62   k8s-ctrl      <none>           <none>
+    kube-system      cilium-z74j9                          1/1     Running   0          4h8m    10.107.242.64   k8s-worker2   <none>           <none>
     ```
 
 ```bash
@@ -639,8 +781,8 @@ kubectl get svc -A |  awk 'NR==1 || tolower($0) ~ /cilium/'
 ```
 ??? example "Expected result"
     ```text
-    NAMESPACE        NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
-    kube-system      cilium-ingress                      LoadBalancer   10.152.84.241    10.219.64.5   80:31695/TCP,443:31146/TCP   144m
+    NAMESPACE        NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                      AGE
+    kube-system      cilium-ingress                      LoadBalancer   10.152.181.41    10.107.242.10   80:31285/TCP,443:30697/TCP   4h19m
     ```
 
 Imagine a web application with two microservices, red and blue. These examples display only text, but the same routing pattern applies to real-world applications.
@@ -652,7 +794,7 @@ Check the red microservice definition:
 cat ~/resources/red-app.yaml
 ```
 ??? example "Expected result"
-    ```text
+    ```yaml
     kind: Pod
     apiVersion: v1
     metadata:
@@ -686,7 +828,7 @@ Also, check the Ingress resource definition:
 cat ~/resources/ingress.yaml
 ```
 ??? example "Expected result"
-    ```text
+    ```yaml
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
@@ -714,6 +856,8 @@ cat ~/resources/ingress.yaml
                     number: 5678
     ```
 
+The legacy `ingress.kubernetes.io/rewrite-target` annotation is not required by Cilium for these `Prefix` routes. This exercise validates path routing, not URL rewriting.
+
 Each HTTP rule contains the following information:
 1. An optional `host`. If no host is specified, the rule applies to inbound HTTP traffic that reaches the Ingress address.
 
@@ -728,23 +872,49 @@ Create the objects:
 kubectl create -f ~/resources/blue-app.yaml
 ```
 ??? example "Expected result"
-    The blue microservice objects are created.
+    ```text
+    pod/blue-app created
+    service/blue-service created
+    ```
+
+```bash
+# Wait for the blue microservice pod to become Ready.
+kubectl wait --for=condition=Ready pod/blue-app --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    pod/blue-app condition met
+    ```
 
 ```bash
 # Create the red microservice objects.
 kubectl create -f ~/resources/red-app.yaml
 ```
 ??? example "Expected result"
-    The red microservice objects are created.
+    ```text
+    pod/red-app created
+    service/red-service created
+    ```
+
+```bash
+# Wait for the red microservice pod to become Ready.
+kubectl wait --for=condition=Ready pod/red-app --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    pod/red-app condition met
+    ```
 
 ```bash
 # Create the Ingress object.
 kubectl create -f ~/resources/ingress.yaml
 ```
 ??? example "Expected result"
-    The Ingress is created.
+    ```text
+    ingress.networking.k8s.io/bluered-ingress created
+    ```
 
-Verify the Ingress resource:
+Repeat the following command until the Ingress has an `ADDRESS` before testing its routes:
 
 ```bash
 # List Ingress resources.
@@ -752,38 +922,63 @@ kubectl get ingress
 ```
 ??? example "Expected result"
     ```text
-    NAME              CLASS    HOSTS   ADDRESS       PORTS   AGE
-    bluered-ingress   cilium   *       10.219.64.10   80      6s
+    NAME              CLASS    HOSTS   ADDRESS         PORTS   AGE
+    bluered-ingress   cilium   *       10.107.242.10   80      28s
     ```
 
-The `ADDRESS` column shows the address used to reach the Ingress. Open your tunneled browser and use that address for the `/blue` and `/red` paths.
+The `ADDRESS` column shows the address used to reach the Ingress. Open your tunneled browser and use that address for the `/blue` and `/red` paths. Replace `<ingress-address>` below with the reported address.
 
-**NOTE**: Your LoadBalancer IP address may differ from the example output.
+```bash
+# Probe the blue microservice through the Ingress.
+curl -s http://<ingress-address>/blue
+```
+??? example "Expected result"
+    ```text
+    blue-microservice
+    ```
 
-After testing, remove the Ingress and Pods.
+```bash
+# Probe the red microservice through the Ingress.
+curl -s http://<ingress-address>/red
+```
+??? example "Expected result"
+    ```text
+    red-microservice
+    ```
+
+!!! note "Environment-specific address"
+    Your LoadBalancer IP address may differ from the example output.
+
+After testing, remove the application Pods, Services, and Ingress.
 
 ```bash
 # Delete the blue microservice objects.
 kubectl delete -f ~/resources/blue-app.yaml
 ```
 ??? example "Expected result"
-    The blue microservice objects are deleted.
+    ```text
+    pod "blue-app" deleted from default namespace
+    service "blue-service" deleted from default namespace
+    ```
 
 ```bash
 # Delete the red microservice objects.
 kubectl delete -f ~/resources/red-app.yaml
 ```
 ??? example "Expected result"
-    The red microservice objects are deleted.
+    ```text
+    pod "red-app" deleted from default namespace
+    service "red-service" deleted from default namespace
+    ```
 
 ```bash
 # Delete the Ingress object.
 kubectl delete -f ~/resources/ingress.yaml
 ```
 ??? example "Expected result"
-    The Ingress is deleted.
+    ```text
+    ingress.networking.k8s.io "bluered-ingress" deleted from default namespace
+    ```
 
-For more Ingress-related information, see:
-
-https://kubernetes.io/docs/concepts/services-networking/ingress/
-https://docs.cilium.io/en/stable/network/servicemesh/ingress/
+For more information, see the [Kubernetes Ingress documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/)
+and the [Cilium Ingress documentation](https://docs.cilium.io/en/stable/network/servicemesh/ingress/).

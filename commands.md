@@ -1024,3 +1024,926 @@ kubectl delete pod redis
 
 ??? example "Expected result"
     `pod "redis" deleted from default namespace`
+
+### 2026-09-08 - Chapter 2 validation
+
+Select the workload cluster kubeconfig.
+
+```bash
+export KUBECONFIG=~/.kube/myk8scluster_config
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Verify the selected Kubernetes context.
+
+```bash
+kubectl config current-context
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-admin@myk8scluster
+    ```
+
+Display the LXD bridge address.
+
+```bash
+ip add sh dev lxdbr0
+```
+
+??? example "Expected result"
+    ```text
+    3: lxdbr0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+        link/ether 00:16:3e:47:9e:4b brd ff:ff:ff:ff:ff:ff
+        inet 10.107.242.1/24 scope global lxdbr0
+           valid_lft forever preferred_lft forever
+    ```
+
+Create the MetalLB IP address pool manifest.
+
+```bash
+install -m 600 /dev/stdin ~/metallb.yaml
+```
+
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: lb-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.107.242.10-10.107.242.40
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Apply the MetalLB IP address pool.
+
+```bash
+kubectl apply -f metallb.yaml
+```
+
+??? example "Expected result"
+    ```text
+    ipaddresspool.metallb.io/lb-pool created
+    ```
+
+List MetalLB IP address pools.
+
+```bash
+kubectl get IPAddressPool -n metallb-system
+```
+
+??? example "Expected result"
+    ```text
+    NAME      AUTO ASSIGN   AVOID BUGGY IPS   ADDRESSES
+    lb-pool   true          false             ["10.107.242.10-10.107.242.40"]
+    ```
+
+Describe the MetalLB IP address pool.
+
+```bash
+kubectl describe IPAddressPool -n metallb-system lb-pool
+```
+
+??? example "Expected result"
+    ```text
+    Name:         lb-pool
+    Namespace:    metallb-system
+    API Version:  metallb.io/v1beta1
+    Kind:         IPAddressPool
+    Spec:
+      Addresses:
+        10.107.242.10-10.107.242.40
+      Auto Assign:       true
+      Avoid Buggy I Ps:  false
+    Status:
+      assignedIPv4:   1
+      availableIPv4:  30
+    Events:           <none>
+    ```
+
+Create the MetalLB L2 advertisement manifest.
+
+```bash
+cat > ~/metallb-l2advertisement.yaml
+```
+
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: lb-pool
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - lb-pool
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Apply the MetalLB L2 advertisement.
+
+```bash
+kubectl apply -f metallb-l2advertisement.yaml
+```
+
+??? example "Expected result"
+    ```text
+    l2advertisement.metallb.io/lb-pool created
+    ```
+
+Verify the cilium-ingress EndpointSlice Service label.
+
+```bash
+kubectl get endpointslice -n kube-system \
+  -l kubernetes.io/service-name=cilium-ingress \
+  --show-labels
+```
+
+??? example "Expected result"
+    ```text
+    NAME                   ADDRESSTYPE   PORTS   ENDPOINTS         AGE     LABELS
+    cilium-ingress-qwp8x   IPv4          9999    192.192.192.192   3h28m   app.kubernetes.io/managed-by=Helm,endpointslice.kubernetes.io/managed-by=endpointslicemirroring-controller.k8s.io,kubernetes.io/service-name=cilium-ingress
+    ```
+
+List services in all namespaces.
+
+```bash
+kubectl get svc --all-namespaces
+```
+
+??? example "Expected result"
+    ```text
+    NAMESPACE        NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                      AGE
+    default          kubernetes                          ClusterIP      10.152.0.1       <none>          443/TCP                      3h29m
+    kube-system      cilium-ingress                      LoadBalancer   10.152.181.41    10.107.242.10   80:31285/TCP,443:30697/TCP   3h28m
+    kube-system      ck-storage-rawfile-csi-controller   ClusterIP      None             <none>          <none>                       3h29m
+    kube-system      ck-storage-rawfile-csi-node         ClusterIP      10.152.43.17     <none>          9100/TCP                     3h29m
+    kube-system      coredns                             ClusterIP      10.152.17.81     <none>          53/UDP,53/TCP                3h29m
+    kube-system      hubble-peer                         ClusterIP      10.152.53.109    <none>          443/TCP                      3h29m
+    kube-system      metrics-server                      ClusterIP      10.152.210.241   <none>          443/TCP                      3h29m
+    metallb-system   metallb-webhook-service             ClusterIP      10.152.84.215    <none>          443/TCP                      3h29m
+    ```
+
+Display the nginx pod definition.
+
+```bash
+cat ~/resources/nginx-pod.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: nginx
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+          - containerPort: 80
+    ```
+
+Create the nginx pod.
+
+```bash
+kubectl create -f ~/resources/nginx-pod.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod/nginx created
+    ```
+
+Wait for the nginx pod to become Ready.
+
+```bash
+kubectl wait --for=condition=Ready pod/nginx --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/nginx condition met
+    ```
+
+Display the nginx service definition.
+
+```bash
+cat ~/resources/nginx-service.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: nginx
+    spec:
+      ports:
+      - port: 8080
+        targetPort: 80
+      selector:
+        app: nginx
+    ```
+
+Create the nginx service.
+
+```bash
+kubectl create -f ~/resources/nginx-service.yaml
+```
+
+??? example "Expected result"
+    ```text
+    service/nginx created
+    ```
+
+List services with selectors.
+
+```bash
+kubectl get svc -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE     SELECTOR
+    kubernetes   ClusterIP   10.152.0.1      <none>        443/TCP    3h32m   <none>
+    nginx        ClusterIP   10.152.46.161   <none>        8080/TCP   26s     app=nginx
+    ```
+
+Enter the k8s-ctrl node shell.
+
+```bash
+lxc shell k8s-ctrl
+```
+
+??? example "Expected result"
+    ```text
+    root@k8s-ctrl:~#
+    ```
+
+Install pandoc on the k8s-ctrl node.
+
+```bash
+apt install -y pandoc
+```
+
+??? example "Expected result"
+    ```text
+    Setting up pandoc (3.1.3+ds-2) ...
+    ```
+
+Probe nginx from the k8s-ctrl node.
+
+```bash
+curl -s 10.152.46.161:8080 | pandoc -f html -t plain
+```
+
+??? example "Expected result"
+    ```text
+    Welcome to nginx!
+
+    If you see this page, nginx is successfully installed and working.
+    Further configuration is required for the web server, reverse proxy, API
+    gateway, load balancer, content cache, or other features.
+
+    For online documentation and support please refer to nginx.org.
+    To engage with the community please visit community.nginx.org.
+    For enterprise grade support, professional services, additional security
+    features and capabilities please refer to f5.com/nginx.
+
+    Thank you for using nginx.
+    ```
+
+Exit the k8s-ctrl node.
+
+```bash
+exit
+```
+
+??? example "Expected result"
+    ```text
+    ubuntu@radumoisan:~$
+    ```
+
+Enter the k8s-worker1 node shell.
+
+```bash
+lxc shell k8s-worker1
+```
+
+??? example "Expected result"
+    ```text
+    root@k8s-worker1:~#
+    ```
+
+Install pandoc on the k8s-worker1 node.
+
+```bash
+apt install -y pandoc
+```
+
+??? example "Expected result"
+    ```text
+    Setting up pandoc (3.1.3+ds-2) ...
+    ```
+
+Probe nginx from the k8s-worker1 node.
+
+```bash
+curl -s 10.152.46.161:8080 | pandoc -f html -t plain
+```
+
+??? example "Expected result"
+    ```text
+    Welcome to nginx!
+
+    If you see this page, nginx is successfully installed and working.
+    Further configuration is required for the web server, reverse proxy, API
+    gateway, load balancer, content cache, or other features.
+
+    For online documentation and support please refer to nginx.org.
+    To engage with the community please visit community.nginx.org.
+    For enterprise grade support, professional services, additional security
+    features and capabilities please refer to f5.com/nginx.
+
+    Thank you for using nginx.
+    ```
+
+Exit the k8s-worker1 node.
+
+```bash
+exit
+```
+
+??? example "Expected result"
+    ```text
+    ubuntu@radumoisan:~$
+    ```
+
+List the CoreDNS Pods.
+
+```bash
+kubectl get pods -n kube-system | { head -n 1; grep "coredns"; }
+```
+
+??? example "Expected result"
+    ```text
+    NAME                                  READY   STATUS    RESTARTS   AGE
+    coredns-c4fd9db5c-t5f84               1/1     Running   0          3h36m
+    coredns-c4fd9db5c-ww2bj               1/1     Running   0          3h36m
+    ```
+
+Create and enter the shell pod.
+
+```bash
+kubectl run shell -i --tty --image ubuntu -- /bin/bash
+```
+
+??? example "Expected result"
+    ```text
+    All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+    If you don't see a command prompt, try pressing enter.
+    root@shell:/#
+    ```
+
+Exit the shell pod.
+
+```bash
+exit
+```
+
+??? example "Expected result"
+    ```text
+    ubuntu@radumoisan:~$
+    ```
+
+Wait for the shell pod to become Ready again.
+
+```bash
+kubectl wait --for=condition=Ready pod/shell --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/shell condition met
+    ```
+
+Reconnect to the shell pod.
+
+```bash
+kubectl exec -it shell -- /bin/bash
+```
+
+??? example "Expected result"
+    ```text
+    root@shell:/#
+    ```
+
+Update package information in the shell pod.
+
+```bash
+apt update
+```
+
+??? example "Expected result"
+    ```text
+    Fetched 26.0 MB in 4s (7026 kB/s)
+    24 packages can be upgraded. Run 'apt list --upgradable' to see them.
+    ```
+
+Install curl and pandoc in the shell pod.
+
+```bash
+apt install curl pandoc -y
+```
+
+??? example "Expected result"
+    ```text
+    Setting up pandoc (3.7.0.2+ds-1) ...
+    Setting up curl (8.18.0-1ubuntu2.4) ...
+    Processing triggers for ca-certificates (20260601~26.04.1) ...
+    ```
+
+Probe nginx using service discovery.
+
+```bash
+curl -s nginx:8080 | pandoc -f html -t plain
+```
+
+??? example "Expected result"
+    ```text
+    Welcome to nginx!
+
+    If you see this page, nginx is successfully installed and working.
+    Further configuration is required for the web server, reverse proxy, API
+    gateway, load balancer, content cache, or other features.
+
+    For online documentation and support please refer to nginx.org.
+    To engage with the community please visit community.nginx.org.
+    For enterprise grade support, professional services, additional security
+    features and capabilities please refer to f5.com/nginx.
+
+    Thank you for using nginx.
+    ```
+
+Exit the shell pod.
+
+```bash
+exit
+```
+
+??? example "Expected result"
+    ```text
+    ubuntu@radumoisan:~$
+    ```
+
+List services with selectors after the service-discovery test.
+
+```bash
+kubectl get svc -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+    kubernetes   ClusterIP   10.152.0.1      <none>        443/TCP    4h    <none>
+    nginx        ClusterIP   10.152.46.161   <none>        8080/TCP   27m   app=nginx
+    ```
+
+Display the NodePort service definition.
+
+```bash
+cat ~/resources/nodeport-service.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: nginx-nodeport
+    spec:
+      type: NodePort
+      ports:
+      - port: 8080
+        targetPort: 80
+        nodePort: 30111
+      selector:
+        app: nginx
+    ```
+
+Create the NodePort service.
+
+```bash
+kubectl create -f ~/resources/nodeport-service.yaml
+```
+
+??? example "Expected result"
+    ```text
+    service/nginx-nodeport created
+    ```
+
+List services with selectors.
+
+```bash
+kubectl get svc -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME             TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE    SELECTOR
+    kubernetes       ClusterIP   10.152.0.1       <none>        443/TCP          4h3m   <none>
+    nginx            ClusterIP   10.152.46.161    <none>        8080/TCP         31m    app=nginx
+    nginx-nodeport   NodePort    10.152.132.179   <none>        8080:30111/TCP   29s    app=nginx
+    ```
+
+Install pandoc on the student machine before the NodePort client test.
+
+```bash
+sudo apt update && sudo apt install -y pandoc
+```
+
+??? example "Expected result"
+    ```text
+    6 packages can be upgraded. Run 'apt list --upgradable' to see them.
+    The following NEW packages will be installed:
+      liblua5.4-0 pandoc pandoc-data
+    Setting up pandoc (3.1.3+ds-2) ...
+    Processing triggers for man-db (2.12.0-4build2) ...
+    ```
+
+List NodePort client node IP addresses.
+
+```bash
+lxc list -c n,4
+```
+
+??? example "Expected result"
+    ```text
+    +--------------+--------------------------+
+    |     NAME     |           IPV4           |
+    +--------------+--------------------------+
+    | cluster-ctrl | 10.107.242.61 (eth0)     |
+    |              | 10.1.0.36 (cilium_host)  |
+    +--------------+--------------------------+
+    | k8s-ctrl     | 10.107.242.62 (eth0)     |
+    |              | 10.1.0.173 (cilium_host) |
+    +--------------+--------------------------+
+    | k8s-worker1  | 10.107.242.63 (eth0)     |
+    |              | 10.1.1.85 (cilium_host)  |
+    +--------------+--------------------------+
+    | k8s-worker2  | 10.107.242.64 (eth0)     |
+    |              | 10.1.2.216 (cilium_host) |
+    +--------------+--------------------------+
+    ```
+
+Probe nginx through the NodePort from the student machine.
+
+```bash
+curl -s 10.107.242.64:30111 | pandoc -f html -t plain
+```
+
+??? example "Expected result"
+    ```text
+    Welcome to nginx!
+
+    If you see this page, nginx is successfully installed and working.
+    Further configuration is required for the web server, reverse proxy, API
+    gateway, load balancer, content cache, or other features.
+
+    For online documentation and support please refer to nginx.org.
+    To engage with the community please visit community.nginx.org.
+    For enterprise grade support, professional services, additional security
+    features and capabilities please refer to f5.com/nginx.
+
+    Thank you for using nginx.
+    ```
+
+Display the LoadBalancer service definition.
+
+```bash
+cat ~/resources/loadbalancer-service.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: nginx-loadbalancer
+    spec:
+      type: LoadBalancer
+      ports:
+      - port: 8080
+        targetPort: 80
+      selector:
+        app: nginx
+    ```
+
+Create the LoadBalancer service.
+
+```bash
+kubectl create -f ~/resources/loadbalancer-service.yaml
+```
+
+??? example "Expected result"
+    ```text
+    service/nginx-loadbalancer created
+    ```
+
+List services.
+
+```bash
+kubectl get svc
+```
+
+??? example "Expected result"
+    ```text
+    NAME                 TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)          AGE
+    kubernetes           ClusterIP      10.152.0.1       <none>          443/TCP          4h10m
+    nginx                ClusterIP      10.152.46.161    <none>          8080/TCP         38m
+    nginx-loadbalancer   LoadBalancer   10.152.20.193    10.107.242.11   8080:30364/TCP   30s
+    nginx-nodeport       NodePort       10.152.132.179   <none>          8080:30111/TCP   7m20s
+    ```
+
+Probe nginx through the LoadBalancer.
+
+```bash
+curl -s 10.107.242.11:8080 | pandoc -f html -t plain
+```
+
+??? example "Expected result"
+    ```text
+    Welcome to nginx!
+
+    If you see this page, nginx is successfully installed and working.
+    Further configuration is required for the web server, reverse proxy, API
+    gateway, load balancer, content cache, or other features.
+
+    For online documentation and support please refer to nginx.org.
+    To engage with the community please visit community.nginx.org.
+    For enterprise grade support, professional services, additional security
+    features and capabilities please refer to f5.com/nginx.
+
+    Thank you for using nginx.
+    ```
+
+Delete the nginx services.
+
+```bash
+kubectl delete svc nginx nginx-loadbalancer nginx-nodeport
+```
+
+??? example "Expected result"
+    ```text
+    service "nginx" deleted from default namespace
+    service "nginx-loadbalancer" deleted from default namespace
+    service "nginx-nodeport" deleted from default namespace
+    ```
+
+Delete the nginx and shell pods.
+
+```bash
+kubectl delete pod nginx shell
+```
+
+??? example "Expected result"
+    ```text
+    pod "nginx" deleted from default namespace
+    pod "shell" deleted from default namespace
+    ```
+
+Check Cilium Pod readiness before creating the red and blue application resources.
+
+```bash
+kubectl get pods -A -o wide | awk 'NR==1 || tolower($0) ~ /cilium/'
+```
+
+??? example "Expected result"
+    ```text
+    NAMESPACE        NAME                                  READY   STATUS    RESTARTS   AGE     IP              NODE          NOMINATED NODE   READINESS GATES
+    kube-system      cilium-2k597                          1/1     Running   0          4h18m   10.107.242.62   k8s-ctrl      <none>           <none>
+    kube-system      cilium-lxtbw                          1/1     Running   0          4h8m    10.107.242.63   k8s-worker1   <none>           <none>
+    kube-system      cilium-operator-77968f785f-gpmlz      1/1     Running   0          4h18m   10.107.242.62   k8s-ctrl      <none>           <none>
+    kube-system      cilium-z74j9                          1/1     Running   0          4h8m    10.107.242.64   k8s-worker2   <none>           <none>
+    ```
+
+List Cilium services before creating the red and blue application resources.
+
+```bash
+kubectl get svc -A |  awk 'NR==1 || tolower($0) ~ /cilium/'
+```
+
+??? example "Expected result"
+    ```text
+    NAMESPACE        NAME                                TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                      AGE
+    kube-system      cilium-ingress                      LoadBalancer   10.152.181.41    10.107.242.10   80:31285/TCP,443:30697/TCP   4h19m
+    ```
+
+Display the red microservice manifest before creating application resources.
+
+```bash
+cat ~/resources/red-app.yaml
+```
+
+??? example "Expected result"
+    ```text
+    kind: Pod
+    apiVersion: v1
+    metadata:
+      name: red-app
+      labels:
+        app: red
+    spec:
+      containers:
+        - name: red-app
+          image: hashicorp/http-echo
+          args:
+            - "-text=red-microservice"
+    ---
+    kind: Service
+    apiVersion: v1
+    metadata:
+      name: red-service
+    spec:
+      selector:
+        app: red
+      ports:
+        - port: 5678
+    ```
+
+Display the Ingress manifest before creating application resources.
+
+```bash
+cat ~/resources/ingress.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: bluered-ingress
+      annotations:
+        ingress.kubernetes.io/rewrite-target: /
+    spec:
+      ingressClassName: cilium
+      rules:
+      - http:
+          paths:
+            - path: /blue
+              pathType: Prefix
+              backend:
+                service:
+                  name: blue-service
+                  port:
+                    number: 5678
+            - path: /red
+              pathType: Prefix
+              backend:
+                service:
+                  name: red-service
+                  port:
+                    number: 5678
+    ```
+
+Create the blue microservice objects.
+
+```bash
+kubectl create -f ~/resources/blue-app.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod/blue-app created
+    service/blue-service created
+    ```
+
+Wait for the blue microservice pod to become Ready.
+
+```bash
+kubectl wait --for=condition=Ready pod/blue-app --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/blue-app condition met
+    ```
+
+Create the red microservice objects.
+
+```bash
+kubectl create -f ~/resources/red-app.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod/red-app created
+    service/red-service created
+    ```
+
+Wait for the red microservice pod to become Ready.
+
+```bash
+kubectl wait --for=condition=Ready pod/red-app --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/red-app condition met
+    ```
+
+Create the Ingress object.
+
+```bash
+kubectl create -f ~/resources/ingress.yaml
+```
+
+??? example "Expected result"
+    ```text
+    ingress.networking.k8s.io/bluered-ingress created
+    ```
+
+List Ingress resources.
+
+```bash
+kubectl get ingress
+```
+
+??? example "Expected result"
+    ```text
+    NAME              CLASS    HOSTS   ADDRESS         PORTS   AGE
+    bluered-ingress   cilium   *       10.107.242.10   80      28s
+    ```
+
+Probe the blue microservice through the Ingress.
+
+```bash
+curl -s http://10.107.242.10/blue
+```
+
+??? example "Expected result"
+    ```text
+    blue-microservice
+    ```
+
+Probe the red microservice through the Ingress.
+
+```bash
+curl -s http://10.107.242.10/red
+```
+
+??? example "Expected result"
+    ```text
+    red-microservice
+    ```
+
+Delete the blue microservice objects.
+
+```bash
+kubectl delete -f ~/resources/blue-app.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod "blue-app" deleted from default namespace
+    service "blue-service" deleted from default namespace
+    ```
+
+Delete the red microservice objects.
+
+```bash
+kubectl delete -f ~/resources/red-app.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod "red-app" deleted from default namespace
+    service "red-service" deleted from default namespace
+    ```
+
+Delete the Ingress object.
+
+```bash
+kubectl delete -f ~/resources/ingress.yaml
+```
+
+??? example "Expected result"
+    ```text
+    ingress.networking.k8s.io "bluered-ingress" deleted from default namespace
+    ```

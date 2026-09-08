@@ -1,5 +1,17 @@
 # 2. Networking !heading
 
+Select the workload cluster kubeconfig before running this chapter's `kubectl` commands:
+
+```bash
+export KUBECONFIG=~/.kube/myk8scluster_config
+```
+
+Verify that `kubectl` targets the workload cluster:
+
+```bash
+kubectl config current-context
+```
+
 ## 2.1 Exposing apps using Services and Labels
 
 The applications created so far are not exposed outside the cluster. Directly addressing Pods is unreliable for several reasons:
@@ -69,6 +81,8 @@ spec:
   - 10.219.64.10-10.219.64.40
 ```
 
+This pool is inside the `.1-.50` range reserved in Chapter 1, so MAAS does not allocate these addresses to cluster machines.
+
 Apply the configuration with:
 
 ```bash
@@ -101,13 +115,12 @@ Apply the configuration with:
 kubectl apply -f metallb-l2advertisement.yaml
 ```
 
-The `cilium-ingress` EndpointSlice also needs the Service label:
+The automatically managed `cilium-ingress` EndpointSlice should have the Service label. Verify it without relying on its generated name:
 
 ```bash
-kubectl label endpointslice cilium-ingress \
-  -n kube-system \
-  kubernetes.io/service-name=cilium-ingress \
-  --overwrite
+kubectl get endpointslice -n kube-system \
+  -l kubernetes.io/service-name=cilium-ingress \
+  --show-labels
 ```
 
 Now, let's take a look at the existing services:
@@ -153,6 +166,12 @@ spec:
 
 ```bash
 kubectl create -f ~/resources/nginx-pod.yaml
+```
+
+Wait for the Pod to become Ready:
+
+```bash
+kubectl wait --for=condition=Ready pod/nginx --timeout=180s
 ```
 
 Now it's time to create the Service. The Service definition file should be found under `~/resources/nginx-service.yaml`. Let's
@@ -282,6 +301,12 @@ kubectl run shell -i --tty --image ubuntu -- /bin/bash
 ```bash
 # exit pod
 root@shell:/# exit
+```
+
+Exiting stops the container's main shell, and the Pod restarts it. Wait for the Pod to become Ready again:
+
+```bash
+kubectl wait --for=condition=Ready pod/shell --timeout=180s
 ```
 
 After which we can reconnect to the pod:
@@ -463,7 +488,7 @@ spec:
 kubectl create -f ~/resources/loadbalancer-service.yaml
 ```
 
-MetalLB may take a few seconds to allocate an address. List the Services:
+MetalLB may take a few seconds to allocate an address. Repeat the following command until `nginx-loadbalancer` has an `EXTERNAL-IP` instead of `<pending>`:
 
 ```bash
 kubectl get svc
@@ -590,6 +615,8 @@ spec:
                 number: 5678
 ```
 
+The legacy `ingress.kubernetes.io/rewrite-target` annotation is not required by Cilium for these `Prefix` routes. This exercise validates path routing, not URL rewriting.
+
 Each HTTP rule contains the following information:
 1. An optional `host`. If no host is specified, the rule applies to inbound HTTP traffic that reaches the Ingress address.
 
@@ -601,11 +628,29 @@ Create the objects:
 
 ```bash
 kubectl create -f ~/resources/blue-app.yaml
+```
+
+Wait for the blue Pod to become Ready:
+
+```bash
+kubectl wait --for=condition=Ready pod/blue-app --timeout=180s
+```
+
+```bash
 kubectl create -f ~/resources/red-app.yaml
+```
+
+Wait for the red Pod to become Ready:
+
+```bash
+kubectl wait --for=condition=Ready pod/red-app --timeout=180s
+```
+
+```bash
 kubectl create -f ~/resources/ingress.yaml
 ```
 
-Verify the Ingress resource:
+Repeat the following command until the Ingress has an `ADDRESS` before testing its routes:
 
 ```bash
 kubectl get ingress
@@ -615,11 +660,21 @@ NAME              CLASS    HOSTS   ADDRESS       PORTS   AGE
 bluered-ingress   cilium   *       10.219.64.10   80      6s
 ```
 
-The `ADDRESS` column shows the address used to reach the Ingress. Open your tunneled browser and use that address for the `/blue` and `/red` paths.
+The `ADDRESS` column shows the address used to reach the Ingress. Open your tunneled browser and use that address for the `/blue` and `/red` paths. Replace `<ingress-address>` below with the reported address.
+
+You can also verify both routes from the student machine:
+
+```bash
+curl -s http://<ingress-address>/blue
+```
+
+```bash
+curl -s http://<ingress-address>/red
+```
 
 **NOTE**: Your LoadBalancer IP address may differ from the example output.
 
-After testing, remove the Ingress and Pods.
+After testing, remove the application Pods, Services, and Ingress.
 
 ```bash
 kubectl delete -f ~/resources/blue-app.yaml
