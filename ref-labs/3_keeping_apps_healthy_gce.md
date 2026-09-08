@@ -1,5 +1,8 @@
 # 3. Keeping apps healthy !heading
 
+This chapter builds on [Chapter 2](2_networking_gce.md). Complete it first so MetalLB is configured, the LoadBalancer
+Service manifest is available, and `pandoc` is installed on the student machine.
+
 ## 3.1 ReplicaSets
 
 A ReplicaSet maintains a specified number of Pod replicas. This helps an application tolerate Pod deletion or failure, but availability also depends on scheduling and application health.
@@ -10,9 +13,9 @@ ReplicaSets and Deployments maintain Pod count; they do not determine whether ap
 
 `ReplicaSet` is often abbreviated as `rs` in `kubectl` commands.
 
-![service](assets/service1.png)
+![Service routing traffic to ReplicaSet Pods](assets/service1.png)
 
-Create a ReplicaSet from the `~/resources/nginx-rs.yaml` definition:
+Display the ReplicaSet definition in `~/resources/nginx-rs.yaml`:
 
 ```bash
 cat ~/resources/nginx-rs.yaml
@@ -101,7 +104,8 @@ nginx-rs-6vldg   1/1     Running   0          55s
 nginx-rs-b9s4g   1/1     Running   0          55s
 ```
 
-The ReplicaSet now maintains three replicas. To access them consistently, recreate the LoadBalancer Service from Chapter 2. Its selector matches the `app=nginx` label and routes traffic to eligible Ready endpoints.
+The ReplicaSet now maintains three replicas. To access them consistently, recreate the LoadBalancer Service from
+[Chapter 2](2_networking_gce.md). Its selector matches the `app=nginx` label and routes traffic to eligible Ready endpoints.
 
 Recreate the `LoadBalancer` service:
 
@@ -119,10 +123,13 @@ NAME                 TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)       
 nginx-loadbalancer   LoadBalancer   10.152.188.44   10.219.64.11   8080:31731/TCP   21s
 ```
 
-Use the `EXTERNAL-IP` reported by your cluster to access the website. Substitute it in the following command if it differs from the example:
+Use the `EXTERNAL-IP` reported by your cluster to access the website.
+
+**WARNING**: The LoadBalancer IP address may differ from the example output. Replace `<external-ip>` in the following
+command with the address reported by your cluster.
 
 ```bash
-curl -s 10.219.64.11:8080 | pandoc -f html -t plain
+curl -s "http://<external-ip>:8080" | pandoc -f html -t plain
 
 #output
 Welcome to nginx!
@@ -141,7 +148,7 @@ Thank you for using nginx.
 
 The Service can now distribute connections across the three eligible Pods.
 
-Inspect each Pod's access log to see which Pods received requests. Repeated requests may not reach every Pod:
+Inspect the Pod logs to see which Pods received requests. Repeated requests may not reach every Pod:
 
 ```bash
 kubectl get pods
@@ -195,8 +202,7 @@ ReplicaSets cover many application deployment use cases, while Deployments add c
 
 The Deployment controller manages ReplicaSets, which manage Pods, and changes the observed state toward the desired state described in the Deployment.
 
-![deployment](assets/deployment.png)
-
+![Deployment managing a ReplicaSet and Pods](assets/deployment.png)
 
 Display the Deployment definition in `~/resources/nginx-deploy.yaml`:
 
@@ -231,7 +237,6 @@ As with a ReplicaSet, the most important fields are:
   * replica count: the desired number of Pod replicas
   * label selector: identifies the Pods managed by the Deployment
   * Pod template: defines the new Pod replicas
-
 
 Create the Deployment:
 
@@ -310,7 +315,7 @@ deployment "nginx-deploy" successfully rolled out
 
 A Deployment rollout is triggered when its Pod template changes, such as when the container image changes. Scaling a Deployment changes its replica count but does not create a new revision.
 
-![deployment](assets/rolling_upgrade.png)
+![Deployment rolling update between ReplicaSet versions](assets/rolling_upgrade.png)
 
 Suppose that we now want to update the nginx Pods to use the `nginx:1.29` image instead of the `nginx:1.28` image:
 
@@ -430,7 +435,7 @@ REVISION  CHANGE-CAUSE
 ```
 
 ```bash
-# this command does not do anything, it just inspects the revision
+# Inspect Deployment revision 1.
 kubectl rollout history deploy nginx-deploy --revision=1
 
 # output
@@ -451,7 +456,7 @@ Pod Template:
 ```
 
 ```bash
-# this command does not do anything, it just inspects the revision
+# Inspect Deployment revision 2.
 kubectl rollout history deploy nginx-deploy --revision=2
 
 # output
