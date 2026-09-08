@@ -41,10 +41,10 @@ proxy:
   EMAIL_DOMAINS: '*'
   INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL: true
   keycloak:
-    secret_name: ""
+    secret_name: "oauth2-proxy-mkdocs"
     client_secret_key: client-secret
   cookie:
-    secret_name: ""
+    secret_name: "oauth2-proxy-mkdocs"
     secret_key: cookie-secret
   redis:
     enabled: true
