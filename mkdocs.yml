@@ -17,7 +17,7 @@ nav:
   - "📋 Networking": 2-networking.md
   - "📋 Keeping apps healthy": 3-keeping-apps-healthy.md
   - "📋 Storage and User Data": 4-storage-and-user-data.md
-  - "⏳ Autoscaling": 5-autoscaling.md
+  - "📋 Autoscaling": 5-autoscaling.md
   - "⏳ AuthN and AuthZ": 6-authentication-and-authorization.md
   - "⏳ Helm": 7-helm.md
   - "⏳ Upgrades": 8-upgrading-canonical-kubernetes.md

@@ -3552,3 +3552,485 @@ kubectl get pv "$PV_NAME" -o name --ignore-not-found
     ```text
     No output.
     ```
+
+### 2026-09-08 - Chapter 5 validation
+
+Select the workload cluster kubeconfig.
+
+```bash
+# Select the workload cluster kubeconfig.
+export KUBECONFIG=~/.kube/myk8scluster_config
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the active Kubernetes context.
+
+```bash
+# Display the active Kubernetes context.
+kubectl config current-context
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-admin@myk8scluster
+    ```
+
+Display current node resource usage.
+
+```bash
+# Display current node resource usage.
+kubectl top nodes
+```
+
+??? example "Expected result"
+    ```text
+    NAME          CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)
+    k8s-ctrl      191m         4%       1824Mi          23%
+    k8s-worker1   90m          2%       1067Mi          13%
+    k8s-worker2   96m          2%       1093Mi          13%
+    ```
+
+Create the nginx Deployment.
+
+```bash
+# Create the nginx Deployment.
+kubectl create deployment nginx-hpa --image=nginx
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps/nginx-hpa created
+    ```
+
+Expose the nginx Deployment on port 80.
+
+```bash
+# Expose the nginx Deployment on port 80.
+kubectl expose deployment nginx-hpa --port=80
+```
+
+??? example "Expected result"
+    ```text
+    service/nginx-hpa exposed
+    ```
+
+Set the nginx container CPU request.
+
+```bash
+# Set the nginx container CPU request.
+kubectl set resources deployment nginx-hpa --requests=cpu=100m
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps/nginx-hpa resource requirements updated
+    ```
+
+Wait for the nginx Deployment rollout.
+
+```bash
+# Wait for the nginx Deployment rollout.
+kubectl rollout status deployment/nginx-hpa --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    deployment "nginx-hpa" successfully rolled out
+    ```
+
+Wait for a ready nginx Service endpoint.
+
+```bash
+# Wait for a ready nginx Service endpoint.
+kubectl wait --for=jsonpath='{.endpoints[0].conditions.ready}'=true endpointslice -l kubernetes.io/service-name=nginx-hpa --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    endpointslice.discovery.k8s.io/nginx-hpa-9fr9v condition met
+    ```
+
+Display the nginx Deployment.
+
+```bash
+# Display the nginx Deployment.
+kubectl get deployment nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+    nginx-hpa   1/1     1            1           70s
+    ```
+
+Display the nginx Service.
+
+```bash
+# Display the nginx Service.
+kubectl get service nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    NAME        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE
+    nginx-hpa   ClusterIP   10.152.124.160   <none>        80/TCP    60s
+    ```
+
+Display the nginx container CPU request.
+
+```bash
+# Display the nginx container CPU request.
+kubectl get deployment nginx-hpa -o jsonpath='{.spec.template.spec.containers[0].resources.requests.cpu}{"\n"}'
+```
+
+??? example "Expected result"
+    ```text
+    100m
+    ```
+
+Create the nginx HorizontalPodAutoscaler.
+
+```bash
+# Create the nginx HorizontalPodAutoscaler.
+kubectl autoscale deployment nginx-hpa --cpu 30% --min=1 --max=5
+```
+
+??? example "Expected result"
+    ```text
+    horizontalpodautoscaler.autoscaling/nginx-hpa autoscaled
+    ```
+
+Wait for the HPA metric to become active.
+
+```bash
+# Wait for the HPA metric to become active.
+kubectl wait --for=condition=ScalingActive hpa/nginx-hpa --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    horizontalpodautoscaler.autoscaling/nginx-hpa condition met
+    ```
+
+Display the HPA replica bounds and CPU target.
+
+```bash
+# Display the HPA replica bounds and CPU target.
+kubectl get hpa nginx-hpa -o jsonpath='{.spec.minReplicas}{"\t"}{.spec.maxReplicas}{"\t"}{.spec.metrics[0].resource.target.averageUtilization}{"%\n"}'
+```
+
+??? example "Expected result"
+    ```text
+    1    5    30%
+    ```
+
+Display the initial HPA status.
+
+```bash
+# Display the initial HPA status.
+kubectl get hpa nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    NAME        REFERENCE              TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+    nginx-hpa   Deployment/nginx-hpa   cpu: 0%/30%   1         5         1          44s
+    ```
+
+Start bounded load against the nginx Service.
+
+```bash
+# Start bounded load against the nginx Service.
+kubectl run load-generator --image=busybox --restart=Never -- /bin/sh -c 'for worker in 1 2 3 4; do timeout 360 sh -c "while true; do wget -q -O /dev/null http://nginx-hpa; done" & done; wait'
+```
+
+??? example "Expected result"
+    ```text
+    pod/load-generator created
+    ```
+
+Wait for the load-generator Pod.
+
+```bash
+# Wait for the load-generator Pod.
+kubectl wait --for=condition=Ready pod/load-generator --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/load-generator condition met
+    ```
+
+Wait for the HPA to scale above one replica.
+
+```bash
+# Wait for the HPA to scale above one replica.
+timeout 300 bash -c 'until replicas=$(kubectl get hpa nginx-hpa -o jsonpath="{.status.currentReplicas}"); [[ "$replicas" =~ ^[2-5]$ ]]; do sleep 10; done'
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Wait for multiple nginx Pods to become ready.
+
+```bash
+# Wait for multiple nginx Pods to become ready.
+timeout 180 bash -c 'until replicas=$(kubectl get deployment nginx-hpa -o jsonpath="{.status.readyReplicas}"); [[ "$replicas" =~ ^[2-5]$ ]]; do sleep 5; done'
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the HPA after scale-up.
+
+```bash
+# Display the HPA after scale-up.
+kubectl get hpa nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    NAME        REFERENCE              TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+    nginx-hpa   Deployment/nginx-hpa   cpu: 37%/30%   1         5         5          3m15s
+    ```
+
+Display the scaled nginx Pods.
+
+```bash
+# Display the scaled nginx Pods.
+kubectl get pods -l app=nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    NAME                         READY   STATUS    RESTARTS   AGE
+    nginx-hpa-7698f65fcb-49m27   1/1     Running   0          4m23s
+    nginx-hpa-7698f65fcb-fq8qs   1/1     Running   0          75s
+    nginx-hpa-7698f65fcb-prwvp   1/1     Running   0          60s
+    nginx-hpa-7698f65fcb-pv7n5   1/1     Running   0          75s
+    nginx-hpa-7698f65fcb-xjhwq   1/1     Running   0          75s
+    ```
+
+Display the load-generator Pod.
+
+```bash
+# Display the load-generator Pod.
+kubectl get pod load-generator
+```
+
+??? example "Expected result"
+    ```text
+    NAME             READY   STATUS    RESTARTS   AGE
+    load-generator   1/1     Running   0          104s
+    ```
+
+Stop and delete the load-generator Pod.
+
+```bash
+# Stop and delete the load-generator Pod.
+kubectl delete pod load-generator --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod "load-generator" deleted from default namespace
+    ```
+
+Wait for the HPA and Deployment to scale down to one replica.
+
+```bash
+# Wait for the HPA and Deployment to scale down to one replica.
+timeout 600 bash -c 'until [[ "$(kubectl get hpa nginx-hpa -o jsonpath="{.status.currentReplicas}")" == "1" && "$(kubectl get deployment nginx-hpa -o jsonpath="{.status.readyReplicas}")" == "1" ]]; do sleep 15; done'
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the HPA after scale-down.
+
+```bash
+# Display the HPA after scale-down.
+kubectl get hpa nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    NAME        REFERENCE              TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+    nginx-hpa   Deployment/nginx-hpa   cpu: 0%/30%   1         5         1          10m
+    ```
+
+Display the Deployment after scale-down.
+
+```bash
+# Display the Deployment after scale-down.
+kubectl get deployment nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+    nginx-hpa   1/1     1            1           11m
+    ```
+
+Display the nginx Pod after scale-down.
+
+```bash
+# Display the nginx Pod after scale-down.
+kubectl get pods -l app=nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    NAME                         READY   STATUS    RESTARTS   AGE
+    nginx-hpa-7698f65fcb-pv7n5   1/1     Running   0          8m21s
+    ```
+
+Describe the nginx HorizontalPodAutoscaler.
+
+```bash
+# Describe the nginx HorizontalPodAutoscaler.
+kubectl describe hpa nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    Name:                                                  nginx-hpa
+    Namespace:                                             default
+    Labels:                                                <none>
+    Annotations:                                           <none>
+    CreationTimestamp:                                     Tue, 08 Sep 2026 17:14:16 +0000
+    Reference:                                             Deployment/nginx-hpa
+    Metrics:                                               ( current / target )
+      resource cpu on pods  (as a percentage of request):  0% (0) / 30%
+    Min replicas:                                          1
+    Max replicas:                                          5
+    Deployment pods:                                       1 current / 1 desired
+    Conditions:
+      Type            Status  Reason            Message
+      ----            ------  ------            -------
+      AbleToScale     True    ReadyForNewScale  recommended size matches current size
+      ScalingActive   True    ValidMetricFound  the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+      ScalingLimited  True    TooFewReplicas    the desired replica count is less than the minimum replica count
+    Events:
+      Type    Reason             Age    From                       Message
+      ----    ------             ----   ----                       -------
+      Normal  SuccessfulRescale  8m21s  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+      Normal  SuccessfulRescale  8m6s   horizontal-pod-autoscaler  New size: 5; reason:
+      Normal  SuccessfulRescale  66s    horizontal-pod-autoscaler  New size: 4; reason: All metrics below target
+      Normal  SuccessfulRescale  51s    horizontal-pod-autoscaler  New size: 1; reason: All metrics below target
+    ```
+
+Display events for the nginx HorizontalPodAutoscaler.
+
+```bash
+# Display events for the nginx HorizontalPodAutoscaler.
+kubectl events --for hpa/nginx-hpa
+```
+
+??? example "Expected result"
+    ```text
+    LAST SEEN   TYPE     REASON              OBJECT                              MESSAGE
+    8m21s       Normal   SuccessfulRescale   HorizontalPodAutoscaler/nginx-hpa   New size: 4; reason: cpu resource utilization (percentage of request) above target
+    8m6s        Normal   SuccessfulRescale   HorizontalPodAutoscaler/nginx-hpa   New size: 5; reason:
+    66s         Normal   SuccessfulRescale   HorizontalPodAutoscaler/nginx-hpa   New size: 4; reason: All metrics below target
+    51s         Normal   SuccessfulRescale   HorizontalPodAutoscaler/nginx-hpa   New size: 1; reason: All metrics below target
+    ```
+
+Delete the nginx HorizontalPodAutoscaler.
+
+```bash
+# Delete the nginx HorizontalPodAutoscaler.
+kubectl delete hpa nginx-hpa --ignore-not-found --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    horizontalpodautoscaler.autoscaling "nginx-hpa" deleted from default namespace
+    ```
+
+Delete the nginx Deployment.
+
+```bash
+# Delete the nginx Deployment.
+kubectl delete deployment nginx-hpa --ignore-not-found --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    deployment.apps "nginx-hpa" deleted from default namespace
+    ```
+
+Delete the nginx Service.
+
+```bash
+# Delete the nginx Service.
+kubectl delete service nginx-hpa --ignore-not-found --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    service "nginx-hpa" deleted from default namespace
+    ```
+
+Check for remaining Chapter 5 resources.
+
+```bash
+# Check for remaining Chapter 5 resources.
+kubectl get deployment/nginx-hpa service/nginx-hpa horizontalpodautoscaler/nginx-hpa pod/load-generator -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Check for remaining nginx ReplicaSets and Pods.
+
+```bash
+# Check for remaining nginx ReplicaSets and Pods.
+kubectl get replicaset,pod -l app=nginx-hpa -o name
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Wait for all cluster nodes to remain ready.
+
+```bash
+# Wait for all cluster nodes to remain ready.
+kubectl wait --for=condition=Ready nodes --all --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    node/k8s-ctrl condition met
+    node/k8s-worker1 condition met
+    node/k8s-worker2 condition met
+    ```
+
+Display the final cluster node status.
+
+```bash
+# Display the final cluster node status.
+kubectl get nodes
+```
+
+??? example "Expected result"
+    ```text
+    NAME          STATUS   ROLES                  AGE     VERSION
+    k8s-ctrl      Ready    control-plane,worker   7h28m   v1.35.7
+    k8s-worker1   Ready    worker                 7h17m   v1.35.7
+    k8s-worker2   Ready    worker                 7h17m   v1.35.7
+    ```
