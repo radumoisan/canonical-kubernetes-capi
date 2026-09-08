@@ -11,7 +11,8 @@ This repository supports Kubernetes Cluster API (CAPI) training.
 - Treat `ref-labs/_README.md` and `ref-labs/acknowledgements.md` as supporting references.
 - Treat `ref-labs/k8s_lab_azure.md` and `ref-labs/k8s_lab_gce_deprecated.md` as legacy background only.
 - Preserve the technical intent of active labs and keep wording practical and concise.
-- Plaintext credentials, secret values, bearer tokens, private keys, and certificates are allowed when they are intentional training examples, lab-created values used by an exercise, or user-approved active lab data.
+- Plaintext credentials, secret values, bearer tokens, private keys, and certificates are allowed in documentation and tracking files when they are intentional training examples or lab-created values used by an exercise.
+- User-approved active lab credentials and assignment details may be stored in the selected ignored `students_*.json` inventory and used during lab execution.
 - Do not include unrelated production credentials, guessed secrets, or unapproved sensitive data.
 
 ## Protected Paths
@@ -46,9 +47,12 @@ This repository supports Kubernetes Cluster API (CAPI) training.
 ## Tracking Files
 
 - `migration.md` tracks CAPI lab preparation and validation status.
-- `playground.md` records approved internal lab context and may include plaintext active lab credentials and required student assignment details. These approved values may be committed when requested.
+- Use `students_*.json` as the authoritative current lab-assignment source before lab execution. Keep these inventory files ignored and untracked.
+- Exactly one `students_*.json` file must exist. If none exists, ask the user to provide one and do not infer lab context from another source.
+- If more than one `students_*.json` file exists, ask the user which one is authoritative and wait for the human to resolve the extras so exactly one remains. Do not choose, use, or delete an inventory automatically.
+- The selected inventory may contain plaintext active lab credentials, infrastructure details, and required student assignment fields supplied or approved by the user.
 - Record only successfully executed training commands run by an agent in `commands.md`, including during live interactive training, using the exact executed command string.
-- Preserve plaintext secret literals that are part of a training command. Do not record external connection-wrapper credentials that are not part of the student-facing exercise.
+- Preserve plaintext secret literals that are part of a training command. Do not copy external connection-wrapper or inventory credentials into `commands.md` unless the credential literal is itself part of the student-facing exercise.
 - Do not record failed, exploratory, or corrected commands.
 - Mark a lab complete only after its commands have been validated and results documented.
 
