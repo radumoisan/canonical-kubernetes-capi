@@ -4,7 +4,7 @@ Applications can write and read data directly on and from the container filesyst
 one is when two container of the same pod need to access the same piece of data. Also, Kubernetes works on pod level, so
 something new had to be done to address this.
 
-## :material-numeric-4-circle-outline: 4.1 Volumes
+## :material-book-open-page-variant-outline: 4.1 Volumes
 
 `Volumes` are a Kubernetes resource type that solves this. A Volume can be shared between containers of the same pod.
 There are different types of volumes, some are ephemeral, meaning that they live as long as the pods do, and some are persistent
@@ -131,7 +131,7 @@ kubectl delete pod two-containers
 ??? example "Expected result"
     The Pod is deleted.
 
-## :material-numeric-4-circle-outline: 4.2 ConfigMaps
+## :material-book-open-page-variant-outline: 4.2 ConfigMaps
 
 `ConfigMaps` allow developers to decouple configuration options from the app source code or container image.
 
@@ -240,7 +240,7 @@ For more information on `ConfigMaps`, please visit:
 
 https://kubernetes.io/docs/concepts/configuration/configmap/
 
-## :material-numeric-4-circle-outline: 4.3 Secrets
+## :material-book-open-page-variant-outline: 4.3 Secrets
 
 `Secrets` are a way to securely inject sensitive data into Pods. By sensitive data is meant: credentials, encryption keys,
 tokens, etc. The data is represented as key-values pairs and are encoded in base64.
@@ -384,7 +384,7 @@ kubectl delete secret bob-secret
 ??? example "Expected result"
     The Secret is deleted.
 
-## :material-numeric-4-circle-outline: 4.4 PersistentVolumes, PersistentVolumeClaims and StorageClasses
+## :material-book-open-page-variant-outline: 4.4 PersistentVolumes, PersistentVolumeClaims and StorageClasses
 
 This works great but volume types such as `emptyDir` and `hostPath` have the drawback that developers need to have knowledge of
 the storage and network infrastructure. Storage should be provisioned in a transparent manner and fully abstracted of the backend solution.

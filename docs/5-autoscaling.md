@@ -31,7 +31,7 @@ More information on the Resource metrics pipeline can be found here:
 
 https://kubernetes.io/docs/tasks/debug-application-cluster/resource-metrics-pipeline/
 
-## :material-numeric-5-circle-outline: 5.1 Autoscale a Deployment resource
+## :material-book-open-page-variant-outline: 5.1 Autoscale a Deployment resource
 
 Create an nginx deployment, this will be the scaled application:
 

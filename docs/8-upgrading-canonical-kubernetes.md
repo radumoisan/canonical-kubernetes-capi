@@ -11,14 +11,14 @@ Before upgrading the cluster, you should also make sure:
 * you read the Release notes for the version you are upgrading to, which will alert you to any important changes to the operation of your cluster
 * the new version is supported by Cluster API deployment
 
-## :material-numeric-8-circle-outline: 8.1 Rollout upgrade Kubernetes
+## :material-book-open-page-variant-outline: 8.1 Rollout upgrade Kubernetes
 
-??? warning "Warning"
+!!! warning "Warning"
     **This is documentation only and should NOT be applied in our environments.**
 
 The order of upgrades should be, first, control plane nodes, second, worker nodes.
 
-### :material-application-edit: Upgrade control plane nodes
+### :material-application-edit-outline: Upgrade control plane nodes
 
 First, identify the name of your control plane CRD with:
 
@@ -77,7 +77,7 @@ watch kubectl get nodes -o wide
 ??? example "Expected result"
     The node list refreshes while the upgrade takes place.
 
-### :material-application-edit: Upgrade worker nodes
+### :material-application-edit-outline: Upgrade worker nodes
 
 After upgrading the control plane, proceed with upgrading the worker nodes by updating the MachineDeployment resource. The name of the resource can be found with:
 
@@ -146,7 +146,7 @@ kubectl get machinedeployment myk8scluster-worker-md-0
 ??? example "Expected result"
     The MachineDeployment resource is displayed.
 
-## :material-numeric-8-circle-outline: 8.2 In-place upgrades
+## :material-book-open-page-variant-outline: 8.2 In-place upgrades
 
 Since our cluster is non-HA, the only option we have is to do in-place upgrades.
 Let's begin by checking our current Kubernetes version:
@@ -227,33 +227,36 @@ kubectl get machine myk8scluster-control-plane-qqdlb -o yaml
 
 You'll need to watch the annotations of that machine, especially four parameters:
 
-```text
-v1beta2.k8sd.io/in-place-upgrade-release
-v1beta2.k8sd.io/in-place-upgrade-status
-v1beta2.k8sd.io/in-place-upgrade-to
-v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at
-```
+??? example "Expected result"
+    ```text
+    v1beta2.k8sd.io/in-place-upgrade-release
+    v1beta2.k8sd.io/in-place-upgrade-status
+    v1beta2.k8sd.io/in-place-upgrade-to
+    v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at
+    ```
 
 Upon successful upgrade, you'll see:
 
-```text
-v1beta2.k8sd.io/in-place-upgrade-release: channel=1.36-classic/candidate
-v1beta2.k8sd.io/in-place-upgrade-status: done
-```
+??? example "Expected result"
+    ```text
+    v1beta2.k8sd.io/in-place-upgrade-release: channel=1.36-classic/candidate
+    v1beta2.k8sd.io/in-place-upgrade-status: done
+    ```
 
 The other two, `v1beta2.k8sd.io/in-place-upgrade-to` and `v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at`, will not be defined. In case something goes wrong with the upgrade, you'll see something like:
 
-```yaml
-annotations:
-  # the `upgrade-to` causes the retry to happen
-  v1beta2.k8sd.io/in-place-upgrade-to: "channel=1.36-classic/candidate"
-  v1beta2.k8sd.io/in-place-upgrade-status: "failed"
+??? example "Expected result"
+    ```yaml
+    annotations:
+      # the `upgrade-to` causes the retry to happen
+      v1beta2.k8sd.io/in-place-upgrade-to: "channel=1.36-classic/candidate"
+      v1beta2.k8sd.io/in-place-upgrade-status: "failed"
 
-  # orchestrator will notice this annotation and knows that the
-  # upgrade for this machine failed
-  v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at: "Sat, 7 Nov
-  2026 13:30:00 +0400"
-```
+      # orchestrator will notice this annotation and knows that the
+      # upgrade for this machine failed
+      v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at: "Sat, 7 Nov
+      2026 13:30:00 +0400"
+    ```
 
 In that case, issue should be investigated and upgrade retried.
 
@@ -305,19 +308,21 @@ kubectl get machine myk8scluster-worker-md-0-nmtpp-sdwqw -o yaml
 
 You'll need to watch the annotations of those machines, especially four parameters:
 
-```text
-v1beta2.k8sd.io/in-place-upgrade-release
-v1beta2.k8sd.io/in-place-upgrade-status
-v1beta2.k8sd.io/in-place-upgrade-to
-v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at
-```
+??? example "Expected result"
+    ```text
+    v1beta2.k8sd.io/in-place-upgrade-release
+    v1beta2.k8sd.io/in-place-upgrade-status
+    v1beta2.k8sd.io/in-place-upgrade-to
+    v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at
+    ```
 
 Upon successful upgrade, you'll see:
 
-```text
-v1beta2.k8sd.io/in-place-upgrade-release: channel=1.36-classic/candidate
-v1beta2.k8sd.io/in-place-upgrade-status: done
-```
+??? example "Expected result"
+    ```text
+    v1beta2.k8sd.io/in-place-upgrade-release: channel=1.36-classic/candidate
+    v1beta2.k8sd.io/in-place-upgrade-status: done
+    ```
 
 After the upgrade is done, you can verify the version of the k8s cluster on all nodes with:
 

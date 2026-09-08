@@ -14,7 +14,7 @@ The upstream Kubernetes version is comprised of:
     * the service proxy called kube-proxy
     * the container runtime - containerd
 
-## :material-book-open-variant: Canonical Kubernetes
+## :material-book-open-page-variant-outline: Canonical Kubernetes
 
 The official distribution of Kubernetes on Ubuntu delivers a pure 'upstream' version of Kubernetes for organizations to
 use privately, plus a few more features like key distribution and overlay networking. We work directly with Google to
@@ -27,7 +27,7 @@ Canonical Kubernetes works on AWS, Google Cloud, Azure and Oracle Cloud as well 
 racks to VMware and OpenStack. Ubuntu is the most widely used platform for container operations, and Canonical offers the
 largest ecosystem of Kubernetes partners, solutions and integration options.
 
-## :material-numeric-1-circle-outline: 1.1 Deploy Canonical Kubernetes
+## :material-book-open-page-variant-outline: 1.1 Deploy Canonical Kubernetes
 
 We will be using `MAAS` and `CAPI` to deploy and manage a Kubernetes cluster on MAAS cloud provider using LXD VMs.
 
@@ -568,7 +568,7 @@ exit
 ??? example "Expected result"
     The local shell resumes.
 
-## :material-numeric-1-circle-outline: 1.2 Interacting with the cluster and observability
+## :material-book-open-page-variant-outline: 1.2 Interacting with the cluster and observability
 
 After the cluster is deployed you may assume control over the Kubernetes
 cluster from any k8s node.
@@ -881,7 +881,7 @@ kubectl top pods --all-namespaces
 
 ![bundle](assets/k8s_architecture.png)
 
-## :material-numeric-1-circle-outline: 1.3 Pods and namespaces
+## :material-book-open-page-variant-outline: 1.3 Pods and namespaces
 
 A `pod` is smallest deployment unit that a user can create. It is an encapsulation of one or more containers
 with a shared network and storage scope. The shared context of a pod is implemented with Linux namespaces,
@@ -920,7 +920,7 @@ kubectl get namespaces
 ??? example "Expected result"
     Namespaces are displayed.
 
-## :material-numeric-1-circle-outline: 1.4 Work with pods and volumes
+## :material-book-open-page-variant-outline: 1.4 Work with pods and volumes
 
 Kubernetes treats everything as objects, including pods, and each object has a definition. A definition is a declaration of
 a desired state. Kubernetes ensures that the current state matches the desired state. For example, when you create a Pod and

@@ -6,7 +6,7 @@ are packages of pre-configured Kubernetes resources.
 In this chapter we'll install a `wordpress` stack with a `mariaDB` database. This requires some Kubernetes resources such as:
 pods, loadBalancer services, `PVCs` and `PVs`. All of this will be deployed from a chart.
 
-## :material-numeric-7-circle-outline: 7.1 Deploy an app
+## :material-book-open-page-variant-outline: 7.1 Deploy an app
 
 Install helm client on the student machine:
 
@@ -188,7 +188,7 @@ Now the wordpress app should be available via `10.237.75.129`.
 
 In this chapter we saw how easy it is to deploy simple or complex apps with Helm.
 
-## :material-numeric-7-circle-outline: 7.2 Deployment Chart
+## :material-book-open-page-variant-outline: 7.2 Deployment Chart
 
 First, the application code has to be built into a Docker image. Here you can find code for a simple `nodejs` web app plus
 the `Dockerfile` for it:
@@ -354,7 +354,7 @@ lxc exec k8s-worker2 -- sh -c "curl -s 10.152.183.20"
     This app is running in pod web-app-stateless-5bd5fffc48-xwcnq
     ```
 
-### try again
+### :material-application-edit-outline: try again
 
 ```bash
 # Query the web app ClusterIP from k8s-worker2 again.
@@ -365,7 +365,7 @@ lxc exec k8s-worker2 -- sh -c "curl -s 10.152.183.20"
     This app is running in pod web-app-stateless-5bd5fffc48-654wt
     ```
 
-### try one more time
+### :material-application-edit-outline: try one more time
 
 ```bash
 # Query the web app ClusterIP from k8s-worker2 one more time.
@@ -385,7 +385,7 @@ helm delete web-app-stateless
 ??? example "Expected result"
     The `web-app-stateless` release is deleted.
 
-## :material-numeric-7-circle-outline: 7.3 StatefulSet Chart
+## :material-book-open-page-variant-outline: 7.3 StatefulSet Chart
 
 The Docker image can be built as before. I will only demonstrate how to do this, the image is already public so no need for you
 to to this:
@@ -611,7 +611,7 @@ helm delete web-app-stateful
 ??? example "Expected result"
     The `web-app-stateful` release is deleted.
 
-## :material-numeric-7-circle-outline: 7.4 Headlamp
+## :material-book-open-page-variant-outline: 7.4 Headlamp
 
 Headlamp is a user-friendly Kubernetes UI focused on extensibility. Headlamp was created to blend the traditional feature set of other web UIs/dashboards (i.e., to list and view resources) with added functionality. A common use case for any Kubernetes web UI is to deploy it `in-cluster` and set up an `ingress server` for having it available to users. We're going to do an `in-cluster` deployment.
 

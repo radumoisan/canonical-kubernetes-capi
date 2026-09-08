@@ -1,6 +1,6 @@
 # :material-numeric-2-circle: 2. Networking
 
-## :material-numeric-2-circle-outline: 2.1 Exposing apps using Services and Labels
+## :material-book-open-page-variant-outline: 2.1 Exposing apps using Services and Labels
 
 The pods/apps we've created so far were not accessible. Kubernetes does not follow the legacy networking architecture
 because of a number of reasons:
@@ -328,7 +328,7 @@ exit
 ??? example "Expected result"
     The student machine shell resumes.
 
-## :material-numeric-2-circle-outline: 2.2 Service discovery
+## :material-book-open-page-variant-outline: 2.2 Service discovery
 
 Another rule of Kubernetes networking is: all containers can communicate with all the other containers without NAT. This means that
 the web app can be probed from another pod with a `ClusterIP` associated with it. But for this we won't be using the `ClusterIP`,
@@ -446,7 +446,7 @@ kubectl get svc -o wide
     nginx        ClusterIP   10.152.95.221   <none>        8080/TCP   25m   app=nginx
     ```
 
-## :material-numeric-2-circle-outline: 2.3 NodePort and LoadBalancer Services
+## :material-book-open-page-variant-outline: 2.3 NodePort and LoadBalancer Services
 
 Until now we made the web app available only inside the cluster. There are a couple of ways to allow outside access.
 
@@ -640,7 +640,7 @@ kubectl delete pod nginx shell
 ??? example "Expected result"
     The nginx and shell Pods are deleted.
 
-## :material-numeric-2-circle-outline: 2.4 Ingress controllers
+## :material-book-open-page-variant-outline: 2.4 Ingress controllers
 
 Ingress resources are DNS mappings to your containers, routed through endpoints. They can manage external access to the services
 in a cluster, providing load balancing, name-based virtual hosting and SSL termination.

@@ -1,6 +1,6 @@
 # :material-numeric-6-circle: 6. Authentication and Authorization
 
-## :material-numeric-6-circle-outline: 6.1 Users and ServiceAccounts
+## :material-book-open-page-variant-outline: 6.1 Users and ServiceAccounts
 
 Kubernetes does NOT have a resource called `user`. It has the concept of `ServiceAccounts` which live inside `Namespaces`,
 objects used for multi-tenancy. However, Kubernetes understands the concept of users as an external object.
@@ -229,7 +229,7 @@ kubectl delete pod curl
 ??? example "Expected result"
     The Pod is deleted.
 
-## :material-numeric-6-circle-outline: 6.2 RBAC, Roles and ClusterRoles
+## :material-book-open-page-variant-outline: 6.2 RBAC, Roles and ClusterRoles
 
 All Kubernetes resources are objects which allow CRUD (create, read, update, delete) operations. Role-based access control (RBAC)
 is a method of regulating access to resources based on the roles of individual users. RBAC works and understands 4 types of
@@ -263,7 +263,7 @@ kubectl get clusterroles
 ??? example "Expected result"
     ClusterRoles are displayed.
 
-### Create a ServiceAccount and grant permissions
+### :material-application-edit-outline: Create a ServiceAccount and grant permissions
 
 In this exercise we'll create a `ServiceAccount`, a `Role` and a `RoleBinding`. The `Role` will grant
 read access to pod resources in the default namespace.

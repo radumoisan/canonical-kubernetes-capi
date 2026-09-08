@@ -1,6 +1,6 @@
 # :material-numeric-3-circle: 3. Keeping apps healthy
 
-## :material-numeric-3-circle-outline: 3.1 ReplicaSets
+## :material-book-open-page-variant-outline: 3.1 ReplicaSets
 
 A `ReplicaSet` enables us to achieve high availability by ensuring that a specified number of pod replicas are running at any one time.
 In other words, a `ReplicaSet` makes sure that a pod or a homogeneous set of pods is always up and available.
@@ -243,7 +243,7 @@ kubectl delete svc nginx-loadbalancer
 ??? example "Expected result"
     The LoadBalancer service is deleted.
 
-## :material-numeric-3-circle-outline: 3.2 Deployments
+## :material-book-open-page-variant-outline: 3.2 Deployments
 
 All the functionality we have worked with so far can already cover a wide variety of app deployment use cases, but there is more
 Kubernetes can do. It can also provide a clan way for applications that run in pods to be upgraded from version to version,
