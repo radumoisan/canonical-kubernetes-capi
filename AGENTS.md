@@ -15,6 +15,35 @@ This repository supports Kubernetes Cluster API (CAPI) training.
 - User-approved active lab credentials and assignment details may be stored in the selected ignored `students_*.json` inventory and used during lab execution.
 - Do not include unrelated production credentials, guessed secrets, or unapproved sensitive data.
 
+## Navigation Status Markers
+
+Use these status markers consistently in `mkdocs.yml` navigation labels:
+
+- `📋` for pages whose validation is confirmed, including approved documented exceptions.
+- `⏳` for pages before validation begins or while validation is unconfirmed.
+- `📄` for reference pages.
+
+## Writing Rules
+
+- Keep explanations concise.
+- Do not over-explain unless explicitly asked.
+- Prefer direct, task-focused wording.
+- Normalize inconsistent formatting from the source.
+- Keep command examples close to the original intent, but rewrite for clarity when needed.
+- All second-level headings must use the prefix `:material-book-open-page-variant-outline:`, for example `## :material-book-open-page-variant-outline: Second level header`.
+- All third-level headings must use the prefix `:material-application-edit-outline:`, for example `### :material-application-edit-outline: Third level header`.
+
+## Admonitions
+
+Use Material admonitions when they improve clarity:
+
+- Use `!!! abstract` for page goals and short page-purpose callouts.
+- Use `!!! note` for context.
+- Use `!!! tip` for helpful shortcuts or best practices.
+- Use `!!! warning` for risky actions.
+- Use `!!! danger` for actions that can break the lab or destroy data.
+- Use expandable admonitions such as `??? example "Expected result"` for bulky expected-result snapshots so the default reading path stays compact.
+
 ## Protected Paths
 
 - `docs/` and `Dockerfile` are user-managed. Do not modify them unless explicitly asked.
