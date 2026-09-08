@@ -2,43 +2,36 @@
 
 ## 2.1 Exposing apps using Services and Labels
 
-The pods/apps we've created so far were not accessible. Kubernetes does not follow the legacy networking architecture
-because of a number of reasons:
+The applications created so far are not exposed outside the cluster. Directly addressing Pods is unreliable for several reasons:
 
-  * pods are ephemeral
-  * Kubernetes itself assigns IPs to pods after they are scheduled -> the user cannot assign or know the IP beforehand
-  * scaling and load-balancing: users should not care how many pods are backing a service, what their IPs are, on which nodes the pods are scheduled
+  * Pods are ephemeral.
+  * Kubernetes assigns IP addresses to Pods after they are scheduled, so clients should not rely on addresses known in advance.
+  * Applications can scale across multiple Pods, and clients should not need to track their addresses or locations.
 
-To solve these issues, Kubernetes provides the `Service` object resource type.
+Kubernetes provides the `Service` resource to give clients a stable way to reach these Pods.
 
 ![service](assets/network1.png)
 
-A `Service` is a single point of access to a group of pods that provide the same type of service. Each service has
-an IP and a port that will never change during the lifetime of the service. Users will initiate connections to the IP
-and port, and those connections are routed to one of the pods backing the service. This way, users don't have to care
-about pod location and if a pod crashes.
+A Service provides a stable access point for a group of Pods. Most Services receive a virtual IP address that remains stable for the lifetime of the Service. Connections to the Service are forwarded to eligible backend Pods, so clients do not need to track individual Pod addresses or locations. Headless and `ExternalName` Services do not use a virtual IP address.
 
 ![service](assets/service1.png)
 
 
-There are three types of Services:
-  * `ClusterIPs`: the purpose of this type of service is exposing groups of pods to other pods in the cluster
-  * `NodePort`: allocates a static port on the Node on which the pod is running. Used to access Pod port from outside the cluster
-  * `LoadBalancer`: exposes the service externally using a cloud provider’s load balancer. Used to access Pod's from outside the cluster
-  * `ExternalName`: maps the Service to the contents of the externalName field (for example, to the hostname api.foo.bar.example). The mapping configures your cluster's DNS server to return a CNAME record with that external hostname value. No proxying of any kind is set up.
+There are four Service types:
+  * `ClusterIP`: exposes the Service on an internal virtual IP address.
+  * `NodePort`: exposes the Service on a static port on every node.
+  * `LoadBalancer`: requests an externally reachable address from the platform's load-balancer implementation.
+  * `ExternalName`: maps the Service to an external DNS name by returning a CNAME record. It does not configure proxying.
 
-`Labels` and `Selectors` help in associating Services to Pods. `Labels` are key-value pairs that can be associated with pods in the pod
-definition. Then, a Service will use label `Selectors` to know to which pods to redirect traffic to.
+Labels are key-value metadata attached to objects such as Pods. A Service selector identifies the Pods that provide its endpoints.
 
-For example, given some pods running an app, we would specify in the pod definition of the app we specify a label `app: nginx` and we
-scale the pods to 3. Then a service can be create with Selector `app: nginx`. This is how Services know where to route traffic
-and load-balance between the 3 pods.
+For example, suppose three Pods running an application have the label `app: nginx`. A Service with the selector `app: nginx` sends traffic to eligible Pods with that label.
 
 ![labels and selectors](assets/labels_selectors.png)
 
-Canonical Kubernetes deployed with CAPI comes with Cilium CNI and MetalLB. MetalLB needs some pool of IP addressess that can be used for `LoadBalancer` services. Let's configure that IPAddressPool:
+The Canonical Kubernetes cluster deployed in this lab uses Cilium for networking and MetalLB to allocate addresses for `LoadBalancer` Services. Configure a MetalLB `IPAddressPool`:
 
-Create a yaml file, called `metallb.yaml` with the following content:
+Create a YAML file named `metallb.yaml` with the following content:
 
 ```yaml
 apiVersion: metallb.io/v1beta1
@@ -51,7 +44,7 @@ spec:
   - XX.XX.XX.10-XX.XX.XX.40
 ```
 
-Replace the first three groups with the IP address you get from:
+Replace `XX.XX.XX` with the first three octets of the LXD bridge's IPv4 address shown by:
 
 ```bash
 ip add sh dev lxdbr0
@@ -63,7 +56,7 @@ ip add sh dev lxdbr0
        valid_lft forever preferred_lft forever
 ```
 
-So, the file, in this case, should look like:
+In this case, the file should look like:
 
 ```yaml
 apiVersion: metallb.io/v1beta1
@@ -108,7 +101,7 @@ Apply the configuration with:
 kubectl apply -f metallb-l2advertisement.yaml
 ```
 
-Also, cilium-ingress endpointslice will need a patch:
+The `cilium-ingress` EndpointSlice also needs the Service label:
 
 ```bash
 kubectl label endpointslice cilium-ingress \
@@ -134,13 +127,11 @@ kube-system      metrics-server                      ClusterIP      10.152.75.38
 metallb-system   metallb-webhook-service             ClusterIP      10.152.195.15    <none>        443/TCP                      68m
 ```
 
-Here we can see all the Services within the cluster. Control plane Kubernetes Pods talk to each other via the `ClusterIPs`. Only the `cilium-ingress` service is exposed to the outside world. If you add `-o wide` to the command above, you can see in the `Selector` field the association between a Service and Pods.
-The `ClusterIPs` are internal, virtual IPs that only Kubernetes has knowledge of.
+This output lists Services used by cluster components and applications. Only the `cilium-ingress` Service has the `LoadBalancer` type. A ClusterIP is an internal virtual address implemented by the cluster networking data plane and is normally reachable only from the cluster network. Adding `-o wide` displays each Service selector, when present.
 
-**NOTE**: The same Selector mechanism is used for other objects (resources) offered by Kubernetes. Other Kubernetes objects (Deployment,
-ReplicaSets, etc,) which interact with Pods use the same mechanism.
+**NOTE**: Workload controllers such as Deployments and ReplicaSets also use selectors to associate with Pods.
 
-Ok, let's redeploy `nginx` and use a label. Check the `~/resources/nginx-pod.yaml` pod definition to see and note the `label` part:
+Redeploy `nginx` with a label. Display `~/resources/nginx-pod.yaml` and note the `labels` field:
 
 ```bash
 cat ~/resources/nginx-pod.yaml
@@ -198,16 +189,11 @@ kubernetes   ClusterIP   10.152.0.1      <none>        443/TCP    70m   <none>
 nginx        ClusterIP   10.152.95.221   <none>        8080/TCP   5s    app=nginx
 ```
 
-Currently, the app can now be accessed from within the cluster, but not from outside of the cluster.
+The application can now be accessed through the Service from within the cluster, but not from outside it.
 
-Actually, there are two ways to probe the web app, but both of them are just for demonstration purposes. In production
-environments direct access to the apps is desired, we do not have that yet. This is just for demonstration purposes and to
-understand the architecture.
+The following probes demonstrate internal Service connectivity. External access methods are introduced later in this chapter.
 
-One of the rules of Kubernetes networking is: all nodes can communicate with all containers without NAT. This means that if we `ssh` in
-one of the Nodes, we should be able to `curl` the web app. For this two things are needed, the `ClusterIP` of the app and the
-port on which the app is listening, both of which we can extract from the previous `kubectl get svc -o wide` command. We need to
-log in one of the Nodes , doesn't matter which one, all the Nodes can reach the Pod. List the nodes:
+In the default Kubernetes network model, nodes can reach Pods without NAT unless network policies or infrastructure rules restrict that traffic. To probe the application from a node, use the Service's ClusterIP and port shown by `kubectl get svc -o wide`:
 
 ```bash
 lxc shell k8s-ctrl
@@ -234,7 +220,7 @@ Thank you for using nginx.
 exit
 ```
 
-This should also work from any other worker node:
+Repeat the probe from another worker node:
 
 ```bash
 lxc shell k8s-worker1
@@ -264,31 +250,19 @@ exit
 
 ## 2.2 Service discovery
 
-Another rule of Kubernetes networking is: all containers can communicate with all the other containers without NAT. This means that
-the web app can be probed from another pod with a `ClusterIP` associated with it. But for this we won't be using the `ClusterIP`,
-but the DNS record of the Service.
+In the default Kubernetes network model, Pods can communicate across nodes without NAT unless network policies or infrastructure rules restrict that traffic. Rather than use a Service's ClusterIP directly, clients can use its DNS name.
 
-Pods need to talk to each other. Kubernetes has multiple mechanisms to do this. One of them is to set the `ClusterIPs` as environment
-variables inside the pods. In this way, when some frontend component needs to talk to the backend, for example, the IP and port can be
-referenced from the environment variable. In the nginx example, it would look like this `NGINX_SERVICE_HOST=10.152.183.197`
-and `NGINX_SERVICE_PORT=8080`. This is not the best approach, however. If you add a new Service, it will not be automatically
-be set on already running pods.
+Kubernetes can inject environment variables for existing Services into newly created Pods, including `NGINX_SERVICE_HOST` and `NGINX_SERVICE_PORT` in this example. New Services are not added to already-running Pods, so DNS is the preferred discovery method.
 
-Another method is to have a DNS server in a Pod. Canonical Kubernetes comes with this feature by default. All the pods in the cluster are automatically
-configured to use the DNS server (`/etc/resolv.conf` file). In this way, any query performed by a process within a Pod will be handled
-by DNS server in Kubernetes, which is accessible from the whole cluster.
+Canonical Kubernetes uses CoreDNS for cluster DNS. Pods are configured through `/etc/resolv.conf` to send cluster-domain queries to the DNS Service.
 
-The default DNS server in Kubernetes is CoreDNS. It runs as a pod in the `kube-system` namespace.More info can be found here https://coredns.io.
+CoreDNS runs in Pods in the `kube-system` namespace. More information is available at https://coredns.io.
 
-If the DNS server is present, when a Service is created for a Pod, a  `A record` is also associated with the Pod in the form of
-`pod-ip-address.my-namespace.pod.cluster.local`. For example, if I have a Pod with the ClusterIP of `1.2.3.4` in the `default`
-Namespace, the DNS entry will be `1.2.3.4.default.pod.cluster.local`.
+A Service receives a DNS record such as `service-name.namespace.svc.cluster.local`. For example, the `nginx` Service in the `default` namespace can be reached as `nginx.default.svc.cluster.local`, or simply as `nginx` from the same namespace.
 
-Alongside the previous nginx pod and service, we'll create another pod and do a `curl` on the nginx record from there. Commands can
-be ran directly inside a pod by using `kubectl exec`. You can also lunch an interactive bash shell inside a pod (granted if the
-base container has the bash installed).
+Alongside the existing nginx Pod and Service, create another Pod and query the nginx DNS name from it. Commands can be run in a Pod with `kubectl exec`. You can also launch an interactive shell if the container image provides one.
 
-List the `CoreDNS` pod:
+List the CoreDNS Pods:
 
 ```bash
 kubectl get pods -n kube-system | { head -n 1; grep "coredns"; }
@@ -299,7 +273,7 @@ coredns-7b7cc6b5fc-hbbbg              1/1     Running   0          63m
 coredns-7b7cc6b5fc-nmrb6              1/1     Running   0          63m
 ```
 
-The pod can be created without a pods definition file:
+The Pod can be created without a Pod definition file:
 
 ```bash
 kubectl run shell -i --tty --image ubuntu -- /bin/bash
@@ -362,11 +336,11 @@ nginx        ClusterIP   10.152.95.221   <none>        8080/TCP   25m   app=ngin
 
 Until now we made the web app available only inside the cluster. There are a couple of ways to allow outside access.
 
-`NodePorts` are one way to do it. Kubernetes will open a port on all Nodes. That port is accessible via the Nodes IP address.
+A `NodePort` Service exposes the same port on every node. Clients connect through a reachable node IP address and that port, subject to routing and firewall rules.
 
 ![nodeport](assets/nodeport.png)
 
-This is a `NodePort` Service definition for nginx app:
+This is a `NodePort` Service definition for the nginx application:
 
 ```bash
 cat ~/resources/nodeport-service.yaml
@@ -402,15 +376,15 @@ nginx            ClusterIP   10.152.95.221   <none>        8080/TCP         25m 
 nginx-nodeport   NodePort    10.152.57.213   <none>        8080:30111/TCP   5s    app=nginx
 ```
 
-`nodePort: 30111` is of utmost importance here. The connection would look like this `<NodeIP>:<30111>`:
+The `nodePort: 30111` field selects the port exposed on each node. A client connects to `<NodeIP>:30111`:
 
-First, install the required `pandoc` so you can interpret HTML output of `curl`:
+First, install `pandoc` to render the HTML output from `curl` as text:
 
 ```bash
 sudo apt update && sudo apt install -y pandoc
 ```
 
-Then, find out the IP address of your nodes, control plane and worker:
+Then, identify the IP addresses of the control plane and worker nodes:
 
 ```bash
 lxc list -c n,4
@@ -433,7 +407,7 @@ lxc list -c n,4
 +--------------+--------------------------+
 ```
 
-Lastly, `curl` any of the nodes that start with `k8s-` to access the nginx service:
+Lastly, use the IP address of any reachable node whose name starts with `k8s-` to access the nginx Service:
 
 ```bash
 curl -s 10.219.64.24:30111 | pandoc -f html -t plain
@@ -453,23 +427,20 @@ features and capabilities please refer to f5.com/nginx.
 Thank you for using nginx.
 ```
 
-**NOTE**: This required that port `30111` is opened on the Node.
+**NOTE**: Firewall and routing rules must allow access to port `30111` on the selected node.
 
-Using NodePorts in production has a number of limitations, including:
- * only possible to have 1 service per port
- * limited Ports Range 30000 to 32767
- * in case of node IP address change the Service becomes unavailable
- * in case the node goes down the Service becomes unavailable
+Consider these NodePort characteristics in production:
+ * Only one Service can use a given NodePort.
+ * The default NodePort range is 30000 to 32767, although it is configurable.
+ * Clients or an external load balancer must use reachable node addresses and handle node availability.
 
-`LoadBalancer` is another type of Service allowing connections from outside. Kubernetes clusters usually run on top of
-Cloud providers like AWS, Azure and GCP. Clusters and Cloud providers know how to interact with each other. The Cloud provider
-will associate a public IP with the app. In ca local deployment of Canonical Kubernetes, this is handled by `Cilium` and `MetalLB`.
+A `LoadBalancer` Service requests an externally reachable address from the platform's load-balancer implementation. Cloud providers commonly supply this integration. In this local deployment, Cilium and MetalLB provide it, and the allocated address is not necessarily public.
 
 ![loadbalancer](assets/loadbalancer2.png)
 
 **NOTE** the IPs and ports from the diagram differ from the exercise ones.
 
-Create a `LoadBalancer` IP and associate it with the nginx app:
+Create a `LoadBalancer` Service for the nginx application:
 
 ```bash
 cat ~/resources/loadbalancer-service.yaml
@@ -492,7 +463,7 @@ spec:
 kubectl create -f ~/resources/loadbalancer-service.yaml
 ```
 
-It will take a couple of seconds for `MetalLB` to allocate a Load Balancer. Take a look at services:
+MetalLB may take a few seconds to allocate an address. List the Services:
 
 ```bash
 kubectl get svc
@@ -505,14 +476,13 @@ nginx-loadbalancer   LoadBalancer   10.152.170.223   10.219.64.11  8080:32294/TC
 nginx-nodeport       NodePort       10.152.57.213    <none>        8080:30111/TCP   2m46s   app=nginx
 ```
 
-`10.237.75.129:8080` is a "public" IP address allocated by `MetalLB`. Try to access it from a tunneled browser.
-Also, from any of the nodes, including your host, you can run:
+The `EXTERNAL-IP` column shows the address allocated by MetalLB. In this example, the endpoint is `10.219.64.11:8080`. If your cluster reports a different address, substitute it in the browser and the following command:
 
 ```bash
 curl -s 10.219.64.11:8080 | pandoc -f html -t plain
 ```
 
-Cleanup the resources created so far:
+Clean up the resources created so far:
 
 ```bash
 # run 'kubectl get svc' to get the services
@@ -526,14 +496,13 @@ kubectl delete pod nginx shell
 
 ## 2.4 Ingress controllers
 
-Ingress resources are DNS mappings to your containers, routed through endpoints. They can manage external access to the services
-in a cluster, providing load balancing, name-based virtual hosting and SSL termination.
+An Ingress defines HTTP(S) routing rules that expose Services. An Ingress controller implements those rules and can provide load balancing, name-based virtual hosting, and TLS termination.
 
 ![ingress](assets/ingress2.png)
 
-Canonical Kubernetes comes with Cilium CNI. Cilium provides different type of services and use-cases to your Kubernetes cluster, including `ingresses`.
+This lab uses Cilium for container networking and Ingress support.
 
-Check the Cilium pods are running on each node:
+Check that the Cilium Pods are running on each node:
 
 ```bash
 kubectl get pods -A -o wide | awk 'NR==1 || tolower($0) ~ /cilium/'
@@ -554,7 +523,7 @@ NAMESPACE        NAME                                TYPE           CLUSTER-IP  
 kube-system      cilium-ingress                      LoadBalancer   10.152.84.241    10.219.64.5   80:31695/TCP,443:31146/TCP   144m
 ```
 
-Let's imagine we have a web application with two microservices, red and blue. The microservices are just displaying some text, but from a design perspective, a real world application would work just the same.
+Imagine a web application with two microservices, red and blue. These examples display only text, but the same routing pattern applies to real-world applications.
 
 Check the red microservice definition:
 
@@ -588,7 +557,7 @@ spec:
 
 The blue microservice looks the same but instead of red, it displays blue.
 
-Also, check the Ingress Controller definition:
+Also, check the Ingress resource definition:
 
 ```bash
 cat ~/resources/ingress.yaml
@@ -622,13 +591,11 @@ spec:
 ```
 
 Each HTTP rule contains the following information:
-1. An optional `host`. If no host is specified, the rule applies to all inbound HTTP traffic through the IP address specified.
+1. An optional `host`. If no host is specified, the rule applies to inbound HTTP traffic that reaches the Ingress address.
 
-2. A list of paths (`/red`, `/blue`), each of which has an associated backend defined with a service. Both the host and path must match
-the content of an incoming request before the load balancer directs traffic to the referenced Service.
+2. A list of paths, such as `/red` and `/blue`, each associated with a backend Service. The Ingress controller evaluates the host and path before routing a request.
 
-3. A backend - combination of Service and port names as described in the Service. Requests to the Ingress that matches the host and
-path of the rule are sent to the listed backend.
+3. A backend that identifies a Service and one of its ports by name or number. Matching requests are sent to that Service.
 
 Create the objects:
 
@@ -638,7 +605,7 @@ kubectl create -f ~/resources/red-app.yaml
 kubectl create -f ~/resources/ingress.yaml
 ```
 
-The Ingress Controller is created:
+Verify the Ingress resource:
 
 ```bash
 kubectl get ingress
@@ -648,11 +615,11 @@ NAME              CLASS    HOSTS   ADDRESS       PORTS   AGE
 bluered-ingress   cilium   *       10.219.64.10   80      6s
 ```
 
-`10.219.64.10` is the MetalLB IP address for this ingress. It's matching the IP address of the `cilium-ingress` service from above. Open your tunneled browser and navigate to `http://10.219.64.10/blue` and `http://10.219.64.10/red`.
+The `ADDRESS` column shows the address used to reach the Ingress. Open your tunneled browser and use that address for the `/blue` and `/red` paths.
 
-**NOTE**: your LoadBalancer IP will be different.
+**NOTE**: Your LoadBalancer IP address may differ from the example output.
 
-After everything is tested, remove the Ingress and pods.
+After testing, remove the Ingress and Pods.
 
 ```bash
 kubectl delete -f ~/resources/blue-app.yaml
@@ -660,8 +627,7 @@ kubectl delete -f ~/resources/red-app.yaml
 kubectl delete -f ~/resources/ingress.yaml
 ```
 
-For more Ingress related information regarding Canonical Kubernetes, please visit:
+For more Ingress-related information, see:
 
 https://kubernetes.io/docs/concepts/services-networking/ingress/
 https://docs.cilium.io/en/stable/network/servicemesh/ingress/
-

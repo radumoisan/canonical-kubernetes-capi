@@ -3,16 +3,16 @@
 Kubernetes is an open-source infrastructure for automating deployment, scaling, and management of containerized
 applications. Originally built by Google, it is currently maintained by the Cloud Native Computing Foundation.
 
-The upstream Kubernetes version is comprised of:
+A Kubernetes cluster includes these primary components:
   * control plane components:
     * etcd distributed key-value store
     * the API server
-    * the Scheduler
-    * the Controller Manager
-  * worker nodes components:
+    * the scheduler
+    * the controller manager
+  * node components:
     * the kubelet
-    * the service proxy called kube-proxy
-    * the container runtime - containerd
+    * the kube-proxy network proxy
+    * a container runtime, such as containerd
 
 ## :material-book-open-page-variant-outline: Canonical Kubernetes
 
@@ -29,7 +29,7 @@ largest ecosystem of Kubernetes partners, solutions and integration options.
 
 ## :material-book-open-page-variant-outline: 1.1 Deploy Canonical Kubernetes
 
-We will be using `MAAS` and `CAPI` to deploy and manage a Kubernetes cluster on MAAS cloud provider using LXD VMs.
+This lab uses MAAS and Cluster API (CAPI) to deploy and manage a Kubernetes cluster on MAAS using LXD VMs.
 
 First, install MAAS and LXD:
 
@@ -61,7 +61,7 @@ Next, initialize LXD and disable IPv6:
 sudo lxd init --auto
 ```
 ??? example "Expected result"
-    No output.
+    `No output.`
 
 ```bash
 # Disable IPv6 on the LXD bridge.
@@ -98,7 +98,7 @@ sudo lxc config set core.https_address 127.0.0.1:8443
 ??? example "Expected result"
     No output.
 
-Then, let's disable IPv6 system wide:
+Then, disable IPv6 system-wide:
 
 ```bash
 # Configure IPv6 to be disabled system wide.
@@ -141,7 +141,7 @@ sudo maas init region+rack --database-uri maas-test-db:/// --maas-url http://${I
 ??? example "Expected result"
     MAAS initializes successfully.
 
-Now that both LXD and MAAS are installed, let's do the initial MAAS setup and integrate it with LXD. Your local host will be registered as a LXD host inside MAAS:
+Now that both LXD and MAAS are installed, complete the initial MAAS setup and integrate it with LXD. The local LXD instance will be registered in MAAS as a VM host:
 
 ```bash
 # Create the MAAS administrator.
@@ -213,7 +213,7 @@ maas deployprofile sshkeys create key="`cat ~/.ssh/id_rsa.pub`"
 ??? example "Expected result"
     The SSH public key is added to MAAS.
 
-LXD has it's own network and but DNS and DHCP will be handled by MAAS. To configure MAAS to work with LXD's network, run:
+LXD has its own network, but MAAS will handle DNS and DHCP. To configure MAAS to work with LXD's network, run:
 
 ```bash
 # Detect the LXD network CIDR.
@@ -370,7 +370,7 @@ maas deployprofile vm-host compose 1 cores=4 memory=8192 storage="1:80(default)"
 ??? example "Expected result"
     The second Kubernetes worker VM is created.
 
-VMs are created and commissioned automatically. Before we can proceed, we need to tag those machines:
+VMs are created and commissioned automatically. Before proceeding, tag these machines:
 
 ```bash
 # Tag the commissioned machines.
@@ -398,7 +398,7 @@ done
 ??? example "Expected result"
     `Processing` is displayed for each machine.
 
-Next, let's deploy an operating system to your management machine. On `cluster-ctrl` we'll be running our Kubernetes management cluster that can further provision other clusters.
+Next, deploy an operating system to the management machine. The Kubernetes management cluster will run on `cluster-ctrl` and provision workload clusters.
 
 ```bash
 # Get the management machine system ID.
@@ -415,7 +415,12 @@ maas "$PROFILE" machine deploy "$CLUSTERCTL_SYSTEM_ID" distro_series="ubuntu/nob
 ??? example "Expected result"
     Deployment of the management machine starts.
 
-After the machine gets deployed with Ubuntu Noble (24.04), we will need to install the necessary tools to have Cluster API up and running:
+After the machine is deployed with Ubuntu Noble (24.04), install and bootstrap Canonical Kubernetes as the management cluster, then install `clusterctl`:
+
+!!! note
+    The `k8s` command is the administration CLI installed by the Canonical Kubernetes snap. It manages the local cluster through commands such as `bootstrap`, `status`, and `config`.
+
+    `k8s kubectl` runs the kubectl client bundled with Canonical Kubernetes and connects to the local management cluster. Plain `kubectl`, introduced later, connects to the cluster selected through `KUBECONFIG`.
 
 ```bash
 # Get the management machine IP address.
@@ -461,7 +466,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLU
 ??? example "Expected result"
     No output.
 
-Last step before actually creating the cluster is to generate a Cluster API manifest that will be used by plain `kubectl` to create our cluster:
+Next, initialize the CAPI providers and generate the resource manifest for the workload cluster:
 
 ```bash
 # Set the variables used to generate the Cluster API manifest.
@@ -508,23 +513,37 @@ export WORKER_MACHINE_MINCPU=$WORKER_MACHINE_MINCPU
 export WORKER_MACHINE_MINMEMORY=$WORKER_MACHINE_MINMEMORY
 export WORKER_MACHINE_COUNT=$WORKER_MACHINE_COUNT
 
+# Install the Cluster API providers in the management cluster.
+# Core provider: manages common Cluster API resources.
+# Bootstrap provider: generates Canonical Kubernetes node configuration.
+# Control-plane provider: manages Canonical Kubernetes control-plane nodes.
+# Infrastructure provider: provisions machines through MAAS.
 clusterctl init \
   --core "cluster-api:${CAPI_VERSION}" \
   --bootstrap "canonical-kubernetes:${CK8S_PROVIDER_VERSION}" \
   --control-plane "canonical-kubernetes:${CK8S_PROVIDER_VERSION}" \
   --infrastructure "maas:${MAAS_PROVIDER_VERSION}"
 
+# Download the Canonical Kubernetes Cluster API templates.
 git clone https://github.com/canonical/cluster-api-k8s
+
+# Enter the downloaded provider repository.
 cd cluster-api-k8s
+
+# Set the name used for the workload cluster resources.
 export CLUSTER_NAME=myk8scluster
+
+# Display the variables required and supported by the MAAS template.
 clusterctl generate cluster \${CLUSTER_NAME} --from ./templates/maas/cluster-template.yaml --list-variables
+
+# Render the workload-cluster resources into cluster.yaml.
 clusterctl generate cluster \${CLUSTER_NAME} --from ./templates/maas/cluster-template.yaml > cluster.yaml
 EOF
 ```
 ??? example "Expected result"
-    `cluster.yaml` is generated.
+    `No output.`
 
-Now that the cluster template is generated, we can apply it to create the cluster:
+Apply the generated manifest to the management cluster. The CAPI controllers will reconcile these resources and provision the workload cluster:
 
 ```bash
 # Connect to the management machine.
@@ -570,116 +589,84 @@ exit
 
 ## :material-book-open-page-variant-outline: 1.2 Interacting with the cluster and observability
 
-After the cluster is deployed you may assume control over the Kubernetes
-cluster from any k8s node.
+Continue on the outer GCE lab VM. It can reach the management and workload cluster API endpoints over the MAAS-managed LXD network.
 
-`kubectl` is the command line tool for Kubernetes. It controls the Kubernetes cluster manager.
+`kubectl` is the Kubernetes command-line client. A kubeconfig file contains the cluster endpoint, user credentials, context, and optional namespace that `kubectl` uses.
 
-`config` are files used to organize information about clusters, users, namespaces, and authentication mechanisms.
-The `kubectl` command-line tool uses `config` files to find the information it needs to choose a cluster and communicate
-with the API server of a cluster. By default, the config files are created on the `k8s` nodes. Create
-the `kubectl` config directory and copy the cluster `config` file to the default location:
+!!! note
+    Unless a step explicitly says to run on `cluster-ctrl`, run every command in this section on the outer GCE lab VM.
+
+    The management kubeconfig is `~/.kube/config`. The workload kubeconfig is `~/.kube/myk8scluster_config`.
+
+Create the kubeconfig directory on the outer lab VM:
 
 ```bash
-# Create the kubectl configuration directory.
-mkdir -p ~/.kube && cd ~/.kube
+# Create the local kubectl configuration directory.
+mkdir -p ~/.kube
 ```
 ??? example "Expected result"
-    No output.
+    `No output.`
 
-Once the cluster is done being installed, you'll need the configuration file `kubectl` uses to connect to the cluster. To get it:
+Connect to `cluster-ctrl`, where `clusterctl` and the management kubeconfig are installed:
 
 ```bash
 # Connect to the management machine.
 ssh $CLUSTERCTL_IP
 ```
 ??? example "Expected result"
-    A remote shell opens on the management machine.
+    `ubuntu@cluster-ctrl:~$`
+
+On `cluster-ctrl`, generate the workload-cluster kubeconfig:
 
 ```bash
-# Retrieve the deployed cluster kubeconfig.
+# Generate the workload cluster kubeconfig on cluster-ctrl.
 clusterctl get kubeconfig myk8scluster > ~/.kube/myk8scluster_config
 ```
 ??? example "Expected result"
-    No output.
+    `No output.`
+
+Return to the outer lab VM:
 
 ```bash
-# Exit the management machine.
+# Exit cluster-ctrl.
 exit
 ```
 ??? example "Expected result"
-    The local shell resumes.
+    `Connection to <cluster-ctrl-IP> closed.`
 
-`myk8scluster_config` file gets created inside `.kube` folder. Also, you'll need the `kubectl` CLI installed, so:
-
-```bash
-# Install kubectl.
-sudo snap install kubectl --channel=1.35/stable --classic
-```
-??? example "Expected result"
-    The kubectl snap is installed.
-
-Then, check `kubectl` has access to the cluster:
+The two kubeconfig files currently reside on `cluster-ctrl`. Copy them to the outer lab VM before running plain `kubectl` there:
 
 ```bash
-# Select the deployed cluster kubeconfig.
-export KUBECONFIG=~/.kube/myk8scluster_config
-```
-??? example "Expected result"
-    No output.
-
-```bash
-# List all cluster nodes.
-kubectl get nodes -A -o wide
-```
-??? example "Expected result"
-    Nodes are displayed.
-
-```bash
-# List all cluster pods.
-kubectl get pods -A -o wide
-```
-??? example "Expected result"
-    Pods are displayed.
-
-```bash
-# Exit the current shell.
-exit
-```
-??? example "Expected result"
-    The parent shell resumes.
-
-Now that config files have been tested, they can be copied on your lab environment:
-
-```bash
-# Create the local kubeconfig directory.
-mkdir -p ~/.kube
-```
-??? example "Expected result"
-    No output.
-
-```bash
-# Copy the deployed cluster kubeconfig to the lab environment.
+# Copy the workload cluster kubeconfig to the outer lab VM.
 scp $CLUSTERCTL_IP:~/.kube/myk8scluster_config ~/.kube/
 ```
 ??? example "Expected result"
-    The deployed cluster kubeconfig is copied.
+    `myk8scluster_config  100%`
 
 ```bash
-# Copy the management cluster kubeconfig to the lab environment.
+# Copy the management cluster kubeconfig to the outer lab VM.
 scp $CLUSTERCTL_IP:~/.kube/config ~/.kube/
 ```
 ??? example "Expected result"
-    The management cluster kubeconfig is copied.
+    `config  100%`
+
+Install `kubectl` once on the outer lab VM:
 
 ```bash
-# Install kubectl in the lab environment.
+# Install kubectl on the outer lab VM.
 sudo snap install kubectl --channel=1.35/stable --classic
 ```
 ??? example "Expected result"
-    The kubectl snap is installed.
+    `kubectl <version> from Canonical installed`
 
-Once you have both config files and `kubectl` client, you can inspect both management and deployed clusters.
+Select the management kubeconfig and verify the management cluster:
+
+```bash
+# Select the management cluster kubeconfig.
+export KUBECONFIG=~/.kube/config
+```
+??? example "Expected result"
+    `No output.`
 
 ```bash
 # Inspect the management cluster.
@@ -691,17 +678,17 @@ kubectl get nodes
     cluster-ctrl   Ready    control-plane,worker   54m   v1.35.7
     ```
 
-Also, you can inspect the deployed cluster:
+Select the workload kubeconfig and verify the workload cluster:
 
 ```bash
-# Select the deployed cluster kubeconfig.
+# Select the workload cluster kubeconfig.
 export KUBECONFIG=~/.kube/myk8scluster_config
 ```
 ??? example "Expected result"
-    No output.
+    `No output.`
 
 ```bash
-# Inspect the deployed cluster.
+# Inspect the workload cluster.
 kubectl get nodes
 ```
 ??? example "Expected result"
@@ -712,13 +699,18 @@ kubectl get nodes
     k8s-worker2   Ready    worker                 37m   v1.35.7
     ```
 
-Multiple clusters can be managed with the help of `config` file. Users can switch between different clusters. For more information on
-this please visit:
+```bash
+# List all workload cluster pods.
+kubectl get pods -A -o wide
+```
+??? example "Expected result"
+    Pods from all workload-cluster namespaces are displayed.
+
+A kubeconfig file can define multiple clusters, users, and contexts, allowing users to switch between clusters. For more information, see:
 
 https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters
 
-**Note**: A file that is used to configure access to a cluster is also sometimes called a `kubeconfig` file. This is just a
-generic way of referring to configuration files. It does not mean that there is a file named `kubeconfig`.
+**Note**: `Kubeconfig` is a generic term for a file that configures access to a cluster. The file does not need to be named `kubeconfig`.
 
 For information on how to install `kubectl` on other systems, please visit the links:
 
@@ -735,30 +727,30 @@ Also, let's add command autocompletion for `kubectl`:
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
 ```
 ??? example "Expected result"
-    No output.
+    `No output.`
 
 ```bash
 # Make the kubectl completion file readable.
 sudo chmod a+r /etc/bash_completion.d/kubectl
 ```
 ??? example "Expected result"
-    No output.
+    `No output.`
 
-After that, let's logout and re-login:
+Exit and reconnect to the outer GCE lab VM so the new shell loads kubectl completion:
 
 ```bash
 # Log out of the lab machine.
 exit
 ```
 ??? example "Expected result"
-    The local shell resumes.
+    `Connection to <outer-VM-public-IP> closed.`
 
 ```bash
 # Reconnect to the lab machine.
 ssh ubuntu@<public IP address of your lab>
 ```
 ??? example "Expected result"
-    A shell opens on the lab machine.
+    `ubuntu@<outer-VM>:~$`
 
 Query the cluster:
 
@@ -767,7 +759,7 @@ Query the cluster:
 export KUBECONFIG=~/.kube/myk8scluster_config
 ```
 ??? example "Expected result"
-    No output.
+    `No output.`
 
 ```bash
 # Query cluster information.
@@ -775,13 +767,13 @@ kubectl cluster-info
 ```
 ??? example "Expected result"
     ```text
-    Kubernetes control plane is running at https://myk8scluster-d02f62.maas:6443
-    CoreDNS is running at https://myk8scluster-d02f62.maas:6443/api/v1/namespaces/kube-system/services/coredns:udp-53/proxy
+    Kubernetes control plane is running at https://<generated-control-plane-hostname>.maas:6443
+    CoreDNS is running at https://<generated-control-plane-hostname>.maas:6443/api/v1/namespaces/kube-system/services/coredns:udp-53/proxy
 
     To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
     ```
 
-Kubernetes components like the scheduler or the distributed database can be checked to ensure cluster functionality:
+Query the API server's verbose readiness endpoint to check its dependencies, including etcd:
 
 ```bash
 # Check Kubernetes component readiness.
@@ -829,8 +821,7 @@ kubectl get --raw='/readyz?verbose'
     readyz check passed
     ```
 
-In Kubernetes terminology, the workers which run the `kubelet` service are called `nodes`. This cluster is modeled
-with two purely worker `nodes` and one control plane `node` that also runs `kubelet`, but more can be added at any time:
+A Kubernetes node is a machine that runs the `kubelet`. This cluster has two worker nodes and one control plane node that also runs workloads; more nodes can be added at any time:
 
 ```bash
 # List deployed cluster nodes.
@@ -839,9 +830,9 @@ kubectl get nodes
 ??? example "Expected result"
     ```text
     NAME          STATUS   ROLES                  AGE   VERSION
-    k8s-ctrl      Ready    control-plane,worker   50m   v1.36.4
-    k8s-worker1   Ready    worker                 42m   v1.36.4
-    k8s-worker2   Ready    worker                 42m   v1.36.4
+    k8s-ctrl      Ready    control-plane,worker   50m   v1.35.7
+    k8s-worker1   Ready    worker                 42m   v1.35.7
+    k8s-worker2   Ready    worker                 42m   v1.35.7
     ```
 
 You can get even more detailed information by running `kubectl get nodes -o wide`.
@@ -883,18 +874,14 @@ kubectl top pods --all-namespaces
 
 ## :material-book-open-page-variant-outline: 1.3 Pods and namespaces
 
-A `pod` is smallest deployment unit that a user can create. It is an encapsulation of one or more containers
-with a shared network and storage scope. The shared context of a pod is implemented with Linux namespaces,
-cgroups, among others, the same used for Docker or Containerd containers isolation.
+A Pod is Kubernetes' smallest deployable unit. It contains one or more containers that share networking and can share declared volumes.
 
-Containers within a pod share an IP address and a port space, of the pod. They communicate with each other inside pods
-using standard IPC. Containers in different pods have distinct IPs and communicate on that IP.
+Containers within a Pod share an IP address and port space and can communicate over `localhost`. Containers in different Pods have distinct IP addresses and communicate over the network.
 
 Using pods, applications can be designed in a highly distributed manner. Microservice architectures are common for
 applications that run on Kubernetes.
 
-Pods are considerate to have ephemeral life and should be treated like cattle. Another important mention is that pods alone
-do not offer application high availability. For that, kubernetes has mechanism that make use of pods, but more of that later.
+Pods are ephemeral and should be treated as replaceable. A standalone Pod does not provide replica management or application high availability; controllers such as Deployments provide these capabilities.
 
 List the pods:
 
@@ -905,13 +892,9 @@ kubectl get pods -o wide --all-namespaces
 ??? example "Expected result"
     Pods are displayed.
 
-Multiple pods can be seen, buy why? Kubernetes itself runs it's services (api server, dashboard, etc.) inside
-pods. Those pods run in a special namespace called `kube-system`, a system reserved namespace. `Namespaces` are a way
-to create scopes for different projects. For example, the development team can work in their `dev` namespace, and the
-support team can work in their `support` namespace. The two can be considered different projects, resources are not shared
-and the two namespaces are isolated from each other.
+You may see multiple Pods because many cluster add-ons run in the `kube-system` namespace. Namespaces provide logical scopes for projects and resources. For example, the development team can work in a `dev` namespace, while the support team works in a `support` namespace. Resources in one namespace are distinct from resources in another, but namespaces do not provide network or security isolation by themselves.
 
-By default, a `default` namespace is created along with the kube-system one. List all the namespaces:
+Clusters normally include the `default` and `kube-system` namespaces, among others. List all namespaces:
 
 ```bash
 # List all namespaces.
@@ -922,10 +905,7 @@ kubectl get namespaces
 
 ## :material-book-open-page-variant-outline: 1.4 Work with pods and volumes
 
-Kubernetes treats everything as objects, including pods, and each object has a definition. A definition is a declaration of
-a desired state. Kubernetes ensures that the current state matches the desired state. For example, when you create a Pod and
-declare that the containers in it to be running. If the containers are not running due to an app failure, kubernetes will
-recreate the pod in order to drive the pod to desired state.
+Kubernetes resources, including Pods, are represented by objects that declare a desired state. Kubernetes continually works to match the actual state to the desired state. For a standalone Pod, the `kubelet` restarts failed containers according to the Pod's `restartPolicy`. Controllers such as Deployments create replacement Pods when necessary.
 
 ![bundle](assets/pod1.png)
 
@@ -956,8 +936,7 @@ kubectl create -f ~/resources/nginx-pod.yaml
 ??? example "Expected result"
     `pod/nginx` is created.
 
-List the pods and describe the newly created pod, try to understand what is in there and talk with the trainer on the bits
-that you do not understand:
+List and describe the newly created Pod. Review its status, configuration, and events, and ask the trainer about anything you do not understand:
 
 ```bash
 # List the nginx pod.
@@ -982,19 +961,15 @@ kubectl delete pod nginx
 ??? example "Expected result"
     `pod "nginx"` is deleted.
 
-That's good for a simple web server, but what if persistent storage is needed? The container file system only lives as
-long as the container does. Volumes should be used for any persistent storage needs.
+Container writable layers are ephemeral. Volumes allow containers in a Pod to share data and can have different lifecycles. Data that must outlive a Pod generally requires a PersistentVolume backed by suitable storage.
 
-There are many volume types available, with some being cloud platform specific (e.g. `azureDisk`, `gcePersistentDisk`,
-`azureDisk`, `awsElasticBlockStore`). The standard types include:
+This lab uses these local volume types:
 
-`EmptyDir`: is first created when a Pod is assigned to a Node, and exists as long as that Pod is running on that node.
-It is initially empty and is stored on whatever medium is backing the node - that might be disk or HDD/SSD or network storage,
-depending on your environment.
+`emptyDir` is created when a Pod is assigned to a node and lasts for the lifetime of that Pod on that node. It is initially empty and uses storage provided by the node.
 
-`HostPath`: Mounts an existing directory on the node’s file system. For example `/var/logs`.
+`hostPath` mounts an existing path, such as `/var/logs`, from the node's file system. It ties the Pod to that node and has security implications, so use it with care.
 
-Here is an example of how volumes will look like in a pod definition:
+Here is an example of how to define an `emptyDir` volume in a Pod:
 
 ```yaml
 apiVersion: v1
@@ -1013,8 +988,7 @@ spec:
     emptyDir: {}
 ```
 
-Create the pod in `~/resources/redis-volume-pod.yaml` and run the `describe pod` command on it afterwards to see
-the volumes attached. Delete the pod once done.
+Create the Pod from `~/resources/redis-volume-pod.yaml`, then describe it to inspect the attached volumes. Delete the Pod when finished.
 
 ```bash
 # Create the redis volume pod.
@@ -1031,7 +1005,7 @@ kubectl describe pod redis
 ??? example "Expected result"
     Pod details and attached volumes are displayed.
 
-Multiple containers can also exist in one pod. Take a look at this example:
+A Pod can also contain multiple containers. Display the example definition:
 
 ```bash
 # Display the multi-container pod definition.
@@ -1040,7 +1014,7 @@ cat ~/resources/multi-container-pod.yaml
 ??? example "Expected result"
     The multi-container pod definition is displayed.
 
-There are two containers, `nginx-container` and `debian-container`. The `debian-container` is responsible for generating the index file, while `nginx-container` serves it to the clients.
+The `debian-container` writes the index file to a shared volume, while `nginx-container` serves that file to clients.
 
 Finally, delete the pod:
 
