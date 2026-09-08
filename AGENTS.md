@@ -55,11 +55,18 @@ Use Material admonitions when they improve clarity:
 - Use one command block per command.
 - Follow every command block with an expected-result admonition:
 
-```md
+````md
 ??? example "Expected result"
+    ```text
     Expected output or verification notes.
-```
+    ```
+````
 
+- Format every expected-result body as an indented fenced code block.
+- Use `text` as the default language, including for `No output.` and narrative verification.
+- Use another language identifier only when it accurately represents structured output.
+- Reserve `shell` for intentional transcripts that contain prompts, commands, and output.
+- Do not repeat executable commands in expected-result admonitions; commands belong in the preceding command block.
 - Keep commands and expected results paired.
 - Use representative, concrete success output. Use `No output.` when applicable.
 
