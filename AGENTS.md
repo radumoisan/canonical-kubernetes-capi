@@ -37,6 +37,7 @@ This repository supports Kubernetes Cluster API (CAPI) training.
 ## Live Training
 
 - Use an interactive workflow only when explicitly requested for live training.
+- Always connect to student machines over SSH as the `ubuntu` user; do not derive the SSH username from student identity or inventory fields.
 - Present one instruction and one command at a time.
 - Before each command, state the exact student-facing command and its purpose in one sentence.
 - Wait for explicit approval before executing each command; treat `go` as approval.
