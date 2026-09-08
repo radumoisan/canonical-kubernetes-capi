@@ -1,39 +1,38 @@
 # :material-numeric-5-circle: 5. Autoscaling
 
-Kubernetes can autoscale your application based on load. Numeric based resources like `CPU` and `Memory` can be used for this.
-For example, when the CPU reaches a certain threshold, the application can be scaled without human interaction, in an automated manner.
+Kubernetes can automatically adjust an application's replica count based on observed load. Resource metrics such as CPU and memory
+can drive this scaling. For CPU utilization, Kubernetes compares measured usage with the containers' CPU requests.
 
-The `HorizontalPodAutoscaler` normally fetches metrics from a series of aggregated APIs (metrics.k8s.io, custom.metrics.k8s.io,
-and external.metrics.k8s.io). The `metrics.k8s.io` API is usually provided by `metrics-server`, which needs to be launched separately.
+The `HorizontalPodAutoscaler` can retrieve metrics from aggregated APIs such as `metrics.k8s.io`, `custom.metrics.k8s.io`, and
+`external.metrics.k8s.io`. The `metrics.k8s.io` API is commonly provided by Metrics Server, an add-on installed in the cluster.
 
 ![roles](assets/hpa1.png)
 
-Resource usage metrics, such as container CPU and memory usage, are available in Kubernetes through the `Metrics API`. These metrics can be
-accessed either directly by the user with the `kubectl top` command, or by a controller in the cluster, for example `HorizontalPodAutoscaler`,
-to make decisions. Provided by the `metrics-server`.
+Resource metrics, such as container CPU and memory usage, are available through the Metrics API. Users can query these metrics with
+`kubectl top`, and controllers such as the `HorizontalPodAutoscaler` can use them to make scaling decisions.
 
-`Metrics Server` collects resource metrics from Kubelets and exposes them in Kubernetes API Server through `Metrics API` for use by
-`Horizontal Pod Autoscaler` and `VerticalPodAutoscaler`. Metrics Server is not meant for non-autoscaling purposes. For example, don't
-use it to forward metrics to monitoring solutions, or as a source of monitoring solution metrics. For this Prometheus can be used.
+Metrics Server collects resource metrics from kubelets and exposes them through the Kubernetes API server. It supports resource
+autoscaling and `kubectl top`, but it is not designed for long-term monitoring or alerting. Use a dedicated monitoring system such as
+Prometheus for those purposes.
 
-The `HorizontalPodAutoscaler` is the Kubernetes object that scales a `Deployment` or `ReplicaSet`. It is a control loop that periodically
-checks pod metrics from the `metrics-server`, calculates the number of replicas required to meet the target metric value configured by the user in
-the `HPA` resource, and updates the `REPLICAS` field in the target Deployment resource.
+The `HorizontalPodAutoscaler`, abbreviated as `HPA`, adjusts the desired replica count of a `Deployment` or another workload that
+supports the scale subresource. Its control loop periodically reads Pod metrics, calculates the replica count required to meet the
+configured target, and updates the target workload.
 
-So the autoscaling process works in 3 steps:
-  * collect metrics from all the pods managed by the resource object (deployment, replicaSet) : via `metrics-server`
-  * calculate the number of pods needed to match the specified target value
-  * update the replicas field in the resource object
+The autoscaling process has three main steps:
+  * Collect metrics for the Pods managed by the target workload.
+  * Calculate the replica count required to meet the configured target.
+  * Update the desired replica count of the target workload.
 
 ![roles](assets/hpa2.png)
 
-More information on the Resource metrics pipeline can be found here:
+For more information about the resource metrics pipeline, visit:
 
 https://kubernetes.io/docs/tasks/debug-application-cluster/resource-metrics-pipeline/
 
 ## :material-book-open-page-variant-outline: 5.1 Autoscale a Deployment resource
 
-Create an nginx deployment, this will be the scaled application:
+Create an nginx Deployment as the application to scale:
 
 ```bash
 # Create the nginx deployment.
@@ -42,12 +41,16 @@ kubectl create deployment nginx-hpa --image=nginx
 ??? example "Expected result"
     The Deployment is created.
 
+Expose the Deployment through a Service:
+
 ```bash
 # Expose the nginx deployment on port 80.
 kubectl expose deployment nginx-hpa --port=80
 ```
 ??? example "Expected result"
     The Service is created.
+
+Set a CPU request because the utilization target is calculated as a percentage of requested CPU:
 
 ```bash
 # Set the nginx deployment CPU request.
@@ -56,8 +59,8 @@ kubectl set resources deployment nginx-hpa --requests=cpu=100m
 ??? example "Expected result"
     The Deployment resource requirements are updated.
 
-Create a `HPA` that will autoscale when the pod `CPU` load reaches 30%, but keep the pods between 1 pod minimum and 5 pods
-at max. In this case the pod replicas will not exeed 5 even if the `CPU` is above 30%:
+Create an `HPA` with a target average CPU utilization of 30% of requested CPU. Keep the Deployment between one and five replicas;
+the `HPA` will not scale it above five replicas even when utilization remains above the target:
 
 ```bash
 # Create the nginx HorizontalPodAutoscaler.
@@ -66,7 +69,7 @@ kubectl autoscale deployment nginx-hpa --cpu 30% --min=1 --max=5
 ??? example "Expected result"
     The HorizontalPodAutoscaler is created.
 
-Run a load generator that will do `wget` continuously on the nginx app:
+Run a load-generator Pod that continuously sends requests to the nginx Service:
 
 ```bash
 # Enter the load-generator container shell.
@@ -82,7 +85,7 @@ while true; do wget -q -O- http://nginx-hpa; done
 ??? example "Expected result"
     The command runs continuously until interrupted.
 
-Open a new tab and log in the public machine again. Do a watch getting the `HPA` status. Wait a minute or two for the load to increase:
+Open a second terminal and connect to the student machine again. Watch the `HPA` status and wait a minute or two for the load to increase:
 
 ```bash
 # Watch the HorizontalPodAutoscaler status.
@@ -94,10 +97,10 @@ watch kubectl get hpa
     nginx-hpa   Deployment/nginx-hpa   36%/30%   1         5         2          4m
     ```
 
-Because the CPU utilization went over 30%, it's 36% now, a new replica was added and there are 2 now. Please note that in your case the
-load can be higher, and the replica count can be higher.
+The current average CPU utilization is 36% of requested CPU, which is above the 30% target, so the `HPA` increased the replica count
+to two. The utilization and resulting replica count may differ in your environment.
 
-A new nginx pod was added and the app was autoscaled:
+Confirm that additional nginx Pods were created:
 
 ```bash
 # List the nginx and load-generator pods.
@@ -113,8 +116,8 @@ kubectl get pods
     ...
     ```
 
-If you go back on the first tab and stop the `wget` command, the CPU utilization will drop below 30% and the `REPLICAS` field will be set to 1.
-The scale down operation is performed every five minutes, so you may not see this right away.
+Return to the first terminal and stop the `wget` command. As CPU utilization falls below the target, the `HPA` eventually scales the
+Deployment down to its minimum of one replica. The default scale-down stabilization window is 300 seconds, so this is not immediate.
 
 ```bash
 # Display the HorizontalPodAutoscaler status after scale down.
@@ -126,7 +129,7 @@ kubectl get hpa
     nginx-hpa   Deployment/nginx-hpa   cpu: 0%/30%   1         5         1          10m
     ```
 
-Inspect the `HPA` for a minute, if you find something interesting don't hesitate to talk with the trainer about it:
+Inspect the `HPA` details and discuss any questions with the trainer:
 
 ```bash
 # Describe the nginx HorizontalPodAutoscaler.
@@ -135,7 +138,7 @@ kubectl describe hpa nginx-hpa
 ??? example "Expected result"
     The HorizontalPodAutoscaler details are displayed.
 
-You can check what happened to the HorizontalPodAutoscaler using:
+View recent scaling decisions in the `HPA` events:
 
 ```bash
 # List events for the nginx HorizontalPodAutoscaler.
@@ -149,7 +152,7 @@ kubectl events --for hpa/nginx-hpa
     113s        Normal    SuccessfulRescale              HorizontalPodAutoscaler/nginx-hpa   New size: 1; reason: All metrics below target
     ```
 
-Default behavior of the `HorizontalPodAutoscaler` is desribed here:
+The default scaling behavior of the `HorizontalPodAutoscaler` is equivalent to this configuration:
 
 ```yaml
 behavior:
@@ -171,7 +174,7 @@ behavior:
     selectPolicy: Max
 ```
 
-Do a cleanup on the created resources:
+Delete the resources created in this exercise:
 
 ```bash
 # Delete the nginx deployment.
