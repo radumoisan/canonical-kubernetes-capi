@@ -7,10 +7,11 @@ Tracks migration status for the active Kubernetes CAPI lab sequence in `ref-labs
 - `Not started`
 - `In progress`
 - `Migrated`
+- `Validated`
 
 ## Active Labs
 
-- `1_k8s_basics_gce.md`: `Migrated`
+- `1_k8s_basics_gce.md`: `Validated`
 - `2_networking_gce.md`: `Migrated`
 - `3_keeping_apps_healthy_gce.md`: `Migrated`
 - `4_storage_gce.md`: `Migrated`

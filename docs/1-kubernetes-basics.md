@@ -632,7 +632,7 @@ Return to the outer lab VM:
 exit
 ```
 ??? example "Expected result"
-    `Connection to <cluster-ctrl-IP> closed.`
+    `Connection to 10.107.242.61 closed.`
 
 The two kubeconfig files currently reside on `cluster-ctrl`. Copy them to the outer lab VM before running plain `kubectl` there:
 
@@ -657,7 +657,7 @@ Install `kubectl` once on the outer lab VM:
 sudo snap install kubectl --channel=1.35/stable --classic
 ```
 ??? example "Expected result"
-    `kubectl <version> from Canonical installed`
+    `kubectl (1.35/stable) 1.35.7 from Canonical installed`
 
 Select the management kubeconfig and verify the management cluster:
 
@@ -675,7 +675,7 @@ kubectl get nodes
 ??? example "Expected result"
     ```text
     NAME           STATUS   ROLES                  AGE   VERSION
-    cluster-ctrl   Ready    control-plane,worker   54m   v1.35.7
+    cluster-ctrl   Ready    control-plane,worker   123m   v1.35.7
     ```
 
 Select the workload kubeconfig and verify the workload cluster:
@@ -694,9 +694,9 @@ kubectl get nodes
 ??? example "Expected result"
     ```text
     NAME          STATUS   ROLES                  AGE   VERSION
-    k8s-ctrl      Ready    control-plane,worker   45m   v1.35.7
-    k8s-worker1   Ready    worker                 37m   v1.35.7
-    k8s-worker2   Ready    worker                 37m   v1.35.7
+    k8s-ctrl      Ready    control-plane,worker   87m   v1.35.7
+    k8s-worker1   Ready    worker                 77m   v1.35.7
+    k8s-worker2   Ready    worker                 77m   v1.35.7
     ```
 
 ```bash
@@ -704,7 +704,27 @@ kubectl get nodes
 kubectl get pods -A -o wide
 ```
 ??? example "Expected result"
-    Pods from all workload-cluster namespaces are displayed.
+    ```text
+    NAMESPACE        NAME                                  READY   STATUS    RESTARTS   AGE   IP              NODE          NOMINATED NODE   READINESS GATES
+    kube-system      cilium-2k597                          1/1     Running   0          91m   10.107.242.62   k8s-ctrl      <none>           <none>
+    kube-system      cilium-lxtbw                          1/1     Running   0          81m   10.107.242.63   k8s-worker1   <none>           <none>
+    kube-system      cilium-operator-77968f785f-gpmlz      1/1     Running   0          91m   10.107.242.62   k8s-ctrl      <none>           <none>
+    kube-system      cilium-z74j9                          1/1     Running   0          81m   10.107.242.64   k8s-worker2   <none>           <none>
+    kube-system      ck-storage-rawfile-csi-controller-0   2/2     Running   0          91m   10.1.0.52       k8s-ctrl      <none>           <none>
+    kube-system      ck-storage-rawfile-csi-node-9wvgv     4/4     Running   0          81m   10.1.2.152      k8s-worker2   <none>           <none>
+    kube-system      ck-storage-rawfile-csi-node-k45cl     4/4     Running   0          81m   10.1.1.234      k8s-worker1   <none>           <none>
+    kube-system      ck-storage-rawfile-csi-node-zxjcv     4/4     Running   0          91m   10.1.0.139      k8s-ctrl      <none>           <none>
+    kube-system      coredns-c4fd9db5c-t5f84               1/1     Running   0          79m   10.1.2.87       k8s-worker2   <none>           <none>
+    kube-system      coredns-c4fd9db5c-ww2bj               1/1     Running   0          79m   10.1.0.112      k8s-ctrl      <none>           <none>
+    kube-system      k8sd-proxy-5kg49                      1/1     Running   0          80m   10.1.1.138      k8s-worker1   <none>           <none>
+    kube-system      k8sd-proxy-7g46h                      1/1     Running   0          80m   10.1.2.91       k8s-worker2   <none>           <none>
+    kube-system      k8sd-proxy-lwgnw                      1/1     Running   0          90m   10.1.0.138      k8s-ctrl      <none>           <none>
+    kube-system      metrics-server-575579b55b-vnkhg       1/1     Running   0          91m   10.1.0.8        k8s-ctrl      <none>           <none>
+    metallb-system   metallb-controller-7c447fcdf9-x2625   1/1     Running   0          91m   10.1.0.250      k8s-ctrl      <none>           <none>
+    metallb-system   metallb-speaker-8sqg7                 1/1     Running   0          90m   10.107.242.62   k8s-ctrl      <none>           <none>
+    metallb-system   metallb-speaker-h4p4v                 1/1     Running   0          80m   10.107.242.64   k8s-worker2   <none>           <none>
+    metallb-system   metallb-speaker-rwz22                 1/1     Running   0          80m   10.107.242.63   k8s-worker1   <none>           <none>
+    ```
 
 A kubeconfig file can define multiple clusters, users, and contexts, allowing users to switch between clusters. For more information, see:
 
@@ -743,14 +763,14 @@ Exit and reconnect to the outer GCE lab VM so the new shell loads kubectl comple
 exit
 ```
 ??? example "Expected result"
-    `Connection to <outer-VM-public-IP> closed.`
+    `Connection to 34.89.137.65 closed.`
 
 ```bash
 # Reconnect to the lab machine.
 ssh ubuntu@<public IP address of your lab>
 ```
 ??? example "Expected result"
-    `ubuntu@<outer-VM>:~$`
+    `ubuntu@radumoisan:~$`
 
 Query the cluster:
 
@@ -767,8 +787,8 @@ kubectl cluster-info
 ```
 ??? example "Expected result"
     ```text
-    Kubernetes control plane is running at https://<generated-control-plane-hostname>.maas:6443
-    CoreDNS is running at https://<generated-control-plane-hostname>.maas:6443/api/v1/namespaces/kube-system/services/coredns:udp-53/proxy
+    Kubernetes control plane is running at https://myk8scluster-1d008f.maas:6443
+    CoreDNS is running at https://myk8scluster-1d008f.maas:6443/api/v1/namespaces/kube-system/services/coredns:udp-53/proxy
 
     To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
     ```
@@ -795,11 +815,9 @@ kubectl get --raw='/readyz?verbose'
     [+]poststarthook/start-apiextensions-controllers ok
     [+]poststarthook/crd-informer-synced ok
     [+]poststarthook/start-system-namespaces-controller ok
-    [+]poststarthook/peer-endpoint-reconciler-controller ok
     [+]poststarthook/start-cluster-authentication-info-controller ok
     [+]poststarthook/start-kube-apiserver-identity-lease-controller ok
     [+]poststarthook/start-kube-apiserver-identity-lease-garbage-collector ok
-    [+]poststarthook/storage-readiness ok
     [+]poststarthook/start-legacy-token-tracking-controller ok
     [+]poststarthook/start-service-ip-repair-controllers ok
     [+]poststarthook/rbac/bootstrap-roles ok
@@ -830,9 +848,9 @@ kubectl get nodes
 ??? example "Expected result"
     ```text
     NAME          STATUS   ROLES                  AGE   VERSION
-    k8s-ctrl      Ready    control-plane,worker   50m   v1.35.7
-    k8s-worker1   Ready    worker                 42m   v1.35.7
-    k8s-worker2   Ready    worker                 42m   v1.35.7
+    k8s-ctrl      Ready    control-plane,worker   123m   v1.35.7
+    k8s-worker1   Ready    worker                 113m   v1.35.7
+    k8s-worker2   Ready    worker                 113m   v1.35.7
     ```
 
 You can get even more detailed information by running `kubectl get nodes -o wide`.
@@ -844,7 +862,22 @@ Additionally, check a specific node status, CPU and memory data, system informat
 kubectl describe node <node_name>
 ```
 ??? example "Expected result"
-    Node status, CPU and memory data, and system information are displayed.
+    Key fields from the validated `k8s-ctrl` result:
+
+    ```text
+    Name:               k8s-ctrl
+    Roles:              control-plane,worker
+    Taints:             <none>
+    Unschedulable:      false
+      Ready                True    Tue, 08 Sep 2026 12:02:22 +0000   Tue, 08 Sep 2026 09:58:19 +0000   KubeletReady                 kubelet is posting ready status
+      InternalIP:  10.107.242.62
+      cpu:                4
+      memory:             8110572Ki
+      OS Image:                   Ubuntu 24.04.4 LTS
+      Container Runtime Version:  containerd://2.1.5
+      Kubelet Version:            v1.35.7
+    Events:             <none>
+    ```
 
 We can check how much resources are consumed (current resource usage) on each node:
 
@@ -855,9 +888,9 @@ kubectl top nodes
 ??? example "Expected result"
     ```text
     NAME          CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)
-    k8s-ctrl      153m         3%       1948Mi          24%
-    k8s-worker1   89m          2%       1324Mi          16%
-    k8s-worker2   72m          1%       1147Mi          14%
+    k8s-ctrl      225m         5%       1731Mi          22%
+    k8s-worker1   90m          2%       1000Mi          12%
+    k8s-worker2   88m          2%       1024Mi          13%
     ```
 
 Resource utilization per pod can also be inspected. You may get an error in the beginning, don't worry,
@@ -868,7 +901,27 @@ the metrics take some time to be collected, try again in a minute:
 kubectl top pods --all-namespaces
 ```
 ??? example "Expected result"
-    Pod resource usage is displayed.
+    ```text
+    NAMESPACE        NAME                                  CPU(cores)   MEMORY(bytes)
+    kube-system      cilium-2k597                          79m          201Mi
+    kube-system      cilium-lxtbw                          77m          186Mi
+    kube-system      cilium-operator-77968f785f-gpmlz      9m           36Mi
+    kube-system      cilium-z74j9                          77m          195Mi
+    kube-system      ck-storage-rawfile-csi-controller-0   6m           42Mi
+    kube-system      ck-storage-rawfile-csi-node-9wvgv     11m          69Mi
+    kube-system      ck-storage-rawfile-csi-node-k45cl     10m          70Mi
+    kube-system      ck-storage-rawfile-csi-node-zxjcv     9m           70Mi
+    kube-system      coredns-c4fd9db5c-t5f84               3m           16Mi
+    kube-system      coredns-c4fd9db5c-ww2bj               3m           17Mi
+    kube-system      k8sd-proxy-5kg49                      0m           0Mi
+    kube-system      k8sd-proxy-7g46h                      0m           0Mi
+    kube-system      k8sd-proxy-lwgnw                      0m           0Mi
+    kube-system      metrics-server-575579b55b-vnkhg       6m           27Mi
+    metallb-system   metallb-controller-7c447fcdf9-x2625   4m           23Mi
+    metallb-system   metallb-speaker-8sqg7                 10m          20Mi
+    metallb-system   metallb-speaker-h4p4v                 11m          19Mi
+    metallb-system   metallb-speaker-rwz22                 10m          19Mi
+    ```
 
 ![bundle](assets/k8s_architecture.png)
 
@@ -890,7 +943,27 @@ List the pods:
 kubectl get pods -o wide --all-namespaces
 ```
 ??? example "Expected result"
-    Pods are displayed.
+    ```text
+    NAMESPACE        NAME                                  READY   STATUS    RESTARTS   AGE    IP              NODE          NOMINATED NODE   READINESS GATES
+    kube-system      cilium-2k597                          1/1     Running   0          137m   10.107.242.62   k8s-ctrl      <none>           <none>
+    kube-system      cilium-lxtbw                          1/1     Running   0          127m   10.107.242.63   k8s-worker1   <none>           <none>
+    kube-system      cilium-operator-77968f785f-gpmlz      1/1     Running   0          137m   10.107.242.62   k8s-ctrl      <none>           <none>
+    kube-system      cilium-z74j9                          1/1     Running   0          127m   10.107.242.64   k8s-worker2   <none>           <none>
+    kube-system      ck-storage-rawfile-csi-controller-0   2/2     Running   0          138m   10.1.0.52       k8s-ctrl      <none>           <none>
+    kube-system      ck-storage-rawfile-csi-node-9wvgv     4/4     Running   0          127m   10.1.2.152      k8s-worker2   <none>           <none>
+    kube-system      ck-storage-rawfile-csi-node-k45cl     4/4     Running   0          127m   10.1.1.234      k8s-worker1   <none>           <none>
+    kube-system      ck-storage-rawfile-csi-node-zxjcv     4/4     Running   0          138m   10.1.0.139      k8s-ctrl      <none>           <none>
+    kube-system      coredns-c4fd9db5c-t5f84               1/1     Running   0          125m   10.1.2.87       k8s-worker2   <none>           <none>
+    kube-system      coredns-c4fd9db5c-ww2bj               1/1     Running   0          125m   10.1.0.112      k8s-ctrl      <none>           <none>
+    kube-system      k8sd-proxy-5kg49                      1/1     Running   0          126m   10.1.1.138      k8s-worker1   <none>           <none>
+    kube-system      k8sd-proxy-7g46h                      1/1     Running   0          126m   10.1.2.91       k8s-worker2   <none>           <none>
+    kube-system      k8sd-proxy-lwgnw                      1/1     Running   0          137m   10.1.0.138      k8s-ctrl      <none>           <none>
+    kube-system      metrics-server-575579b55b-vnkhg       1/1     Running   0          138m   10.1.0.8        k8s-ctrl      <none>           <none>
+    metallb-system   metallb-controller-7c447fcdf9-x2625   1/1     Running   0          138m   10.1.0.250      k8s-ctrl      <none>           <none>
+    metallb-system   metallb-speaker-8sqg7                 1/1     Running   0          137m   10.107.242.62   k8s-ctrl      <none>           <none>
+    metallb-system   metallb-speaker-h4p4v                 1/1     Running   0          126m   10.107.242.64   k8s-worker2   <none>           <none>
+    metallb-system   metallb-speaker-rwz22                 1/1     Running   0          126m   10.107.242.63   k8s-worker1   <none>           <none>
+    ```
 
 You may see multiple Pods because many cluster add-ons run in the `kube-system` namespace. Namespaces provide logical scopes for projects and resources. For example, the development team can work in a `dev` namespace, while the support team works in a `support` namespace. Resources in one namespace are distinct from resources in another, but namespaces do not provide network or security isolation by themselves.
 
@@ -901,7 +974,15 @@ Clusters normally include the `default` and `kube-system` namespaces, among othe
 kubectl get namespaces
 ```
 ??? example "Expected result"
-    Namespaces are displayed.
+    ```text
+    NAME              STATUS   AGE
+    cilium-secrets    Active   142m
+    default           Active   142m
+    kube-node-lease   Active   142m
+    kube-public       Active   142m
+    kube-system       Active   142m
+    metallb-system    Active   142m
+    ```
 
 ## :material-book-open-page-variant-outline: 1.4 Work with pods and volumes
 
@@ -929,12 +1010,18 @@ spec:
 Create the pod:
 
 ```bash
-# Create the nginx pod.
+# Select the deployed cluster kubeconfig.
 export KUBECONFIG=~/.kube/myk8scluster_config
+```
+??? example "Expected result"
+    `No output.`
+
+```bash
+# Create the nginx pod.
 kubectl create -f ~/resources/nginx-pod.yaml
 ```
 ??? example "Expected result"
-    `pod/nginx` is created.
+    `pod/nginx created`
 
 List and describe the newly created Pod. Review its status, configuration, and events, and ask the trainer about anything you do not understand:
 
@@ -943,14 +1030,30 @@ List and describe the newly created Pod. Review its status, configuration, and e
 kubectl get pods -o wide
 ```
 ??? example "Expected result"
-    The nginx pod is displayed.
+    ```text
+    NAME    READY   STATUS    RESTARTS   AGE   IP           NODE          NOMINATED NODE   READINESS GATES
+    nginx   1/1     Running   0          58s   10.1.1.204   k8s-worker1   <none>           <none>
+    ```
 
 ```bash
 # Describe the nginx pod.
 kubectl describe pod nginx
 ```
 ??? example "Expected result"
-    Pod details are displayed.
+    Key fields from the validated result:
+
+    ```text
+    Name:             nginx
+    Namespace:        default
+    Node:             k8s-worker1/10.107.242.63
+    Labels:           app=nginx
+    Status:           Running
+    IP:               10.1.1.204
+        Image:          nginx:latest
+        State:          Running
+        Ready:          True
+        Restart Count:  0
+    ```
 
 Delete the pod:
 
@@ -959,7 +1062,7 @@ Delete the pod:
 kubectl delete pod nginx
 ```
 ??? example "Expected result"
-    `pod "nginx"` is deleted.
+    `pod "nginx" deleted from default namespace`
 
 Container writable layers are ephemeral. Volumes allow containers in a Pod to share data and can have different lifecycles. Data that must outlive a Pod generally requires a PersistentVolume backed by suitable storage.
 
@@ -991,19 +1094,36 @@ spec:
 Create the Pod from `~/resources/redis-volume-pod.yaml`, then describe it to inspect the attached volumes. Delete the Pod when finished.
 
 ```bash
-# Create the redis volume pod.
+# Select the deployed cluster kubeconfig.
 export KUBECONFIG=~/.kube/myk8scluster_config
+```
+??? example "Expected result"
+    `No output.`
+
+```bash
+# Create the redis volume pod.
 kubectl create -f ~/resources/redis-volume-pod.yaml
 ```
 ??? example "Expected result"
-    `pod/redis` is created.
+    `pod/redis created`
 
 ```bash
 # Describe the redis pod.
 kubectl describe pod redis
 ```
 ??? example "Expected result"
-    Pod details and attached volumes are displayed.
+    Key fields from the validated result:
+
+    ```text
+    Name:             redis
+    Namespace:        default
+    Node:             k8s-worker1/10.107.242.63
+    Status:           Running
+    IP:               10.1.1.69
+          /data/redis from redis-storage (rw)
+      redis-storage:
+        Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    ```
 
 A Pod can also contain multiple containers. Display the example definition:
 
@@ -1012,7 +1132,32 @@ A Pod can also contain multiple containers. Display the example definition:
 cat ~/resources/multi-container-pod.yaml
 ```
 ??? example "Expected result"
-    The multi-container pod definition is displayed.
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: two-containers
+      labels:
+        app: two-containers
+    spec:
+      restartPolicy: Never
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+      - name: debian-container
+        image: debian
+        volumeMounts:
+        - name: shared-data
+          mountPath: /pod-data
+        command: ["/bin/sh"]
+        args: ["-c", "echo Hello from the debian container > /pod-data/index.html; sleep 900000"]
+    ```
 
 The `debian-container` writes the index file to a shared volume, while `nginx-container` serves that file to clients.
 
@@ -1023,6 +1168,6 @@ Finally, delete the pod:
 kubectl delete pod redis
 ```
 ??? example "Expected result"
-    `pod "redis"` is deleted.
+    `pod "redis" deleted from default namespace`
 
 ![bundle](assets/pod2.png)
