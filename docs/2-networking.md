@@ -1,4 +1,4 @@
-# :material-numeric-2-circle: 2. Networking
+# 2. Networking
 
 Select the workload cluster kubeconfig before running this chapter's `kubectl` commands:
 

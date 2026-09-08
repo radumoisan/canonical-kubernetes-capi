@@ -1,4 +1,4 @@
-# :material-numeric-6-circle: 6. Authentication and Authorization
+# 6. Authentication and Authorization
 
 ## :material-book-open-page-variant-outline: 6.1 Users and ServiceAccounts
 

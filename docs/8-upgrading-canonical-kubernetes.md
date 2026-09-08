@@ -1,4 +1,4 @@
-# :material-numeric-8-circle: 8. Upgrading Canonical Kubernetes
+# 8. Upgrading Canonical Kubernetes
 
 The cluster currently runs Kubernetes `1.35`. In this chapter, you will upgrade it to Kubernetes `1.36` by using an
 in-place upgrade.

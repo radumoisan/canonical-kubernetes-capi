@@ -1,4 +1,4 @@
-# :material-numeric-7-circle: 7. Helm
+# 7. Helm
 
 Helm is a package manager for Kubernetes. A chart packages Kubernetes resource templates and default values. Installing
 a chart creates a Helm release.

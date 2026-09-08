@@ -1,4 +1,4 @@
-# :material-numeric-5-circle: 5. Autoscaling
+# 5. Autoscaling
 
 Kubernetes can automatically adjust an application's replica count based on observed load. Resource metrics such as CPU and memory
 can drive this scaling. For CPU utilization, Kubernetes compares measured usage with the containers' CPU requests.

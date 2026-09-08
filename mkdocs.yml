@@ -18,9 +18,9 @@ nav:
   - "📋 Keeping apps healthy": 3-keeping-apps-healthy.md
   - "📋 Storage and User Data": 4-storage-and-user-data.md
   - "⏳ Autoscaling": 5-autoscaling.md
-  - "⏳ Authentication and Authorization": 6-authentication-and-authorization.md
+  - "⏳ AuthN and AuthZ": 6-authentication-and-authorization.md
   - "⏳ Helm": 7-helm.md
-  - "⏳ Upgrading Canonical Kubernetes": 8-upgrading-canonical-kubernetes.md
+  - "⏳ Upgrades": 8-upgrading-canonical-kubernetes.md
 
 markdown_extensions:
   - tables

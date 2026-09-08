@@ -1,4 +1,4 @@
-# :material-numeric-4-circle: 4. Storage and User Data
+# 4. Storage and User Data
 
 Select the workload cluster kubeconfig:
 
