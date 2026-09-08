@@ -2,32 +2,29 @@
 
 ## :material-book-open-page-variant-outline: 6.1 Users and ServiceAccounts
 
-Kubernetes does NOT have a resource called `user`. It has the concept of `ServiceAccounts` which live inside `Namespaces`,
-objects used for multi-tenancy. However, Kubernetes understands the concept of users as an external object.
+Kubernetes has no built-in `User` API object. Human identities are managed outside the cluster, while `ServiceAccount` (`SA`) objects
+are namespaced identities for workloads.
 
-`ServiceAccounts` are Kubernetes resource types that are associated with Pods to offer them the possibility to talk to the
-API Server. They represent the identify of the app running inside Pods. Pods can make API calls against the Server to request
-pod metadata such as: pod name, IP, namespace, labels, CPU and memory utilization. Usually, apps can make use of this kind of
-information. Each `SA` contains a token, this token is mounted as a `secret` volume inside pods on creation. The token is then used
-to authenticate and authorize the pod requests for the API Server.
+`ServiceAccounts` give Pods an identity for communicating with the Kubernetes API server. Pods normally receive a projected volume
+that contains a short-lived ServiceAccount token, the cluster CA certificate, and the Pod's namespace. The token authenticates API
+requests; authorization rules determine which operations the Pod may perform.
 
-Kubernetes distinguishes between the concept of a user account and a service account for a number of reasons:
-  * user accounts are for humans, the intent is for user accounts to be managed externally to the Kubernetes cluster
-  * service accounts are for Pods and processes that run in them
-  * user accounts are global and unique across all namespaces of the cluster
-  * service accounts are namespaced
-  * auditing for humans and service accounts may differ
+Kubernetes distinguishes user accounts from service accounts for several reasons:
+  * User accounts represent people and are managed externally to the cluster.
+  * Service accounts represent Pods and the processes running in them.
+  * User identities are cluster-wide rather than namespaced.
+  * Service accounts are namespaced.
+  * Auditing requirements for people and workloads may differ.
 
-Each namespace has a `default` `SA`. Additional `SAs` can be created for security reasons, read-only `SAs` for pods
-that only need to read API info, and separate `SAs` with write permissions for pods that need to modify API objects.
+Each namespace has a `default` `SA`. Create separate `SAs` to follow least privilege, granting each workload only the API
+permissions it requires.
 
-Each Pod is associated with a `SA` on creation. If no `SA` is specified in the Pod definition, the namespace default `SA`
-is used. The `secret` volume contains the `default` token of the namespace in which the pod is running.
+Each Pod is assigned an `SA` when it is created. If the Pod manifest does not specify one, Kubernetes uses the namespace's
+`default` `SA`. Unless token automounting is disabled, Kubernetes injects a projected credential volume for the selected `SA`.
 
-In this chapter we'll create a pod with `curl` binary installed and see how the secret volume is mounted in it. The last step would
-be to send an API request to the API server.
+In this chapter, you will create a Pod with `curl`, inspect its projected ServiceAccount volume, and send a request to the API server.
 
-First, let's check the default namespace and the `SAs`:
+First, inspect the namespaces and `SAs`:
 
 ```bash
 # List namespaces.
@@ -44,7 +41,7 @@ kubectl get namespace
     metallb-system    Active   6h4m
     ```
 
-Get the default namespace `SA`:
+Get the `SA` in the default namespace:
 
 ```bash
 # List ServiceAccounts in the default namespace.
@@ -57,7 +54,7 @@ kubectl get sa
     default   0         25h
     ```
 
-Get the `SA` for all the namespaces:
+Get the `SAs` in all namespaces:
 
 ```bash
 # List ServiceAccounts in all namespaces.
@@ -66,7 +63,7 @@ kubectl get sa --all-namespaces
 ??? example "Expected result"
     ServiceAccounts for all namespaces are displayed.
 
-Inspect the default namespace `SA`:
+Inspect the default namespace's `SA`:
 
 ```bash
 # Describe the default ServiceAccount.
@@ -82,7 +79,8 @@ kubectl describe sa default
     Events:              <none>
     ```
 
-Since Kubernetes v1.24 there are no tokens generated for service accounts by default. A `Secret` definition for the default service account looks like this:
+Since Kubernetes v1.24, ServiceAccounts no longer receive long-lived token Secrets automatically. Pods still receive short-lived,
+projected tokens by default. The following manifest defines a legacy long-lived token Secret for the default ServiceAccount:
 
 ```bash
 # Display the default ServiceAccount token Secret definition.
@@ -99,7 +97,7 @@ cat ~/resources/service-account-token.yaml
     type: kubernetes.io/service-account-token
     ```
 
-To generate one, please run:
+Create the token Secret:
 
 ```bash
 # Create the default ServiceAccount token Secret.
@@ -108,7 +106,7 @@ kubectl create -f ~/resources/service-account-token.yaml
 ??? example "Expected result"
     The Secret is created.
 
-To get details about the generated ServiceAccount secret, run:
+Inspect the generated ServiceAccount token Secret:
 
 ```bash
 # Describe the default ServiceAccount token Secret.
@@ -131,7 +129,8 @@ kubectl describe secret default-serviceaccount-secret
     token:      eyJhbGciOiJSUzI1NiIsImtpZCI6Ik....
     ```
 
-Now create the `alpine` pod and see if the token is mounted:
+This manually created Secret is separate from the short-lived token that Kubernetes projects into Pods. Create the `alpine` Pod
+and inspect its projected ServiceAccount volume:
 
 ```bash
 # Create the curl pod.
@@ -157,8 +156,8 @@ kubectl describe pod curl
     ...
     ```
 
-Kubernetes mounts the secret volume at `/var/run/secrets/kubernetes.io/serviceaccount/` inside the container. Based on the
-certificate and token, the application can talk to the API Server when needed:
+Kubernetes mounts the projected volume at `/var/run/secrets/kubernetes.io/serviceaccount/` inside the container. The CA certificate
+verifies the API server's identity, and the token authenticates the application:
 
 ```bash
 # Enter the curl pod shell.
@@ -187,7 +186,8 @@ apk add curl
 ??? example "Expected result"
     The curl package is installed.
 
-Note that you can get the API cluster IP with `kubectl get svc` or the DNS record which is `kubernetes`.
+From a Pod in the default namespace, the API server Service is available through the short DNS name `kubernetes`. You can also
+retrieve its ClusterIP with `kubectl get svc`.
 
 ```bash
 # Read the ServiceAccount token and query the API root.
@@ -206,12 +206,13 @@ curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
 ??? example "Expected result"
     A long list of API should be listed and the available verbs for those APIs.
 
-A long list of API should be listed and the available verbs for those APIs. If we would have not used the certificate and token, this request would have NOT been unauthorized.
+The responses contain API discovery information. The CA certificate validates the server, the token authenticates the request as
+the default ServiceAccount, and authorization rules control subsequent access to API resources.
 
-**NOTE**: `ServiceAccounts` must be set when creating the pod. It can't be changed later. One pod is associated with only one `SA`, but
-multiple pods can use the same `SA` in a namespace.
+**NOTE**: A Pod's `serviceAccountName` is set when the Pod is created and cannot be changed later. Each Pod uses one `SA`, but
+multiple Pods in a namespace can use the same `SA`.
 
-Get back to the host.
+Return to the student machine:
 
 ```bash
 # Exit the curl pod shell.
@@ -220,7 +221,7 @@ exit
 ??? example "Expected result"
     The student machine shell resumes.
 
-Cleanup the pod:
+Delete the Pod:
 
 ```bash
 # Delete the curl pod.
@@ -231,15 +232,16 @@ kubectl delete pod curl
 
 ## :material-book-open-page-variant-outline: 6.2 RBAC, Roles and ClusterRoles
 
-All Kubernetes resources are objects which allow CRUD (create, read, update, delete) operations. Role-based access control (RBAC)
-is a method of regulating access to resources based on the roles of individual users. RBAC works and understands 4 types of
-Kubernetes resources:
-  * `Role` and `ClusterRole`: contain rules that represent a set of permissions. Permissions are additive, no `deny` rules. `Roles` grant access to resources within a single namespace, while `ClusterRoles` are cluster-wide.
-  * `RoleBinding` and `ClusterRoleBinding`: grant permissions defined in a `Role` to a user or set of users
+Role-based access control (`RBAC`) authorizes Kubernetes API requests based on permissions granted to subjects such as users, groups,
+and ServiceAccounts. RBAC uses four principal authorization resource kinds:
+  * `Role`: contains additive permission rules for resources in one namespace. RBAC has no `deny` rules.
+  * `ClusterRole`: contains rules that can cover cluster-scoped resources or be reused in any namespace.
+  * `RoleBinding`: grants a `Role` or `ClusterRole` to subjects within one namespace.
+  * `ClusterRoleBinding`: grants a `ClusterRole` to subjects across the cluster.
 
 ![roles](assets/roles_bindings.png)
 
-By default, Canonical Kubernetes comes with `RBAC` enabled. You can verify this by checking the authorization mode:
+Canonical Kubernetes enables `RBAC` by default. Verify this by checking the authorization mode:
 
 ```bash
 # Check the API server authorization mode.
@@ -252,9 +254,9 @@ lxc exec k8s-ctrl -- sh -c 'ps aux | grep kube-apiserver'
     ...
     ```
 
-Users can create their own `Roles` and `ClusterRoles` - see the definitions, but Kubernetes clusters also come with a default set of `ClusterRoles`.
-The “edit” role lets users perform basic actions like deploying pods; “view” lets a user observe non-sensitive resources; “admin”
-allows a user to administer a namespace; and “cluster-admin” grants access to administer a cluster. Take a look:
+Users can define their own `Roles` and `ClusterRoles`, and Kubernetes also provides a default set of `ClusterRoles`. The `edit` role
+allows common application-management actions, `view` provides read-only access to most non-sensitive resources, `admin` grants
+administrative access within a namespace, and `cluster-admin` grants full control across the cluster. List them:
 
 ```bash
 # List ClusterRoles.
@@ -265,10 +267,10 @@ kubectl get clusterroles
 
 ### :material-application-edit-outline: Create a ServiceAccount and grant permissions
 
-In this exercise we'll create a `ServiceAccount`, a `Role` and a `RoleBinding`. The `Role` will grant
-read access to pod resources in the default namespace.
+In this exercise, you will create a `ServiceAccount`, a `Role`, and a `RoleBinding`. The `Role` allows the `get`, `watch`, and `list`
+verbs for Pods in the default namespace, and the `RoleBinding` grants those permissions to the ServiceAccount.
 
-The `SA` definition looks like this in `~/resources/student-sa.yaml`:
+The `SA` manifest is available at `~/resources/student-sa.yaml`:
 
 ```bash
 # Display the student ServiceAccount definition.
@@ -292,7 +294,7 @@ kubectl create -f ~/resources/student-sa.yaml
 ??? example "Expected result"
     The ServiceAccount is created.
 
-The `Role` definition looks like this in `~/resources/pod-reader-role.yaml`:
+The `Role` manifest is available at `~/resources/pod-reader-role.yaml`:
 
 ```bash
 # Display the pod-reader Role definition.
@@ -320,7 +322,7 @@ kubectl create -f ~/resources/pod-reader-role.yaml
 ??? example "Expected result"
     The Role is created.
 
-The `Role` has to be associated with the user, this is done with the `RoleBinding` resource in `~/resources/pod-reader-rb.yaml`:
+The `RoleBinding` at `~/resources/pod-reader-rb.yaml` grants the `Role` to the `student-sa` ServiceAccount:
 
 ```bash
 # Display the pod-reader RoleBinding definition.
@@ -349,7 +351,7 @@ kubectl create -f ~/resources/pod-reader-rb.yaml
 ??? example "Expected result"
     The RoleBinding is created.
 
-Inspect the `RoleBinding`, it should be associated with `student-sa`:
+Inspect the `RoleBinding` and confirm that it references `student-sa`:
 
 ```bash
 # Describe the read-pods RoleBinding.
@@ -369,7 +371,7 @@ kubectl describe rolebinding read-pods
       ServiceAccount  student-sa
     ```
 
-Create a Pod with the newly created `SA`. The pod definition looks like this in `~/resources/curl-pod-with-sa.yaml`:
+Create a Pod that uses the new `SA`. Its manifest is available at `~/resources/curl-pod-with-sa.yaml`:
 
 ```bash
 # Display the curl pod definition with the student ServiceAccount.
@@ -398,7 +400,7 @@ kubectl create -f ~/resources/curl-pod-with-sa.yaml
 ??? example "Expected result"
     The Pod is created.
 
-Finally, start a bash process inside the container and attach to it.
+Start a shell inside the container and attach to it:
 
 ```bash
 # Enter the curl pod shell.
@@ -416,7 +418,7 @@ apk add curl
 ??? example "Expected result"
     The curl package is installed.
 
-Query the API server for pods, this action should be allowed:
+Query the API server for Pods. The assigned `Role` allows this action:
 
 ```bash
 # Read the ServiceAccount token and list pods through the API.
@@ -464,7 +466,7 @@ curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
     ...
     ```
 
-Now let's try to read something we should not be allowed to see, like `Secrets`:
+Now try to list `Secrets`, which the assigned `Role` does not allow:
 
 ```bash
 # List Secrets through the API.
@@ -487,9 +489,9 @@ curl --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
     }
     ```
 
-As expected, forbidden action.
+As expected, the API server returns a `403 Forbidden` response.
 
-Get back to the student host:
+Return to the student machine:
 
 ```bash
 # Exit the curl pod shell.
@@ -498,7 +500,7 @@ exit
 ??? example "Expected result"
     The student machine shell resumes.
 
-Cleanup:
+Delete the exercise resources:
 
 ```bash
 # Delete the curl pod.
