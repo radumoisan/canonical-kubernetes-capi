@@ -1,26 +1,29 @@
 # :material-numeric-8-circle: 8. Upgrading Canonical Kubernetes
 
-The installed version of Kubernetes is `1.35`, which is not the latest one. In this chapter we will learn how easy
-it is to upgrade the Canonical Kubernetes cluster to a newer `1.36` version with in-place upgrades.
+The cluster currently runs Kubernetes `1.35`. In this chapter, you will upgrade it to Kubernetes `1.36` by using an
+in-place upgrade.
 
-Another option for upgrades is the rollout upgrade. This is useful whenever the cluster is built highly available. Rollout updates means there will be new machines being deployed with the new version of Kubernetes while the old ones are getting removed, one by one. Since our deployment is non-HA, in-place upgrade is the only viable option.
+Canonical Kubernetes also supports rollout upgrades. During a rollout, CAPI creates machines that run the target
+Kubernetes version and removes the old machines one at a time. Rollout upgrades are recommended for highly available
+clusters. This lab uses an in-place upgrade because its control plane is not highly available.
 
-Before upgrading the cluster, you should also make sure:
-* your cluster is running normally
-* you read the Upgrade notes to see if any caveats apply to the versions you are upgrading to/from
-* you read the Release notes for the version you are upgrading to, which will alert you to any important changes to the operation of your cluster
-* the new version is supported by Cluster API deployment
+Before upgrading, make sure that:
+
+* the cluster is healthy
+* you have reviewed the upgrade notes for the installed and target versions
+* you have read the release notes for the target version
+* the target version is supported by the Canonical Kubernetes CAPI provider
 
 ## :material-book-open-page-variant-outline: 8.1 Rollout upgrade Kubernetes
 
 !!! warning "Warning"
-    **This is documentation only and should NOT be applied in our environments.**
+    This section is for reference only. Do not run these commands in the lab environment.
 
-The order of upgrades should be, first, control plane nodes, second, worker nodes.
+Upgrade the control plane before the worker nodes.
 
 ### :material-application-edit-outline: Upgrade control plane nodes
 
-First, identify the name of your control plane CRD with:
+First, identify the control plane resource:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -39,7 +42,7 @@ kubectl get ck8scontrolplane
     myk8scluster-control-plane   true          true                   1.35.7    1          1       1
     ```
 
-Replace the spec.version field with the new Kubernetes version.
+Update `spec.version` to the target Kubernetes version:
 
 ```bash
 # Edit the control plane resource.
@@ -53,15 +56,19 @@ spec:
   version: v1.36.4
 ```
 
-* When a control plane upgrade is performed, a new CK8sControlPlane machine is deployed with the new configuration. Only after that machine is Ready, the old machine is deprovisioned.
+* When a control plane rollout begins, CAPI creates a replacement control plane `Machine` with the new configuration.
+  It deprovisions the old machine only after the replacement is ready.
 
-* This behavior is controlled by the spec value spec.strategy.rollingUpdate.maxSurge, with the default value being set on 1.
+* `spec.strategy.rollingUpdate.maxSurge` controls how many extra control plane machines can be created during the
+  rollout. It defaults to `1`.
 
-* If spec.strategy.rollingUpdate.maxSurge is set to the value 0 when a control plane upgrade is performed, the old CK8sControlPlane machine is deprovisioned first. Then a new machine is deployed with the new configuration only after the old machine has been removed.
+* When `spec.strategy.rollingUpdate.maxSurge` is `0`, CAPI deprovisions the old control plane `Machine` before creating
+  its replacement.
 
-* spec.strategy.rollingUpdate.maxSurge set to the value 0 is preferable in hardware constrained environments, where an extra machine might not be available.
+* Setting it to `0` avoids the temporary capacity required for an extra machine, but reduces availability. A
+  single-replica control plane will be unavailable during replacement.
 
-Then, watch the new machines being created while the old ones get deleted:
+Switch to the deployed cluster and watch the nodes while CAPI creates replacements and removes the old machines:
 
 ```bash
 # Select the deployed cluster kubeconfig.
@@ -79,7 +86,7 @@ watch kubectl get nodes -o wide
 
 ### :material-application-edit-outline: Upgrade worker nodes
 
-After upgrading the control plane, proceed with upgrading the worker nodes by updating the MachineDeployment resource. The name of the resource can be found with:
+After upgrading the control plane, update the worker `MachineDeployment`. First, identify its name:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -98,7 +105,7 @@ kubectl get machinedeployment
     myk8scluster-worker-md-0   myk8scluster   True        2         2         2       2           2            Running   6h43m   v1.35.7
     ```
 
-Next, update the MachineDeployment resource to use the new Kubernetes version:
+Update `spec.template.spec.version` to the target Kubernetes version:
 
 ```bash
 # Edit the worker MachineDeployment resource.
@@ -114,7 +121,7 @@ spec:
       version: v1.36.4
 ```
 
-Lastly, watch the upgrade taking place:
+Watch the worker nodes as CAPI replaces them:
 
 ```bash
 # Select the deployed cluster kubeconfig.
@@ -130,7 +137,7 @@ watch kubectl get nodes -o wide
 ??? example "Expected result"
     The node list refreshes while the upgrade takes place.
 
-And:
+Stop `watch` with Ctrl+C, switch back to the management cluster, and confirm the `MachineDeployment` status:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -148,8 +155,8 @@ kubectl get machinedeployment myk8scluster-worker-md-0
 
 ## :material-book-open-page-variant-outline: 8.2 In-place upgrades
 
-Since our cluster is non-HA, the only option we have is to do in-place upgrades.
-Let's begin by checking our current Kubernetes version:
+The lab cluster has a single control plane node, so you will use an in-place upgrade to update the existing machines
+without replacing them. Begin by checking the current Kubernetes version:
 
 ```bash
 # Select the deployed cluster kubeconfig.
@@ -170,7 +177,9 @@ kubectl get nodes -o wide
     k8s-worker2   Ready    worker                 21h   v1.35.7   10.219.64.24   <none>        Ubuntu 24.04.4 LTS   6.8.0-138-generic (amd64)   containerd://2.3.3
     ```
 
-The order of upgrades will be the same as for rolling upgrades, first, control plane nodes, then worker nodes. To achieve this, we will need to annotate machine definitions in our management cluster. To interact with it, we need to use `~/.kube/config` kubeconfig file. Let's check our machine names first:
+As with a rollout upgrade, upgrade the control plane before the worker nodes. Request an in-place upgrade by annotating
+the corresponding `Machine` resources in the management cluster. Select the management cluster kubeconfig and list the
+machine names:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -191,9 +200,12 @@ kubectl get machines
     myk8scluster-worker-md-0-nmtpp-sdwqw   myk8scluster   k8s-worker1                    True    True        True         Running   21h   v1.35.7
     ```
 
-Kubernetes on both control plane and worker nodes is installed from the `k8s` snap. Currently, the channel used for the `k8s` snap is `1.35-classic/stable`. As of now, there is now `1.36-classic/stable` channel for `v1.36`, but there's a `1.36-classic/candidate` channel. That's the channel we're going to use for our upgrade. There will be a `1.36-classic/stable` channel at some point in the future.
+Canonical Kubernetes is installed from the `k8s` snap on the control plane and worker nodes. The nodes currently track
+the `1.35-classic/stable` channel. At the time of this lab, a `1.36-classic/stable` channel is not available, so the
+upgrade targets `1.36-classic/candidate`.
 
-To upgrade the control plane, we need to annotate the control plane node, in our case, from the output above, `myk8scluster-control-plane-qqdlb`:
+To upgrade the control plane, annotate its `Machine` resource. From the output above, its name is
+`myk8scluster-control-plane-qqdlb`:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -209,7 +221,7 @@ kubectl annotate machine myk8scluster-control-plane-qqdlb "v1beta2.k8sd.io/in-pl
 ??? example "Expected result"
     The machine is annotated.
 
-You can watch the progress of the upgrade using:
+Inspect the upgrade progress by displaying the `Machine` resource:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -225,7 +237,7 @@ kubectl get machine myk8scluster-control-plane-qqdlb -o yaml
 ??? example "Expected result"
     The control plane machine definition, including annotations, is displayed.
 
-You'll need to watch the annotations of that machine, especially four parameters:
+The upgrade controller reports progress through these four annotation keys:
 
 ??? example "Expected result"
     ```text
@@ -235,7 +247,7 @@ You'll need to watch the annotations of that machine, especially four parameters
     v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at
     ```
 
-Upon successful upgrade, you'll see:
+After a successful upgrade, the release annotation records the target channel and the status is `done`:
 
 ??? example "Expected result"
     ```text
@@ -243,7 +255,9 @@ Upon successful upgrade, you'll see:
     v1beta2.k8sd.io/in-place-upgrade-status: done
     ```
 
-The other two, `v1beta2.k8sd.io/in-place-upgrade-to` and `v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at`, will not be defined. In case something goes wrong with the upgrade, you'll see something like:
+The `v1beta2.k8sd.io/in-place-upgrade-to` and
+`v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at` annotations should be absent after a successful upgrade. A
+failed attempt resembles:
 
 ??? example "Expected result"
     ```yaml
@@ -258,9 +272,10 @@ The other two, `v1beta2.k8sd.io/in-place-upgrade-to` and `v1beta2.k8sd.io/in-pla
       2026 13:30:00 +0400"
     ```
 
-In that case, issue should be investigated and upgrade retried.
+In that case, investigate the failure before retrying the upgrade.
 
-Next, we will upgrade the worker nodes. Based on the output above, that would be machines named `myk8scluster-worker-md-0-nmtpp-kblvd` and `myk8scluster-worker-md-0-nmtpp-sdwqw`. So, let's annotate those, as well:
+Next, upgrade the worker nodes. Based on the output above, their `Machine` resources are
+`myk8scluster-worker-md-0-nmtpp-kblvd` and `myk8scluster-worker-md-0-nmtpp-sdwqw`. Annotate both resources:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -283,7 +298,7 @@ kubectl annotate machine myk8scluster-worker-md-0-nmtpp-sdwqw "v1beta2.k8sd.io/i
 ??? example "Expected result"
     The machine is annotated.
 
-You can watch the progress of the upgrade using:
+Inspect the upgrade progress by displaying both `Machine` resources:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -306,7 +321,7 @@ kubectl get machine myk8scluster-worker-md-0-nmtpp-sdwqw -o yaml
 ??? example "Expected result"
     The second worker machine definition, including annotations, is displayed.
 
-You'll need to watch the annotations of those machines, especially four parameters:
+Check the same four annotation keys on both machines:
 
 ??? example "Expected result"
     ```text
@@ -316,7 +331,7 @@ You'll need to watch the annotations of those machines, especially four paramete
     v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at
     ```
 
-Upon successful upgrade, you'll see:
+After each successful upgrade, the release annotation records the target channel and the status is `done`:
 
 ??? example "Expected result"
     ```text
@@ -324,7 +339,7 @@ Upon successful upgrade, you'll see:
     v1beta2.k8sd.io/in-place-upgrade-status: done
     ```
 
-After the upgrade is done, you can verify the version of the k8s cluster on all nodes with:
+After the upgrades finish, verify the Kubernetes version reported by every node:
 
 ```bash
 # Select the deployed cluster kubeconfig.
@@ -345,8 +360,10 @@ kubectl get nodes -o wide
     k8s-worker2   Ready    worker                 21h   v1.36.4   10.219.64.24   <none>        Ubuntu 24.04.4 LTS   6.8.0-138-generic (amd64)   containerd://2.3.3
     ```
 
-As you can see, cluster nodes got updated to `v1.36.4` which is now the latest version available from the `1.36-classic/candidate` channel.
-Since this was an in-place upgrade, not rolling, neither `ck8scontrolplane` or `machinedeployment` specs haven't been changed. That means, from the management cluster's point of view, it will still show the old version:
+All nodes now report `v1.36.4` from the target `1.36-classic/candidate` channel. An in-place upgrade changes the
+Kubernetes software on the existing nodes, but does not update the version fields in the `CK8sControlPlane` or
+`MachineDeployment` specifications. Their `Machine` resources therefore continue to report the old declarative
+version:
 
 ```bash
 # Select the management cluster kubeconfig.
@@ -367,9 +384,10 @@ kubectl get machines
     myk8scluster-worker-md-0-nmtpp-sdwqw   myk8scluster   k8s-worker1                    True    True        True         Running   21h   v1.35.7
     ```
 
-If your infrastructure is built highly available, it is recommended to use rolling upgrades instead of in-place upgrades.
+For a highly available cluster, prefer rollout upgrades so that CAPI manages the target version through its declarative
+specifications.
 
-More details here:
+For more information, see:
 [https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/rollout-upgrades/](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/rollout-upgrades/)
 [https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/in-place-upgrades/](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/howto/in-place-upgrades/)
 [https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/reference/annotations/](https://documentation.ubuntu.com/canonical-kubernetes/release-1.35/capi/reference/annotations/)
