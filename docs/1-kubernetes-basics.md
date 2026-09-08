@@ -39,21 +39,27 @@ First, install MAAS and LXD:
 sudo snap install maas --channel=3.6/stable
 ```
 ??? example "Expected result"
-    The MAAS snap is installed.
+    ```text
+    maas (3.6/stable) 3.6.5-17655-g.474ecb517 from Canonical installed
+    ```
 
 ```bash
 # Install the MAAS test database.
 sudo snap install maas-test-db --channel=3.6/stable
 ```
 ??? example "Expected result"
-    The MAAS test database snap is installed.
+    ```text
+    maas-test-db (3.6/stable) 16.6-34-g.9c27046 from Canonical installed
+    ```
 
 ```bash
 # Install LXD.
 sudo snap install lxd --channel=5.21/stable
 ```
 ??? example "Expected result"
-    The LXD snap is installed.
+    ```text
+    lxd (5.21/stable) 5.21.7-1018661 from Canonical installed
+    ```
 
 Next, initialize LXD and disable IPv6:
 
@@ -62,42 +68,54 @@ Next, initialize LXD and disable IPv6:
 sudo lxd init --auto
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 ```bash
 # Disable IPv6 on the LXD bridge.
 sudo lxc network set lxdbr0 ipv6.address none
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Disable IPv6 NAT on the LXD bridge.
 sudo lxc network unset lxdbr0 ipv6.nat
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Disable DNS on the LXD bridge.
 sudo lxc network set lxdbr0 dns.mode=none
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Disable DHCP on the LXD bridge.
 sudo lxc network set lxdbr0 ipv4.dhcp=false
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Set the LXD HTTPS address.
 sudo lxc config set core.https_address 127.0.0.1:8443
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 Then, disable IPv6 system-wide:
 
@@ -109,28 +127,38 @@ net.ipv6.conf.default.disable_ipv6 = 1
 EOF
 ```
 ??? example "Expected result"
-    The IPv6 sysctl settings are echoed to the terminal.
+    ```text
+    net.ipv6.conf.all.disable_ipv6 = 1
+    net.ipv6.conf.default.disable_ipv6 = 1
+    ```
 
 ```bash
 # Reload sysctl settings.
 sudo sysctl -p
 ```
 ??? example "Expected result"
-    The configured sysctl settings are displayed.
+    ```text
+    net.ipv6.conf.all.disable_ipv6 = 1
+    net.ipv6.conf.default.disable_ipv6 = 1
+    ```
 
 ```bash
 # Disable IPv6 for all interfaces.
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
 ```
 ??? example "Expected result"
-    The all-interface IPv6 setting is displayed as `1`.
+    ```text
+    net.ipv6.conf.all.disable_ipv6 = 1
+    ```
 
 ```bash
 # Disable IPv6 for default interfaces.
 sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
 ```
 ??? example "Expected result"
-    The default-interface IPv6 setting is displayed as `1`.
+    ```text
+    net.ipv6.conf.default.disable_ipv6 = 1
+    ```
 
 Next, let's also initialize MAAS:
 
@@ -140,7 +168,9 @@ IP_ADDRESS=$(hostname -I | awk '{print $1}')
 sudo maas init region+rack --database-uri maas-test-db:/// --maas-url http://${IP_ADDRESS}:5240/MAAS
 ```
 ??? example "Expected result"
-    MAAS initializes successfully.
+    ```text
+    MAAS has been set up.
+    ```
 
 Now that both LXD and MAAS are installed, complete the initial MAAS setup and integrate it with LXD. The local LXD instance will be registered in MAAS as a VM host:
 
@@ -149,70 +179,102 @@ Now that both LXD and MAAS are installed, complete the initial MAAS setup and in
 sudo maas createadmin --username=admin --password=ubuntu --email=admin@example.com
 ```
 ??? example "Expected result"
-    The MAAS administrator is created.
+    ```text
+    No output.
+    ```
 
 ```bash
 # Save the MAAS API key.
 sudo maas apikey --username=admin > ~/maas-apikey
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Log in to MAAS.
 maas login deployprofile http://${IP_ADDRESS}:5240/MAAS - < ~/maas-apikey
 ```
 ??? example "Expected result"
-    The MAAS CLI login succeeds.
+    ```text
+    You are now logged in to the MAAS server at http://10.156.0.5:5240/MAAS/api/2.0/ with the profile name 'deployprofile'.
+    ```
 
 ```bash
 # Import boot resources.
 maas deployprofile boot-resources import
 ```
 ??? example "Expected result"
-    Boot-resource import starts.
+    ```text
+    Import of boot resources started
+    ```
 
 ```bash
 # Register the local LXD host.
 maas deployprofile vm-hosts create type=lxd power_address=https://127.0.0.1:8443 project=default name=localhost
 ```
 ??? example "Expected result"
-    The local LXD host is registered in MAAS.
+    ```json
+    {
+      "type": "lxd",
+      "name": "localhost",
+      "id": 1
+    }
+    ```
 
 ```bash
 # Save the LXD host certificate.
 maas deployprofile vm-host parameters 1 | jq -r '.certificate' > /tmp/maas.crt
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Trust the MAAS certificate in LXD.
 sudo lxc config trust add /tmp/maas.crt
 ```
 ??? example "Expected result"
-    The MAAS certificate is trusted by LXD.
+    ```text
+    No output.
+    ```
 
 ```bash
 # Refresh the LXD host in MAAS.
 maas deployprofile vm-host refresh 1
 ```
 ??? example "Expected result"
-    The LXD host refresh is requested.
+    ```json
+    {
+      "type": "lxd",
+      "name": "localhost",
+      "version": "5.21.7",
+      "id": 1
+    }
+    ```
 
 ```bash
 # Generate an SSH key pair.
 ssh-keygen -t rsa -N "" -q -f ~/.ssh/id_rsa
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Add the SSH public key to MAAS.
 maas deployprofile sshkeys create key="`cat ~/.ssh/id_rsa.pub`"
 ```
 ??? example "Expected result"
-    The SSH public key is added to MAAS.
+    ```json
+    {
+      "key": "ssh-rsa ... ubuntu@radumoisan.cloudbase.internal",
+      "id": 1
+    }
+    ```
 
 LXD has its own network, but MAAS will handle DNS and DHCP. To configure MAAS to work with LXD's network, run:
 
@@ -233,7 +295,9 @@ CIDR="${NET_PREFIX}.0/${PREFIX}"
 echo "Detected CIDR: $CIDR"
 ```
 ??? example "Expected result"
-    `Detected CIDR` is displayed.
+    ```text
+    Detected CIDR: 10.107.242.0/24
+    ```
 
 ```bash
 # Get the matching MAAS subnet ID.
@@ -249,7 +313,9 @@ fi
 echo "Subnet ID: $SUBNET_ID"
 ```
 ??? example "Expected result"
-    `Subnet ID` is displayed.
+    ```text
+    Subnet ID: 2
+    ```
 
 ```bash
 # Create the reserved MAAS IP range.
@@ -267,7 +333,14 @@ maas "$PROFILE" ipranges create \
   comment="Reserved range from script"
 ```
 ??? example "Expected result"
-    The reserved IP range is created.
+    ```json
+    {
+      "type": "reserved",
+      "start_ip": "10.107.242.1",
+      "end_ip": "10.107.242.50",
+      "id": 1
+    }
+    ```
 
 ```bash
 # Create the dynamic MAAS IP range.
@@ -279,7 +352,14 @@ maas "$PROFILE" ipranges create \
   comment="Dynamic range from script"
 ```
 ??? example "Expected result"
-    The dynamic IP range is created.
+    ```json
+    {
+      "type": "dynamic",
+      "start_ip": "10.107.242.51",
+      "end_ip": "10.107.242.60",
+      "id": 2
+    }
+    ```
 
 ```bash
 # Set the subnet gateway and DNS servers.
@@ -289,7 +369,12 @@ maas "$PROFILE" subnet update "$SUBNET_ID" \
   dns_servers="1.1.1.1 1.0.0.1"
 ```
 ??? example "Expected result"
-    The subnet configuration is updated.
+    ```json
+    {
+      "gateway_ip": "10.107.242.1",
+      "dns_servers": ["1.1.1.1", "1.0.0.1"]
+    }
+    ```
 
 ```bash
 # Enable DHCP on the MAAS VLAN.
@@ -309,14 +394,22 @@ maas "$PROFILE" vlan update "$FABRIC_ID" "$VID" \
   dhcp_on=true
 ```
 ??? example "Expected result"
-    `Using rack controller` is displayed and DHCP is enabled.
+    ```text
+    Using rack controller: yhc4bf
+    "dhcp_on": true
+    "primary_rack": "yhc4bf"
+    "fabric_id": 1
+    "vid": 0
+    ```
 
 ```bash
 # Set the MAAS upstream DNS server.
 maas "$PROFILE" maas set-config name=upstream_dns value="1.1.1.1"
 ```
 ??? example "Expected result"
-    The updated MAAS configuration is displayed.
+    ```text
+    OK
+    ```
 
 ```bash
 # Configure systemd-resolved to use the local MAAS DNS server.
@@ -332,7 +425,9 @@ EOF
 sudo systemctl restart systemd-resolved
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 Finally, let's create the VMs required by our setup:
 
@@ -341,35 +436,59 @@ Finally, let's create the VMs required by our setup:
 maas deployprofile vm-host update 1 cpu_over_commit_ratio=2
 ```
 ??? example "Expected result"
-    The VM host CPU overcommit ratio is updated.
+    ```json
+    {
+      "cpu_over_commit_ratio": 2.0
+    }
+    ```
 
 ```bash
 # Create the management VM.
 maas deployprofile vm-host compose 1 cores=2 memory=4096 storage="1:40(default)" hostname=cluster-ctrl architecture="amd64/generic" interfaces=eth0:subnet=$SUBNET_ID
 ```
 ??? example "Expected result"
-    The management VM is created.
+    ```json
+    {
+      "system_id": "hgwgkf",
+      "resource_uri": "/MAAS/api/2.0/machines/hgwgkf/"
+    }
+    ```
 
 ```bash
 # Create the Kubernetes control-plane VM.
 maas deployprofile vm-host compose 1 cores=4 memory=8192 storage="1:80(default)" hostname=k8s-ctrl architecture="amd64/generic" interfaces=eth0:subnet=$SUBNET_ID
 ```
 ??? example "Expected result"
-    The Kubernetes control-plane VM is created.
+    ```json
+    {
+      "system_id": "r7mpbc",
+      "resource_uri": "/MAAS/api/2.0/machines/r7mpbc/"
+    }
+    ```
 
 ```bash
 # Create the first Kubernetes worker VM.
 maas deployprofile vm-host compose 1 cores=4 memory=8192 storage="1:80(default)" hostname=k8s-worker1 architecture="amd64/generic" interfaces=eth0:subnet=$SUBNET_ID
 ```
 ??? example "Expected result"
-    The first Kubernetes worker VM is created.
+    ```json
+    {
+      "system_id": "gfyma6",
+      "resource_uri": "/MAAS/api/2.0/machines/gfyma6/"
+    }
+    ```
 
 ```bash
 # Create the second Kubernetes worker VM.
 maas deployprofile vm-host compose 1 cores=4 memory=8192 storage="1:80(default)" hostname=k8s-worker2 architecture="amd64/generic" interfaces=eth0:subnet=$SUBNET_ID
 ```
 ??? example "Expected result"
-    The second Kubernetes worker VM is created.
+    ```json
+    {
+      "system_id": "h3xmm8",
+      "resource_uri": "/MAAS/api/2.0/machines/h3xmm8/"
+    }
+    ```
 
 VMs are created and commissioned automatically. Before proceeding, tag these machines:
 
@@ -397,7 +516,17 @@ maas "$PROFILE" machines read \
 done
 ```
 ??? example "Expected result"
-    `Processing` is displayed for each machine.
+    ```text
+    Processing cluster-ctrl (hgwgkf)
+    "added": 1
+    "removed": 0
+    ...
+    Processing k8s-ctrl (r7mpbc)
+    ...
+    Processing k8s-worker1 (gfyma6)
+    ...
+    Processing k8s-worker2 (h3xmm8)
+    ```
 
 Next, deploy an operating system to the management machine. The Kubernetes management cluster will run on `cluster-ctrl` and provision workload clusters.
 
@@ -407,14 +536,22 @@ CLUSTERCTL_SYSTEM_ID=$(maas "$PROFILE" machines read \
   | jq -r '.[] | select(.tag_names[] == "cluster-ctrl") | .system_id')
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Deploy Ubuntu Noble to the management machine.
 maas "$PROFILE" machine deploy "$CLUSTERCTL_SYSTEM_ID" distro_series="ubuntu/noble"
 ```
 ??? example "Expected result"
-    Deployment of the management machine starts.
+    ```json
+    {
+      "hostname": "cluster-ctrl",
+      "distro_series": "noble",
+      "status_name": "Deploying"
+    }
+    ```
 
 After the machine is deployed with Ubuntu Noble (24.04), install and bootstrap Canonical Kubernetes as the management cluster, then install `clusterctl`:
 
@@ -430,42 +567,59 @@ CLUSTERCTL_IP=$(maas "$PROFILE" machine read "$CLUSTERCTL_SYSTEM_ID" \
   | head -n1)
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Install Canonical Kubernetes on the management machine.
 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLUSTERCTL_IP "sudo snap install k8s --classic --channel=1.35-classic/stable"
 ```
 ??? example "Expected result"
-    Canonical Kubernetes is installed on the management machine.
+    ```text
+    k8s (1.35-classic/stable) v1.35.7 from Canonical installed
+    ```
 
 ```bash
 # Bootstrap Canonical Kubernetes on the management machine.
 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLUSTERCTL_IP "sudo k8s bootstrap && sudo k8s status --wait-ready"
 ```
 ??? example "Expected result"
-    Canonical Kubernetes bootstraps and reports ready on the management machine.
+    ```text
+    cluster status:           ready
+    control plane nodes:      10.107.242.61:6400 (voter)
+    network:                  enabled
+    dns:                      enabled at 10.152.183.91
+    ```
 
 ```bash
 # Create the management cluster kubeconfig.
 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLUSTERCTL_IP "mkdir -p ~/.kube/ && sudo k8s config > ~/.kube/config"
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Download clusterctl to the management machine.
 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLUSTERCTL_IP "curl -L https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.13.5/clusterctl-linux-amd64 -o clusterctl"
 ```
 ??? example "Expected result"
-    `clusterctl` is downloaded to the management machine.
+    ```text
+      % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                     Dload  Upload   Total   Spent    Left  Speed
+    100 32.7M  100 32.7M    0     0  ...
+    ```
 
 ```bash
 # Install clusterctl on the management machine.
 ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no ubuntu@$CLUSTERCTL_IP "sudo install -o root -g root -m 0755 clusterctl /usr/local/bin/clusterctl"
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 Next, initialize the CAPI providers and generate the resource manifest for the workload cluster:
 
@@ -493,7 +647,9 @@ CK8S_PROVIDER_VERSION="v0.6.2"
 MAAS_PROVIDER_VERSION="v0.9.0"
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Initialize the providers and generate the Cluster API manifest remotely.
@@ -542,7 +698,33 @@ clusterctl generate cluster \${CLUSTER_NAME} --from ./templates/maas/cluster-tem
 EOF
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    Fetching providers
+    ...
+    Your management cluster has been initialized successfully!
+    ...
+    Cloning into 'cluster-api-k8s'...
+    ...
+    Required Variables:
+      - CHANNEL
+      - CONTROL_PLANE_MACHINE_IMAGE
+      - CONTROL_PLANE_MACHINE_MINCPU
+      - CONTROL_PLANE_MACHINE_MINMEMORY
+      - KUBERNETES_VERSION
+      - MAAS_DNS_DOMAIN
+      - WORKER_MACHINE_IMAGE
+      - WORKER_MACHINE_MINCPU
+      - WORKER_MACHINE_MINMEMORY
+
+    Optional Variables:
+      - CLUSTER_NAME                        (defaults to myk8scluster)
+      - CONTROL_PLANE_MACHINE_COUNT         (defaults to 1)
+      - CONTROL_PLANE_MACHINE_RESOURCEPOOL  (defaults to " ")
+      - CONTROL_PLANE_MACHINE_TAGS          (defaults to " ")
+      - WORKER_MACHINE_COUNT                (defaults to 0)
+      - WORKER_MACHINE_RESOURCEPOOL         (defaults to " ")
+      - WORKER_MACHINE_TAGS                 (defaults to " ")
+    ```
 
 Apply the generated manifest to the management cluster. The CAPI controllers will reconcile these resources and provision the workload cluster:
 
@@ -551,42 +733,68 @@ Apply the generated manifest to the management cluster. The CAPI controllers wil
 ssh $CLUSTERCTL_IP
 ```
 ??? example "Expected result"
-    A remote shell opens on the management machine.
+    ```shell
+    ubuntu@cluster-ctrl:~$
+    ```
 
 ```bash
 # Enter the Cluster API provider directory.
 cd cluster-api-k8s
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Apply the generated cluster template.
 sudo k8s kubectl apply -f cluster.yaml
 ```
 ??? example "Expected result"
-    The cluster resources are created.
+    ```text
+    cluster.cluster.x-k8s.io/myk8scluster created
+    maascluster.infrastructure.cluster.x-k8s.io/myk8scluster created
+    ck8scontrolplane.controlplane.cluster.x-k8s.io/myk8scluster-control-plane created
+    maasmachinetemplate.infrastructure.cluster.x-k8s.io/myk8scluster-control-plane created
+    machinedeployment.cluster.x-k8s.io/myk8scluster-worker-md-0 created
+    maasmachinetemplate.infrastructure.cluster.x-k8s.io/myk8scluster-md-0 created
+    ck8sconfigtemplate.bootstrap.cluster.x-k8s.io/myk8scluster-md-0 created
+    ```
 
 ```bash
 # Verify status with:
 watch "sudo k8s kubectl get clusters; sudo k8s kubectl get machines"
 ```
 ??? example "Expected result"
-    Cluster and machine status are displayed.
+    ```text
+    myk8scluster   True   1   0   1   2   2   2   Provisioned
+
+    myk8scluster-control-plane-cvgdl       myk8scluster   k8s-ctrl      True   True   Running
+    myk8scluster-worker-md-0-m8bgf-rjszd   myk8scluster   k8s-worker1   True   True   True   Running
+    myk8scluster-worker-md-0-m8bgf-sxbrk   myk8scluster   k8s-worker2   True   True   True   Running
+    ```
 
 ```bash
 # and
 watch clusterctl describe cluster myk8scluster
 ```
 ??? example "Expected result"
-    The cluster description is displayed.
+    ```text
+    Cluster/myk8scluster                                          3/3   2   3   3   True   Available
+    ClusterInfrastructure - MaasCluster/myk8scluster                                 True   InfoReported
+    ControlPlane - CK8sControlPlane/myk8scluster-control-plane   1/1       1   1   True   NoReasonReported
+    MachineDeployment/myk8scluster-worker-md-0                   2/2   2   2   2   True   Available
+    ```
 
 ```bash
 # Exit the management machine.
 exit
 ```
 ??? example "Expected result"
-    The local shell resumes.
+    ```shell
+    logout
+    Connection to 10.107.242.61 closed.
+    ```
 
 ## :material-book-open-page-variant-outline: 1.2 Interacting with the cluster and observability
 
@@ -606,7 +814,9 @@ Create the kubeconfig directory on the outer lab VM:
 mkdir -p ~/.kube
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 Connect to `cluster-ctrl`, where `clusterctl` and the management kubeconfig are installed:
 
@@ -615,7 +825,9 @@ Connect to `cluster-ctrl`, where `clusterctl` and the management kubeconfig are 
 ssh $CLUSTERCTL_IP
 ```
 ??? example "Expected result"
-    `ubuntu@cluster-ctrl:~$`
+    ```shell
+    ubuntu@cluster-ctrl:~$
+    ```
 
 On `cluster-ctrl`, generate the workload-cluster kubeconfig:
 
@@ -624,7 +836,9 @@ On `cluster-ctrl`, generate the workload-cluster kubeconfig:
 clusterctl get kubeconfig myk8scluster > ~/.kube/myk8scluster_config
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 Return to the outer lab VM:
 
@@ -633,7 +847,10 @@ Return to the outer lab VM:
 exit
 ```
 ??? example "Expected result"
-    `Connection to 10.107.242.61 closed.`
+    ```shell
+    logout
+    Connection to 10.107.242.61 closed.
+    ```
 
 The two kubeconfig files currently reside on `cluster-ctrl`. Copy them to the outer lab VM before running plain `kubectl` there:
 
@@ -642,14 +859,18 @@ The two kubeconfig files currently reside on `cluster-ctrl`. Copy them to the ou
 scp $CLUSTERCTL_IP:~/.kube/myk8scluster_config ~/.kube/
 ```
 ??? example "Expected result"
-    `myk8scluster_config  100%`
+    ```text
+    myk8scluster_config  100%
+    ```
 
 ```bash
 # Copy the management cluster kubeconfig to the outer lab VM.
 scp $CLUSTERCTL_IP:~/.kube/config ~/.kube/
 ```
 ??? example "Expected result"
-    `config  100%`
+    ```text
+    config  100%
+    ```
 
 Install `kubectl` once on the outer lab VM:
 
@@ -658,7 +879,9 @@ Install `kubectl` once on the outer lab VM:
 sudo snap install kubectl --channel=1.35/stable --classic
 ```
 ??? example "Expected result"
-    `kubectl (1.35/stable) 1.35.7 from Canonical installed`
+    ```text
+    kubectl (1.35/stable) 1.35.7 from Canonical installed
+    ```
 
 Select the management kubeconfig and verify the management cluster:
 
@@ -667,7 +890,9 @@ Select the management kubeconfig and verify the management cluster:
 export KUBECONFIG=~/.kube/config
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 ```bash
 # Inspect the management cluster.
@@ -686,7 +911,9 @@ Select the workload kubeconfig and verify the workload cluster:
 export KUBECONFIG=~/.kube/myk8scluster_config
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 ```bash
 # Inspect the workload cluster.
@@ -748,14 +975,18 @@ Also, let's add command autocompletion for `kubectl`:
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl > /dev/null
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 ```bash
 # Make the kubectl completion file readable.
 sudo chmod a+r /etc/bash_completion.d/kubectl
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 Exit and reconnect to the outer GCE lab VM so the new shell loads kubectl completion:
 
@@ -764,14 +995,19 @@ Exit and reconnect to the outer GCE lab VM so the new shell loads kubectl comple
 exit
 ```
 ??? example "Expected result"
-    `Connection to 34.89.137.65 closed.`
+    ```shell
+    logout
+    Connection to 34.89.137.65 closed.
+    ```
 
 ```bash
 # Reconnect to the lab machine.
 ssh ubuntu@<public IP address of your lab>
 ```
 ??? example "Expected result"
-    `ubuntu@radumoisan:~$`
+    ```shell
+    ubuntu@radumoisan:~$
+    ```
 
 Query the cluster:
 
@@ -780,7 +1016,9 @@ Query the cluster:
 export KUBECONFIG=~/.kube/myk8scluster_config
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 ```bash
 # Query cluster information.
@@ -863,8 +1101,6 @@ Additionally, check a specific node status, CPU and memory data, system informat
 kubectl describe node <node_name>
 ```
 ??? example "Expected result"
-    Key fields from the validated `k8s-ctrl` result:
-
     ```text
     Name:               k8s-ctrl
     Roles:              control-plane,worker
@@ -1015,14 +1251,18 @@ Create the pod:
 export KUBECONFIG=~/.kube/myk8scluster_config
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 ```bash
 # Create the nginx pod.
 kubectl create -f ~/resources/nginx-pod.yaml
 ```
 ??? example "Expected result"
-    `pod/nginx created`
+    ```text
+    pod/nginx created
+    ```
 
 List and describe the newly created Pod. Review its status, configuration, and events, and ask the trainer about anything you do not understand:
 
@@ -1041,8 +1281,6 @@ kubectl get pods -o wide
 kubectl describe pod nginx
 ```
 ??? example "Expected result"
-    Key fields from the validated result:
-
     ```text
     Name:             nginx
     Namespace:        default
@@ -1063,7 +1301,9 @@ Delete the pod:
 kubectl delete pod nginx
 ```
 ??? example "Expected result"
-    `pod "nginx" deleted from default namespace`
+    ```text
+    pod "nginx" deleted from default namespace
+    ```
 
 Container writable layers are ephemeral. Volumes allow containers in a Pod to share data and can have different lifecycles. Data that must outlive a Pod generally requires a PersistentVolume backed by suitable storage.
 
@@ -1099,22 +1339,24 @@ Create the Pod from `~/resources/redis-volume-pod.yaml`, then describe it to ins
 export KUBECONFIG=~/.kube/myk8scluster_config
 ```
 ??? example "Expected result"
-    `No output.`
+    ```text
+    No output.
+    ```
 
 ```bash
 # Create the redis volume pod.
 kubectl create -f ~/resources/redis-volume-pod.yaml
 ```
 ??? example "Expected result"
-    `pod/redis created`
+    ```text
+    pod/redis created
+    ```
 
 ```bash
 # Describe the redis pod.
 kubectl describe pod redis
 ```
 ??? example "Expected result"
-    Key fields from the validated result:
-
     ```text
     Name:             redis
     Namespace:        default
@@ -1169,6 +1411,8 @@ Finally, delete the pod:
 kubectl delete pod redis
 ```
 ??? example "Expected result"
-    `pod "redis" deleted from default namespace`
+    ```text
+    pod "redis" deleted from default namespace
+    ```
 
 ![bundle](assets/pod2.png)
