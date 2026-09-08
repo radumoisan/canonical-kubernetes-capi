@@ -1,4 +1,4 @@
-# :material-numeric-1-circle: 1. Kubernetes Basics
+# 1. Kubernetes Basics
 
 Kubernetes is an open-source infrastructure for automating deployment, scaling, and management of containerized
 applications. Originally built by Google, it is currently maintained by the Cloud Native Computing Foundation.
@@ -6,14 +6,14 @@ applications. Originally built by Google, it is currently maintained by the Clou
 A Kubernetes cluster includes these primary components:
 
 * control plane components:
-    * etcd distributed key-value store
-    * the API server
-    * the scheduler
-    * the controller manager
+    * **etcd**{ .component-name } distributed key-value store
+    * the **API server**{ .component-name }
+    * the **scheduler**{ .component-name }
+    * the **controller manager**{ .component-name }
 * node components:
-    * the kubelet
-    * the kube-proxy network proxy
-    * a container runtime, such as containerd
+    * the **kubelet**{ .component-name }
+    * the **kube-proxy**{ .component-name } network proxy
+    * a container runtime, such as **containerd**{ .component-name }
 
 ## :material-book-open-page-variant-outline: Canonical Kubernetes
 

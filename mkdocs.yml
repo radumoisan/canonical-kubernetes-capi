@@ -8,6 +8,9 @@ theme:
     - navigation.expand
     - content.code.copy
 
+extra_css:
+  - stylesheets/extra.css
+
 nav:
   - "📄 Home": index.md
   - "📋 Kubernetes Basics": 1-kubernetes-basics.md
