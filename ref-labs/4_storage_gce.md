@@ -1,25 +1,23 @@
 # 4. Storage and User Data !heading
 
-Applications can write and read data directly on and from the container filesystem. This approach can have many drawbacks,
-one is when two container of the same pod need to access the same piece of data. Also, Kubernetes works on pod level, so
-something new had to be done to address this.
+Applications can read and write data in a container's filesystem, but that data is isolated from other containers and is lost
+when the container is replaced. Pods often need to share data among containers or retain data beyond a container's lifetime.
 
 ## 4.1 Volumes
 
-`Volumes` are a Kubernetes resource type that solves this. A Volume can be shared between containers of the same pod.
-There are different types of volumes, some are ephemeral, meaning that they live as long as the pods do, and some are persistent
-on pod deletion.
+Kubernetes volumes make data available to containers in a Pod. A volume can be mounted by multiple containers in that Pod.
+Some volume types are ephemeral and tied to the Pod's lifetime, while persistent storage can outlive individual Pods.
 
-There are many volume types, but some of the most used are:
-  * `emptyDir`: exists as long as that pod does, it is initially empty. By default, emptyDir volumes are stored on whatever medium is backing the node - that might be disk or SSD or network storage, depending on your environment. Privileged containers are required for this type of volume.
-  * `hostPath`: mounts a directory from the host Node's filesystem. Useful in some situations: e.g. containers need to access Docker internals or host's `/sys` special filesystem
-  * `fc`: allows an existing fibre channel block storage volume to be mounted in a Pod
-  * `image`: An image volume source represents an OCI object (a container image or artifact) which is available on the kubelet's host machine.
-  * `nfs`: mounts NFS shared into pods
-  * `iscsi`: mounts iSCSI volumes into pods
+Kubernetes supports many volume types. Examples include:
+  * `emptyDir`: starts empty when a Pod is assigned to a node and exists as long as that Pod remains on the node. Its data survives container restarts but is deleted when the Pod is removed. By default, it uses the storage medium that backs the node's ephemeral storage.
+  * `hostPath`: mounts a file or directory from the host node's filesystem. It can provide access to host resources such as `/sys`, but it ties the Pod to a specific node and can introduce security risks.
+  * `fc`: mounts an existing Fibre Channel block storage volume into a Pod.
+  * `image`: makes an OCI object, such as a container image or artifact, available to a Pod as a read-only volume.
+  * `nfs`: mounts an existing NFS share into a Pod.
+  * `iscsi`: mounts an existing iSCSI volume into a Pod.
 
-Let's create a Pod with two running containers and a shared `emptyDir` volume. This is how the pod definition
-`~/resources/multi-container-pod.yaml` looks like:
+Let's create a Pod with two containers and a shared `emptyDir` volume. The manifest is available at
+`~/resources/multi-container-pod.yaml`:
 
 ```bash
 cat ~/resources/multi-container-pod.yaml
@@ -51,12 +49,11 @@ spec:
     args: ["-c", "echo Hello from the debian container > /pod-data/index.html; sleep 900000"]
 ```
 
-The volume is called `shared-data`. Containers reference the volume by name in the `volumeMounts` of the container template.
-`mountPath` is from where the volume is accessible from inside the container. As you can see, the first container sees the html file
-in `/usr/share/nginx/html/index.html` and the second container in  `/pod-data/index.html`, but it's the same file. Try to understand
-the definition file, discuss any interesting details with the trainer.
+The volume is named `shared-data`. Each container references it by name in its `volumeMounts` entry. `mountPath` specifies where
+the volume is available inside that container. The paths `/usr/share/nginx/html/index.html` and `/pod-data/index.html` therefore
+refer to the same shared file. Review the manifest and discuss any questions with the trainer.
 
-Create the pod and a service for it, the definition files are already provisioned in `~/resources/multi-container-pod.yaml` and
+Create the Pod and a Service for it. The manifest files are already provisioned at `~/resources/multi-container-pod.yaml` and
 `~/resources/multi-container-pod-service.yaml`:
 
 ```bash
@@ -67,7 +64,7 @@ kubectl create -f ~/resources/multi-container-pod.yaml
 kubectl create -f ~/resources/multi-container-pod-service.yaml
 ```
 
-Get the ClusterIP, connect to a Node and `curl` from there:
+Get the ClusterIP, open a shell on a node, and send a request from there:
 
 ```bash
 kubectl get svc two-containers-svc
@@ -77,7 +74,7 @@ NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
 two-containers-svc   ClusterIP   10.152.183.236   <none>        8080/TCP   38s
 ```
 
-SSH into one of the nodes:
+Open a shell on one of the nodes:
 
 ```bash
 lxc shell k8s-worker1
@@ -90,10 +87,9 @@ curl 10.152.183.236:8080
 Hello from the debian container
 ```
 
-As you can see the two containers work together in this scenario with the help of the volume. This is a simple example,
-but complex scenarios can be built on the presented concepts.
+The two containers work together through the shared volume. More complex applications can use the same pattern.
 
-Go back to the student machine and delete the pods:
+Return to the student machine and delete the Service and Pod:
 
 ```bash
 # exit back to student machine
@@ -112,18 +108,17 @@ kubectl delete pod two-containers
 
 ![roles](assets/config_map.png)
 
-There are four different ways that you can use a ConfigMap to configure a container inside a Pod:
- * Inside a container command and args
- * Environment variables for a container
- * Add a file in read-only volume, for the application to read
- * Write code to run inside the Pod that uses the Kubernetes API to read a ConfigMap
+There are four ways to use a ConfigMap to configure a container in a Pod:
+  * Set the container command and arguments.
+  * Set environment variables for the container.
+  * Mount ConfigMap keys as files in a read-only volume.
+  * Run code in the Pod that uses the Kubernetes API to read the ConfigMap.
 
-When a `ConfigMap` currently consumed in a volume is updated, projected keys are eventually updated as well. The kubelet checks whether
-the mounted `ConfigMap` is fresh on every periodic sync.
-`ConfigMaps` consumed as environment variables are not updated automatically and require a pod restart.
+When a ConfigMap mounted as a volume is updated, its projected keys are eventually updated. The kubelet checks the mounted ConfigMap
+during periodic synchronization. ConfigMaps consumed as environment variables are not updated automatically and require a Pod restart.
 
-**NOTE**: `ConfigMap` does not provide secrecy or encryption. If the data you want to store is confidential, use a `Secret`
-rather than a `ConfigMap`, or use additional (third party) tools to keep your data private.
+**NOTE**: A `ConfigMap` does not provide secrecy or encryption. For confidential data, use a `Secret` and configure appropriate
+access controls and encryption at rest.
 
 Create a `ConfigMap` with literal values:
 
@@ -157,7 +152,7 @@ ben
 Events:  <none>
 ```
 
-Create a Pod that references the `ConfigMap`.
+The following Pod manifest imports all entries from the `ConfigMap` as environment variables with the `CONFIG_DATA_` prefix:
 
 ```bash
 apiVersion: v1
@@ -179,7 +174,7 @@ spec:
 kubectl create -f ~/resources/pod-with-configmap.yaml
 ```
 
-Check if the Pod sees the values:
+Check whether the Pod received the values:
 
 ```bash
 kubectl exec configmap-pod -- env | grep CONFIG_DATA
@@ -206,20 +201,21 @@ https://kubernetes.io/docs/concepts/configuration/configmap/
 
 ## 4.3 Secrets
 
-`Secrets` are a way to securely inject sensitive data into Pods. By sensitive data is meant: credentials, encryption keys,
-tokens, etc. The data is represented as key-values pairs and are encoded in base64.
+`Secrets` keep sensitive data such as credentials, encryption keys, and tokens separate from application code. Their API
+representation contains base64-encoded values; base64 is encoding, not encryption. Protect Secrets with appropriate access controls
+and encryption at rest.
 
-There are two ways to create secrets, from CLI using `kubectl` or from a file definition, we'll use the CLI method:
+Secrets can be created with `kubectl` or from a manifest. This lab uses the CLI method:
 
 ```bash
 kubectl create secret generic bob-secret --from-literal=username='bob' \
 --from-literal=password='Passw0rd'
 ```
 
-**NOTE**: If the CLI method is used, the values will automatically be encoded for the user. If the file definition is used,
-the user will have to input the already encoded values in the definition.
+**NOTE**: `kubectl create secret` encodes the supplied literal values. In a manifest, use `stringData` for unencoded strings or
+`data` for base64-encoded values.
 
-Observe the secret and node the encoded value:
+Inspect the Secret metadata:
 
 ```bash
 kubectl get secret bob-secret
@@ -229,9 +225,10 @@ NAME         TYPE     DATA   AGE
 bob-secret   Opaque   2      10s
 ```
 
-`type: Opaque` means that contents of this Secret is unstructured, it can contain arbitrary key-value pairs.
-Other types of secrets can be `service-account-token`, `dockercfg`, `dockerconfigjson`, `ssh-auth`, `tls`.
-For more info on Secret types please visit:
+`type: Opaque` means that the Secret has no required structure and can contain arbitrary key-value pairs.
+Other Secret types include `kubernetes.io/service-account-token`, `kubernetes.io/dockercfg`,
+`kubernetes.io/dockerconfigjson`, `kubernetes.io/basic-auth`, `kubernetes.io/ssh-auth`, and `kubernetes.io/tls`.
+For more information about Secret types, visit:
 
 https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
 
@@ -252,11 +249,14 @@ password:  8 bytes
 username:  3 bytes
 ```
 
+Display the Secret's YAML representation to see the base64-encoded data:
+
 ```bash
 kubectl get secret bob-secret -o yaml
 ```
 
-Now create a pod that has access to the `Secret` via environment variables. Here is the pod definition `~/resources/pod-with-secrets.yaml`:
+Now create a Pod that accesses the `Secret` through environment variables. The manifest is available at
+`~/resources/pod-with-secrets.yaml`:
 
 ```bash
 cat ~/resources/pod-with-secrets.yaml
@@ -283,13 +283,13 @@ spec:
           key: password
 ```
 
-Create the pod:
+Create the Pod:
 
 ```bash
 kubectl create -f ~/resources/pod-with-secrets.yaml
 ```
 
-Wait for the pod to come up. Connect to it afterwards and see if the secrets were passed:
+Wait for the Pod to become ready, open a shell in it, and verify that the Secret values were passed:
 
 ```bash
 kubectl exec -it pod-with-secrets -- /bin/bash
@@ -303,9 +303,9 @@ SECRET_PASSWORD=Passw0rd
 SECRET_USERNAME=bob
 ```
 
-Now, a database, for example, can directly reference the environment variables for credentials.
+An application, such as a database, can now read its credentials from these environment variables.
 
-Exit the pod and delete the resources you've created:
+Exit the Pod and delete the resources you created:
 
 ```bash
 root@pod-with-secrets:/# exit
@@ -319,23 +319,24 @@ kubectl delete secret bob-secret
 
 ## 4.4 PersistentVolumes, PersistentVolumeClaims and StorageClasses
 
-This works great but volume types such as `emptyDir` and `hostPath` have the drawback that developers need to have knowledge of
-the storage and network infrastructure. Storage should be provisioned in a transparent manner and fully abstracted of the backend solution.
+An `emptyDir` volume is limited to a Pod's lifetime, while `hostPath` ties a workload to storage on a specific node. Applications
+that need durable storage should be able to request it without depending directly on backend details.
 
-`PersistentVolumes`, `PersistentVolumeClaims` and `StorageClasses` can be used. A storage backend is represented by
-the `StorageClass`. It dynamically provisions `PVs` with the help of `PVCs`.
+`PersistentVolumes`, `PersistentVolumeClaims`, and `StorageClasses` provide this abstraction. A `StorageClass` describes a class
+of storage and its provisioner, while a `PersistentVolumeClaim` requests storage. The provisioner can then create a
+`PersistentVolume` dynamically.
 
-**NOTE**: PersistentVolumes will be referenced with `PVs`, `PersistentVolumeClaims` with `PVCs` and `StorageClasses`
-with `SCs`.
+**NOTE**: This chapter abbreviates PersistentVolumes as `PVs`, PersistentVolumeClaims as `PVCs`, and StorageClasses as `SCs`.
 
-`PVs` are like volumes, but it's lifecycle does not depend on the pods lifecycle. A user or pod can request a `PV` with a `PVC`.
+`PVs` are cluster storage resources whose lifecycle is independent of any Pod. A workload requests storage through a `PVC`,
+which Kubernetes binds to a suitable `PV`.
 
 ![roles](assets/pvc.png)
 
-Administrators can also create `PVs` statically, meaning that the PVs will pe pre-provisioned. This is bad because it's not automated, and may require manual(
-intervention later on. `SCs` are allow for `PVs` to be provisioned dynamically.
+Administrators can create `PVs` statically when storage is pre-provisioned. Alternatively, an `SC` can provision a matching `PV`
+dynamically when a workload makes a request through a `PVC`.
 
-Your cluster is using `hostPath` storage. To get the current configured (and `default`) storage class:
+Your cluster uses the `csi-rawfile-default` StorageClass backed by node-local storage. Display the configured default StorageClass:
 
 ```bash
 kubectl get sc
@@ -345,7 +346,7 @@ NAME                            PROVISIONER              RECLAIMPOLICY   VOLUMEB
 csi-rawfile-default (default)   rawfile.csi.openebs.io   Delete          WaitForFirstConsumer   true                   48m
 ```
 
-Also, you can get details about your storage class:
+Display details about the StorageClass:
 
 ```bash
 kubectl describe sc csi-rawfile-default
@@ -369,9 +370,9 @@ https://kubernetes.io/docs/concepts/storage/storage-classes/
 
 https://documentation.ubuntu.com/canonical-kubernetes/latest/snap/howto/storage/
 
-Great now we can dynamically allocate volumes for containers, the way workflows are intended to be.
+The cluster can now dynamically provision volumes in response to workload requests.
 
-Create a `PVC` using the `SC` from `~/resources/gce-pvc.yaml`:
+Create a `PVC` using this `SC`. The manifest is available at `~/resources/hostpath-pvc.yaml`:
 
 ```bash
 kind: PersistentVolumeClaim
@@ -387,7 +388,7 @@ spec:
   storageClassName: csi-rawfile-default
 ```
 
-`PVCs` are the way to bind to `PVs`. Create the `PVC`:
+A `PVC` requests storage and is bound to a matching `PV`. Create the `PVC`:
 
 ```bash
 kubectl create -f ~/resources/hostpath-pvc.yaml
@@ -423,7 +424,7 @@ Events:
   Normal  WaitForFirstConsumer  5s (x4 over 40s)  persistentvolume-controller  waiting for first consumer to be created before binding
 ```
 
-The `PVC` is bound to a `Persistent Volume`.
+Because the StorageClass uses `WaitForFirstConsumer`, the `PVC` remains pending until a Pod uses it.
 
 ```bash
 kubectl get pv
@@ -432,9 +433,9 @@ kubectl get pv
 No resources found
 ```
 
-The volume will be created upon pod creation.
+The provisioner creates the volume after a Pod that uses the claim is created.
 
-Create a pod that will make use of the new `PV` with `~/resources/busybox-with-pv.yaml`:
+Create a Pod that uses the `PVC` with `~/resources/busybox-with-pv.yaml`:
 
 ```bash
 apiVersion: v1
@@ -464,7 +465,7 @@ spec:
 kubectl create -f ~/resources/busybox-with-pv.yaml
 ```
 
-After the pod gets created, let's check again the PersistentVolumeClaim status:
+After the Pod is created, check the PersistentVolumeClaim status again:
 
 ```bash
 kubectl get pvc
@@ -474,7 +475,7 @@ NAME           STATUS   VOLUME                                     CAPACITY   AC
 hostpath-pvc   Bound    pvc-885f7ff8-8dbc-4f00-bd56-f92edbfa2e3c   10Gi       RWO            csi-rawfile-default   <unset>                 3m37s
 ```
 
-Check inside the pod to see if the volume was mounted:
+Check inside the Pod to verify that the volume was mounted:
 
 ```bash
 kubectl exec busybox -- mount | grep pv
@@ -483,15 +484,15 @@ kubectl exec busybox -- mount | grep pv
 /dev/loop3 on /pv type ext4 (rw,relatime)
 ```
 
-If the new device shows up, we have successfully configured and provisioned an hostPath-backed PV.
+If the new device appears, the `PV` was successfully provisioned and mounted.
 
-Let's write some data on the PV. Create a file called `hello-world.txt`.
+Write data to the `PV` by creating a file named `hello-world.txt`.
 
 ```bash
 kubectl exec busybox --  touch /pv/hello-world.txt
 ```
 
-Connect to the pod and write some text in the file.
+Open a shell in the Pod and write text to the file.
 
 ```bash
 kubectl exec -it busybox -- sh
@@ -508,7 +509,7 @@ cat /pv/hello-world.txt
 Hello world from busybox pod!
 ```
 
-Exit the pods and delete it. Let's see if the `PV` and data will be persistent.
+Exit the Pod shell and delete the Pod. Then verify that the `PV` data persists.
 
 ```bash
 exit
@@ -518,13 +519,13 @@ exit
 kubectl delete pod busybox
 ```
 
-Create a new pod but use the same `PVC`.
+Create a new Pod that uses the same `PVC`.
 
 ```bash
 kubectl create -f ~/resources/nginx-with-pv.yaml
 ```
 
-Connect to the pod to see of the data is still there.
+Open a shell in the Pod to verify that the data is still there.
 
 ```bash
 kubectl exec -it nginx -- sh
@@ -541,14 +542,14 @@ cat /pv/hello-world.txt
 Hello world from busybox pod!
 ```
 
-All is order. Now we can exit and delete the pod.
+Everything is in order. Exit the Pod shell before cleaning up.
 
 ```bash
 exit
 ```
 
-Dynamically allocated PVs is the most flexible and reliable way to allocate storage for applications running in Kubernetes.
-Cleanup the pods we've created in this chapter:
+Dynamic provisioning lets workloads request storage through `PVCs` without requiring administrators to create each `PV` in advance.
+Clean up the remaining Pod and `PVC`:
 
 ```bash
 kubectl delete pod nginx
