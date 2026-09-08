@@ -1,5 +1,27 @@
 # :material-numeric-4-circle: 4. Storage and User Data
 
+Select the workload cluster kubeconfig:
+
+```bash
+# Select the workload cluster kubeconfig.
+export KUBECONFIG=~/.kube/myk8scluster_config
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Confirm that `kubectl` uses the workload cluster:
+
+```bash
+# Display the active Kubernetes context.
+kubectl config current-context
+```
+??? example "Expected result"
+    ```text
+    myk8scluster-admin@myk8scluster
+    ```
+
 Applications can read and write data in a container's filesystem, but that data is isolated from other containers and is lost
 when the container is replaced. Pods often need to share data among containers or retain data beyond a container's lifetime.
 
@@ -64,16 +86,42 @@ Create the Pod and a Service for it. The manifest files are already provisioned 
 kubectl create -f ~/resources/multi-container-pod.yaml
 ```
 ??? example "Expected result"
-    The Pod is created.
+    ```text
+    pod/two-containers created
+    ```
+
+Wait for both containers in the Pod to become ready:
+
+```bash
+# Wait for the multi-container pod to become ready.
+kubectl wait --for=condition=Ready pod/two-containers --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    pod/two-containers condition met
+    ```
 
 ```bash
 # Create the multi-container pod service.
 kubectl create -f ~/resources/multi-container-pod-service.yaml
 ```
 ??? example "Expected result"
-    The Service is created.
+    ```text
+    service/two-containers-svc created
+    ```
 
-Get the ClusterIP, open a shell on a node, and send a request from there:
+Wait for the Service to have a ready endpoint. The generated EndpointSlice suffix in the expected result varies:
+
+```bash
+# Wait for a ready Service endpoint.
+kubectl wait --for=jsonpath='{.endpoints[0].conditions.ready}'=true endpointslice -l kubernetes.io/service-name=two-containers-svc --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    endpointslice.discovery.k8s.io/two-containers-svc-gf2wd condition met
+    ```
+
+The generated EndpointSlice suffix varies. Display the Service and note its dynamically assigned ClusterIP:
 
 ```bash
 # Display the multi-container service.
@@ -81,22 +129,39 @@ kubectl get svc two-containers-svc
 ```
 ??? example "Expected result"
     ```text
-    NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
-    two-containers-svc   ClusterIP   10.152.183.236   <none>        8080/TCP   38s
+    NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+    two-containers-svc   ClusterIP   10.152.82.178   <none>        8080/TCP   1s
     ```
 
-Open a shell on one of the nodes:
+The ClusterIP assigned to your Service will differ.
+
+Save the assigned ClusterIP:
 
 ```bash
-# Enter the k8s-worker1 node shell.
-lxc shell k8s-worker1
+# Save the Service ClusterIP.
+CLUSTER_IP=$(kubectl get svc two-containers-svc -o jsonpath='{.spec.clusterIP}')
 ```
 ??? example "Expected result"
-    A shell opens on the k8s-worker1 node.
+    ```text
+    No output.
+    ```
+
+Display the saved ClusterIP:
+
+```bash
+# Display the Service ClusterIP.
+printf "%s\n" "$CLUSTER_IP"
+```
+??? example "Expected result"
+    ```text
+    10.152.82.178
+    ```
+
+Use a non-interactive node command to send a request to the Service:
 
 ```bash
 # Probe the service from the node.
-curl 10.152.183.236:8080
+lxc exec k8s-worker1 -- curl -fsS "http://$CLUSTER_IP:8080"
 ```
 ??? example "Expected result"
     ```text
@@ -105,28 +170,47 @@ curl 10.152.183.236:8080
 
 The two containers work together through the shared volume. More complex applications can use the same pattern.
 
-Return to the student machine and delete the Service and Pod:
-
-```bash
-# Exit back to the student machine.
-exit
-```
-??? example "Expected result"
-    The student machine shell resumes.
+Delete the Service and Pod:
 
 ```bash
 # Delete the multi-container service.
-kubectl delete svc two-containers-svc
+kubectl delete svc two-containers-svc --wait=true --timeout=180s
 ```
 ??? example "Expected result"
-    The Service is deleted.
+    ```text
+    service "two-containers-svc" deleted from default namespace
+    ```
 
 ```bash
 # Delete the multi-container pod.
-kubectl delete pod two-containers
+kubectl delete pod two-containers --wait=true --timeout=180s
 ```
 ??? example "Expected result"
-    The Pod is deleted.
+    ```text
+    pod "two-containers" deleted from default namespace
+    ```
+
+Confirm that the Service was deleted:
+
+```bash
+# Check for the deleted multi-container service.
+kubectl get svc two-containers-svc -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Confirm that the Pod was deleted:
+
+```bash
+# Check for the deleted multi-container pod.
+kubectl get pod two-containers -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
 
 ## :material-book-open-page-variant-outline: 4.2 ConfigMaps
 
@@ -152,11 +236,12 @@ Create a `ConfigMap` with literal values:
 
 ```bash
 # Create a ConfigMap with literal values.
-kubectl create configmap test-configmap --from-literal=val1=dan \
---from-literal=val2=bill --from-literal=val3=ben
+kubectl create configmap test-configmap --from-literal=val1=dan --from-literal=val2=bill --from-literal=val3=ben
 ```
 ??? example "Expected result"
-    The ConfigMap is created.
+    ```text
+    configmap/test-configmap created
+    ```
 
 Inspect the `ConfigMap`:
 
@@ -182,6 +267,10 @@ kubectl describe configmap test-configmap
     val3:
     ----
     ben
+
+    BinaryData
+    ====
+
     Events:  <none>
     ```
 
@@ -208,31 +297,75 @@ spec:
 kubectl create -f ~/resources/pod-with-configmap.yaml
 ```
 ??? example "Expected result"
-    The Pod is created.
+    ```text
+    pod/configmap-pod created
+    ```
+
+Wait for the Pod to become ready:
+
+```bash
+# Wait for the ConfigMap pod to become ready.
+kubectl wait --for=condition=Ready pod/configmap-pod --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    pod/configmap-pod condition met
+    ```
 
 Check whether the Pod received the values:
 
 ```bash
 # Display ConfigMap environment variables in the pod.
-kubectl exec configmap-pod -- env | grep CONFIG_DATA
+kubectl exec configmap-pod -- env | grep "^CONFIG_DATA_" | sort
 ```
 ??? example "Expected result"
     ```text
-    ...
     CONFIG_DATA_val1=dan
     CONFIG_DATA_val2=bill
     CONFIG_DATA_val3=ben
-    ...
     ```
 
-Delete the pod:
+Delete the Pod and ConfigMap:
 
 ```bash
 # Delete the ConfigMap pod.
-kubectl delete pod configmap-pod
+kubectl delete pod configmap-pod --wait=true --timeout=180s
 ```
 ??? example "Expected result"
-    The Pod is deleted.
+    ```text
+    pod "configmap-pod" deleted from default namespace
+    ```
+
+```bash
+# Delete the ConfigMap.
+kubectl delete configmap test-configmap --wait=true --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    configmap "test-configmap" deleted from default namespace
+    ```
+
+Confirm that the Pod was deleted:
+
+```bash
+# Check for the deleted ConfigMap pod.
+kubectl get pod configmap-pod -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Confirm that the ConfigMap was deleted:
+
+```bash
+# Check for the deleted ConfigMap.
+kubectl get configmap test-configmap -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
 
 For more information, see the
 [Kubernetes ConfigMap documentation](https://kubernetes.io/docs/concepts/configuration/configmap/).
@@ -247,11 +380,12 @@ Secrets can be created with `kubectl` or from a manifest. This lab uses the CLI 
 
 ```bash
 # Create a Secret with username and password values.
-kubectl create secret generic bob-secret --from-literal=username='bob' \
---from-literal=password='Passw0rd'
+kubectl create secret generic bob-secret --from-literal=username="bob" --from-literal=password="Passw0rd"
 ```
 ??? example "Expected result"
-    The Secret is created.
+    ```text
+    secret/bob-secret created
+    ```
 
 !!! note "Secret value encoding"
     `kubectl create secret` encodes the supplied literal values. In a manifest, use `stringData` for unencoded strings or
@@ -266,7 +400,7 @@ kubectl get secret bob-secret
 ??? example "Expected result"
     ```text
     NAME         TYPE     DATA   AGE
-    bob-secret   Opaque   2      10s
+    bob-secret   Opaque   2      0s
     ```
 
 `type: Opaque` means that the Secret has no required structure and can contain arbitrary key-value pairs.
@@ -301,7 +435,17 @@ Display the Secret's YAML representation to see the base64-encoded data:
 kubectl get secret bob-secret -o yaml
 ```
 ??? example "Expected result"
-    The Secret manifest is displayed with data base64 encoded.
+    ```yaml
+    apiVersion: v1
+    data:
+      password: UGFzc3cwcmQ=
+      username: Ym9i
+    kind: Secret
+    metadata:
+      name: bob-secret
+      namespace: default
+    type: Opaque
+    ```
 
 Now create a Pod that accesses the `Secret` through environment variables. The manifest is available at
 `~/resources/pod-with-secrets.yaml`:
@@ -319,7 +463,7 @@ cat ~/resources/pod-with-secrets.yaml
     spec:
       containers:
       - name: container-with-secrets
-        image: nginx
+        image: nginx:latest
         env:
         - name: SECRET_USERNAME
           valueFrom:
@@ -340,20 +484,26 @@ Create the Pod:
 kubectl create -f ~/resources/pod-with-secrets.yaml
 ```
 ??? example "Expected result"
-    The Pod is created.
+    ```text
+    pod/pod-with-secrets created
+    ```
 
-Wait for the Pod to become ready, open a shell in it, and verify that the Secret values were passed:
+Wait for the Pod to become ready:
 
 ```bash
-# Enter the pod-with-secrets shell.
-kubectl exec -it pod-with-secrets -- /bin/bash
+# Wait for the Secret pod to become ready.
+kubectl wait --for=condition=Ready pod/pod-with-secrets --timeout=180s
 ```
 ??? example "Expected result"
-    A shell opens in the pod.
+    ```text
+    pod/pod-with-secrets condition met
+    ```
+
+Verify that the Secret values were passed to the Pod:
 
 ```bash
 # Display Secret environment variables.
-printenv | grep SECRET
+kubectl exec pod-with-secrets -- env | grep "^SECRET_" | sort
 ```
 ??? example "Expected result"
     ```text
@@ -363,28 +513,47 @@ printenv | grep SECRET
 
 An application, such as a database, can now read its credentials from these environment variables.
 
-Exit the Pod and delete the resources you created:
-
-```bash
-# Exit the pod shell.
-exit
-```
-??? example "Expected result"
-    The student machine shell resumes.
+Delete the resources you created:
 
 ```bash
 # Delete the pod with Secret environment variables.
-kubectl delete pod pod-with-secrets
+kubectl delete pod pod-with-secrets --wait=true --timeout=180s
 ```
 ??? example "Expected result"
-    The Pod is deleted.
+    ```text
+    pod "pod-with-secrets" deleted from default namespace
+    ```
 
 ```bash
 # Delete the Secret.
-kubectl delete secret bob-secret
+kubectl delete secret bob-secret --wait=true --timeout=180s
 ```
 ??? example "Expected result"
-    The Secret is deleted.
+    ```text
+    secret "bob-secret" deleted from default namespace
+    ```
+
+Confirm that the Pod was deleted:
+
+```bash
+# Check for the deleted Secret pod.
+kubectl get pod pod-with-secrets -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Confirm that the Secret was deleted:
+
+```bash
+# Check for the deleted Secret.
+kubectl get secret bob-secret -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
 
 ## :material-book-open-page-variant-outline: 4.4 PersistentVolumes, PersistentVolumeClaims and StorageClasses
 
@@ -415,7 +584,7 @@ kubectl get sc
 ??? example "Expected result"
     ```text
     NAME                            PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-    csi-rawfile-default (default)   rawfile.csi.openebs.io   Delete          WaitForFirstConsumer   true                   48m
+    csi-rawfile-default (default)   rawfile.csi.openebs.io   Delete          WaitForFirstConsumer   false                  6h28m
     ```
 
 Display details about the StorageClass:
@@ -431,7 +600,7 @@ kubectl describe sc csi-rawfile-default
     Annotations:           meta.helm.sh/release-name=ck-storage,meta.helm.sh/release-namespace=kube-system,storageclass.kubernetes.io/is-default-class=true
     Provisioner:           rawfile.csi.openebs.io
     Parameters:            <none>
-    AllowVolumeExpansion:  True
+    AllowVolumeExpansion:  False
     MountOptions:          <none>
     ReclaimPolicy:         Delete
     VolumeBindingMode:     WaitForFirstConsumer
@@ -467,7 +636,9 @@ A `PVC` requests storage and is bound to a matching `PV`. Create the `PVC`:
 kubectl create -f ~/resources/hostpath-pvc.yaml
 ```
 ??? example "Expected result"
-    The PersistentVolumeClaim is created.
+    ```text
+    persistentvolumeclaim/hostpath-pvc created
+    ```
 
 ```bash
 # Display PersistentVolumeClaims.
@@ -476,7 +647,7 @@ kubectl get pvc
 ??? example "Expected result"
     ```text
     NAME           STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS          VOLUMEATTRIBUTESCLASS   AGE
-    hostpath-pvc   Pending                                      csi-rawfile-default   <unset>                 10s
+    hostpath-pvc   Pending                                      csi-rawfile-default   <unset>                 1s
     ```
 
 ```bash
@@ -498,9 +669,9 @@ kubectl describe pvc hostpath-pvc
     VolumeMode:    Filesystem
     Used By:       <none>
     Events:
-      Type    Reason                Age               From                         Message
-      ----    ------                ----              ----                         -------
-      Normal  WaitForFirstConsumer  5s (x4 over 40s)  persistentvolume-controller  waiting for first consumer to be created before binding
+      Type    Reason                Age   From                         Message
+      ----    ------                ----  ----                         -------
+      Normal  WaitForFirstConsumer  1s    persistentvolume-controller  waiting for first consumer to be created before binding
     ```
 
 Because the StorageClass uses `WaitForFirstConsumer`, the `PVC` remains pending until a Pod uses it.
@@ -547,25 +718,85 @@ spec:
 kubectl create -f ~/resources/busybox-with-pv.yaml
 ```
 ??? example "Expected result"
-    The Pod is created.
+    ```text
+    pod/busybox created
+    ```
 
-After the Pod is created, check the PersistentVolumeClaim status again:
+Wait for the consumer to trigger dynamic provisioning and bind the `PVC`:
 
 ```bash
-# Display PersistentVolumeClaims.
-kubectl get pvc
+# Wait for the PersistentVolumeClaim to become bound.
+kubectl wait --for=jsonpath='{.status.phase}'=Bound pvc/hostpath-pvc --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    persistentvolumeclaim/hostpath-pvc condition met
+    ```
+
+Wait for the Pod to become ready:
+
+```bash
+# Wait for the busybox pod to become ready.
+kubectl wait --for=condition=Ready pod/busybox --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    pod/busybox condition met
+    ```
+
+Check the `PVC` status again:
+
+```bash
+# Display the PersistentVolumeClaim.
+kubectl get pvc hostpath-pvc
 ```
 ??? example "Expected result"
     ```text
     NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS          VOLUMEATTRIBUTESCLASS   AGE
-    hostpath-pvc   Bound    pvc-885f7ff8-8dbc-4f00-bd56-f92edbfa2e3c   10Gi       RWO            csi-rawfile-default   <unset>                 3m37s
+    hostpath-pvc   Bound    pvc-d9a10756-3433-4237-840e-17181b4417b0   10Gi       RWO            csi-rawfile-default   <unset>                 37s
+    ```
+
+The generated `PV` name in your output will differ.
+
+The generated `PV` name varies. Save it for inspection and cleanup verification:
+
+```bash
+# Save the generated PersistentVolume name.
+PV_NAME=$(kubectl get pvc hostpath-pvc -o jsonpath='{.spec.volumeName}')
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the saved name:
+
+```bash
+# Display the generated PersistentVolume name.
+printf '%s\n' "$PV_NAME"
+```
+??? example "Expected result"
+    ```text
+    pvc-d9a10756-3433-4237-840e-17181b4417b0
+    ```
+
+Display the dynamically provisioned `PV`:
+
+```bash
+# Display the generated PersistentVolume.
+kubectl get pv "$PV_NAME"
+```
+??? example "Expected result"
+    ```text
+    NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                  STORAGECLASS          VOLUMEATTRIBUTESCLASS   REASON   AGE
+    pvc-d9a10756-3433-4237-840e-17181b4417b0   10Gi       RWO            Delete           Bound    default/hostpath-pvc   csi-rawfile-default   <unset>                          6s
     ```
 
 Check inside the Pod to verify that the volume was mounted:
 
 ```bash
 # Display the mount for the PersistentVolume.
-kubectl exec busybox -- mount | grep pv
+kubectl exec busybox -- mount | grep " on /pv "
 ```
 ??? example "Expected result"
     ```text
@@ -581,48 +812,40 @@ Write data to the `PV` by creating a file named `hello-world.txt`.
 kubectl exec busybox -- touch /pv/hello-world.txt
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
-Open a shell in the Pod and write text to the file.
-
-```bash
-# Enter the busybox pod shell.
-kubectl exec -it busybox -- sh
-```
-??? example "Expected result"
-    A shell opens in the pod.
+Write text to the file without opening an interactive shell:
 
 ```bash
 # Write text to the PersistentVolume file.
-echo "Hello world from busybox pod!" > /pv/hello-world.txt
+kubectl exec busybox -- sh -c "echo 'Hello world from busybox pod!' > /pv/hello-world.txt"
 ```
 ??? example "Expected result"
+    ```text
     No output.
+    ```
 
 ```bash
 # Display the PersistentVolume file.
-cat /pv/hello-world.txt
+kubectl exec busybox -- cat /pv/hello-world.txt
 ```
 ??? example "Expected result"
     ```text
     Hello world from busybox pod!
     ```
 
-Exit the Pod shell and delete the Pod. Then verify that the `PV` data persists.
-
-```bash
-# Exit the busybox pod shell.
-exit
-```
-??? example "Expected result"
-    The student machine shell resumes.
+Delete the Pod, then verify that the `PV` data persists:
 
 ```bash
 # Delete the busybox pod.
-kubectl delete pod busybox
+kubectl delete pod busybox --wait=true --timeout=180s
 ```
 ??? example "Expected result"
-    The Pod is deleted.
+    ```text
+    pod "busybox" deleted from default namespace
+    ```
 
 Create a new Pod that uses the same `PVC`.
 
@@ -631,55 +854,113 @@ Create a new Pod that uses the same `PVC`.
 kubectl create -f ~/resources/nginx-with-pv.yaml
 ```
 ??? example "Expected result"
-    The Pod is created.
+    ```text
+    pod/nginx created
+    ```
 
-Open a shell in the Pod to verify that the data is still there.
+Wait for the replacement Pod to become ready:
 
 ```bash
-# Enter the nginx pod shell.
-kubectl exec -it nginx -- sh
+# Wait for the nginx pod to become ready.
+kubectl wait --for=condition=Ready pod/nginx --timeout=180s
 ```
 ??? example "Expected result"
-    A shell opens in the pod.
+    ```text
+    pod/nginx condition met
+    ```
+
+Verify that the file is still present:
 
 ```bash
 # List the PersistentVolume file.
-ls /pv/hello-world.txt
+kubectl exec nginx -- ls -l /pv/hello-world.txt
 ```
 ??? example "Expected result"
-    The `/pv/hello-world.txt` file is listed.
+    ```text
+    -rw-r--r-- 1 root root 30 Sep  8 16:26 /pv/hello-world.txt
+    ```
 
 ```bash
 # Display the PersistentVolume file.
-cat /pv/hello-world.txt
+kubectl exec nginx -- cat /pv/hello-world.txt
 ```
 ??? example "Expected result"
     ```text
     Hello world from busybox pod!
     ```
 
-Everything is in order. Exit the Pod shell before cleaning up.
+Dynamic provisioning lets workloads request storage through `PVCs` without requiring administrators to create each `PV` in advance.
+Refresh the generated `PV` name before cleanup:
 
 ```bash
-# Exit the nginx pod shell.
-exit
+# Save the generated PersistentVolume name.
+PV_NAME=$(kubectl get pvc hostpath-pvc -o jsonpath='{.spec.volumeName}')
 ```
 ??? example "Expected result"
-    The student machine shell resumes.
+    ```text
+    No output.
+    ```
 
-Dynamic provisioning lets workloads request storage through `PVCs` without requiring administrators to create each `PV` in advance.
 Clean up the remaining Pod and `PVC`:
 
 ```bash
 # Delete the nginx pod.
-kubectl delete pod nginx
+kubectl delete pod nginx --wait=true --timeout=180s
 ```
 ??? example "Expected result"
-    The Pod is deleted.
+    ```text
+    pod "nginx" deleted from default namespace
+    ```
 
 ```bash
 # Delete the PersistentVolumeClaim.
-kubectl delete pvc hostpath-pvc
+kubectl delete pvc hostpath-pvc --wait=true --timeout=180s
 ```
 ??? example "Expected result"
-    The PersistentVolumeClaim is deleted.
+    ```text
+    persistentvolumeclaim "hostpath-pvc" deleted from default namespace
+    ```
+
+The StorageClass uses the `Delete` reclaim policy. Wait for it to remove the generated `PV`:
+
+```bash
+# Wait for the generated PersistentVolume to be deleted.
+kubectl wait --for=delete "pv/$PV_NAME" --timeout=180s
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Confirm that the replacement Pod was deleted:
+
+```bash
+# Check for the deleted nginx pod.
+kubectl get pod nginx -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Confirm that the `PVC` was deleted:
+
+```bash
+# Check for the deleted PersistentVolumeClaim.
+kubectl get pvc hostpath-pvc -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Confirm that the generated `PV` was deleted:
+
+```bash
+# Check for the deleted PersistentVolume.
+kubectl get pv "$PV_NAME" -o name --ignore-not-found
+```
+??? example "Expected result"
+    ```text
+    No output.
+    ```

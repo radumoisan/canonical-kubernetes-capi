@@ -2652,3 +2652,903 @@ kubectl get deploy,rs,pod -l app=nginx -o name
     ```text
     No output.
     ```
+
+### 2026-09-08 - Chapter 4 validation
+
+Select the workload cluster kubeconfig.
+
+```bash
+# Select the workload cluster kubeconfig.
+export KUBECONFIG=~/.kube/myk8scluster_config
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the active Kubernetes context.
+
+```bash
+# Display the active Kubernetes context.
+kubectl config current-context
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-admin@myk8scluster
+    ```
+
+Display the multi-container Pod definition.
+
+```bash
+# Display the multi-container Pod definition.
+cat ~/resources/multi-container-pod.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: two-containers
+      labels:
+        app: two-containers
+    spec:
+      restartPolicy: Never
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+      - name: debian-container
+        image: debian
+        volumeMounts:
+        - name: shared-data
+          mountPath: /pod-data
+        command: ["/bin/sh"]
+        args: ["-c", "echo Hello from the debian container > /pod-data/index.html; sleep 900000"]
+    ```
+
+Create the multi-container Pod.
+
+```bash
+# Create the multi-container Pod.
+kubectl create -f ~/resources/multi-container-pod.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod/two-containers created
+    ```
+
+Wait for the multi-container Pod to become ready.
+
+```bash
+# Wait for the multi-container Pod to become ready.
+kubectl wait --for=condition=Ready pod/two-containers --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/two-containers condition met
+    ```
+
+Create the multi-container Service.
+
+```bash
+# Create the multi-container Service.
+kubectl create -f ~/resources/multi-container-pod-service.yaml
+```
+
+??? example "Expected result"
+    ```text
+    service/two-containers-svc created
+    ```
+
+Wait for a ready Service endpoint.
+
+```bash
+# Wait for a ready Service endpoint.
+kubectl wait --for=jsonpath='{.endpoints[0].conditions.ready}'=true endpointslice -l kubernetes.io/service-name=two-containers-svc --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    endpointslice.discovery.k8s.io/two-containers-svc-gf2wd condition met
+    ```
+
+Display the multi-container Service.
+
+```bash
+# Display the multi-container Service.
+kubectl get svc two-containers-svc
+```
+
+??? example "Expected result"
+    ```text
+    NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+    two-containers-svc   ClusterIP   10.152.82.178   <none>        8080/TCP   0s
+    ```
+
+Save the Service ClusterIP.
+
+```bash
+# Save the Service ClusterIP.
+CLUSTER_IP=$(kubectl get svc two-containers-svc -o jsonpath='{.spec.clusterIP}')
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the Service ClusterIP.
+
+```bash
+# Display the Service ClusterIP.
+printf "%s\n" "$CLUSTER_IP"
+```
+
+??? example "Expected result"
+    ```text
+    10.152.82.178
+    ```
+
+Probe the Service from the node.
+
+```bash
+# Probe the Service from the node.
+lxc exec k8s-worker1 -- curl -fsS "http://$CLUSTER_IP:8080"
+```
+
+??? example "Expected result"
+    ```text
+    Hello from the debian container
+    ```
+
+Delete the multi-container Service.
+
+```bash
+# Delete the multi-container Service.
+kubectl delete svc two-containers-svc --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    service "two-containers-svc" deleted from default namespace
+    ```
+
+Delete the multi-container Pod.
+
+```bash
+# Delete the multi-container Pod.
+kubectl delete pod two-containers --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod "two-containers" deleted from default namespace
+    ```
+
+Check for the deleted multi-container Service.
+
+```bash
+# Check for the deleted multi-container Service.
+kubectl get svc two-containers-svc -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Check for the deleted multi-container Pod.
+
+```bash
+# Check for the deleted multi-container Pod.
+kubectl get pod two-containers -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Create a ConfigMap with literal values.
+
+```bash
+# Create a ConfigMap with literal values.
+kubectl create configmap test-configmap --from-literal=val1=dan --from-literal=val2=bill --from-literal=val3=ben
+```
+
+??? example "Expected result"
+    ```text
+    configmap/test-configmap created
+    ```
+
+Describe the ConfigMap.
+
+```bash
+# Describe the ConfigMap.
+kubectl describe configmap test-configmap
+```
+
+??? example "Expected result"
+    ```text
+    Name:         test-configmap
+    Namespace:    default
+    Labels:       <none>
+    Annotations:  <none>
+
+    Data
+    ====
+    val1:
+    ----
+    dan
+
+    val2:
+    ----
+    bill
+
+    val3:
+    ----
+    ben
+
+
+    BinaryData
+    ====
+
+    Events:  <none>
+    ```
+
+Create the ConfigMap Pod.
+
+```bash
+# Create the ConfigMap Pod.
+kubectl create -f ~/resources/pod-with-configmap.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod/configmap-pod created
+    ```
+
+Wait for the ConfigMap Pod to become ready.
+
+```bash
+# Wait for the ConfigMap Pod to become ready.
+kubectl wait --for=condition=Ready pod/configmap-pod --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/configmap-pod condition met
+    ```
+
+Display ConfigMap environment variables in the Pod.
+
+```bash
+# Display ConfigMap environment variables in the Pod.
+kubectl exec configmap-pod -- env | grep "^CONFIG_DATA_" | sort
+```
+
+??? example "Expected result"
+    ```text
+    CONFIG_DATA_val1=dan
+    CONFIG_DATA_val2=bill
+    CONFIG_DATA_val3=ben
+    ```
+
+Delete the ConfigMap Pod.
+
+```bash
+# Delete the ConfigMap Pod.
+kubectl delete pod configmap-pod --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod "configmap-pod" deleted from default namespace
+    ```
+
+Delete the ConfigMap.
+
+```bash
+# Delete the ConfigMap.
+kubectl delete configmap test-configmap --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    configmap "test-configmap" deleted from default namespace
+    ```
+
+Check for the deleted ConfigMap Pod.
+
+```bash
+# Check for the deleted ConfigMap Pod.
+kubectl get pod configmap-pod -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Check for the deleted ConfigMap.
+
+```bash
+# Check for the deleted ConfigMap.
+kubectl get configmap test-configmap -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Create the Secret with username and password values.
+
+```bash
+# Create the Secret with username and password values.
+kubectl create secret generic bob-secret --from-literal=username="bob" --from-literal=password="Passw0rd"
+```
+
+??? example "Expected result"
+    ```text
+    secret/bob-secret created
+    ```
+
+Display the Secret.
+
+```bash
+# Display the Secret.
+kubectl get secret bob-secret
+```
+
+??? example "Expected result"
+    ```text
+    NAME         TYPE     DATA   AGE
+    bob-secret   Opaque   2      0s
+    ```
+
+Describe the Secret.
+
+```bash
+# Describe the Secret.
+kubectl describe secret bob-secret
+```
+
+??? example "Expected result"
+    ```text
+    Name:         bob-secret
+    Namespace:    default
+    Labels:       <none>
+    Annotations:  <none>
+
+    Type:  Opaque
+
+    Data
+    ====
+    password:  8 bytes
+    username:  3 bytes
+    ```
+
+Display the Secret manifest.
+
+```bash
+# Display the Secret manifest.
+kubectl get secret bob-secret -o yaml
+```
+
+??? example "Expected result"
+    ```yaml
+    apiVersion: v1
+    data:
+      password: UGFzc3cwcmQ=
+      username: Ym9i
+    kind: Secret
+    metadata:
+      creationTimestamp: "2026-09-08T16:25:10Z"
+      name: bob-secret
+      namespace: default
+      resourceVersion: "62468"
+      uid: b644add5-a0dd-43b9-b725-7e4b1ca63933
+    type: Opaque
+    ```
+
+Display the Pod definition that consumes the Secret.
+
+```bash
+# Display the Pod definition that consumes the Secret.
+cat ~/resources/pod-with-secrets.yaml
+```
+
+??? example "Expected result"
+    ```text
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: pod-with-secrets
+    spec:
+      containers:
+      - name: container-with-secrets
+        image: nginx:latest
+        env:
+        - name: SECRET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: bob-secret
+              key: username
+        - name: SECRET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bob-secret
+              key: password
+    ```
+
+Create the Pod with Secret environment variables.
+
+```bash
+# Create the Pod with Secret environment variables.
+kubectl create -f ~/resources/pod-with-secrets.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod/pod-with-secrets created
+    ```
+
+Wait for the Secret Pod to become ready.
+
+```bash
+# Wait for the Secret Pod to become ready.
+kubectl wait --for=condition=Ready pod/pod-with-secrets --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/pod-with-secrets condition met
+    ```
+
+Display Secret environment variables in the Pod.
+
+```bash
+# Display Secret environment variables in the Pod.
+kubectl exec pod-with-secrets -- env | grep "^SECRET_" | sort
+```
+
+??? example "Expected result"
+    ```text
+    SECRET_PASSWORD=Passw0rd
+    SECRET_USERNAME=bob
+    ```
+
+Delete the Secret Pod.
+
+```bash
+# Delete the Secret Pod.
+kubectl delete pod pod-with-secrets --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod "pod-with-secrets" deleted from default namespace
+    ```
+
+Delete the Secret.
+
+```bash
+# Delete the Secret.
+kubectl delete secret bob-secret --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    secret "bob-secret" deleted from default namespace
+    ```
+
+Check for the deleted Secret Pod.
+
+```bash
+# Check for the deleted Secret Pod.
+kubectl get pod pod-with-secrets -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Check for the deleted Secret.
+
+```bash
+# Check for the deleted Secret.
+kubectl get secret bob-secret -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+List StorageClasses.
+
+```bash
+# List StorageClasses.
+kubectl get sc
+```
+
+??? example "Expected result"
+    ```text
+    NAME                            PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+    csi-rawfile-default (default)   rawfile.csi.openebs.io   Delete          WaitForFirstConsumer   false                  6h28m
+    ```
+
+Describe the default StorageClass.
+
+```bash
+# Describe the default StorageClass.
+kubectl describe sc csi-rawfile-default
+```
+
+??? example "Expected result"
+    ```text
+    Name:                  csi-rawfile-default
+    IsDefaultClass:        Yes
+    Annotations:           meta.helm.sh/release-name=ck-storage,meta.helm.sh/release-namespace=kube-system,storageclass.kubernetes.io/is-default-class=true
+    Provisioner:           rawfile.csi.openebs.io
+    Parameters:            <none>
+    AllowVolumeExpansion:  False
+    MountOptions:          <none>
+    ReclaimPolicy:         Delete
+    VolumeBindingMode:     WaitForFirstConsumer
+    Events:                <none>
+    ```
+
+Create the PersistentVolumeClaim.
+
+```bash
+# Create the PersistentVolumeClaim.
+kubectl create -f ~/resources/hostpath-pvc.yaml
+```
+
+??? example "Expected result"
+    ```text
+    persistentvolumeclaim/hostpath-pvc created
+    ```
+
+Display the pending PersistentVolumeClaim.
+
+```bash
+# Display the pending PersistentVolumeClaim.
+kubectl get pvc hostpath-pvc
+```
+
+??? example "Expected result"
+    ```text
+    NAME           STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS          VOLUMEATTRIBUTESCLASS   AGE
+    hostpath-pvc   Pending                                      csi-rawfile-default   <unset>                 1s
+    ```
+
+Describe the pending PersistentVolumeClaim.
+
+```bash
+# Describe the pending PersistentVolumeClaim.
+kubectl describe pvc hostpath-pvc
+```
+
+??? example "Expected result"
+    ```text
+    Name:          hostpath-pvc
+    Namespace:     default
+    StorageClass:  csi-rawfile-default
+    Status:        Pending
+    Volume:
+    Labels:        <none>
+    Annotations:   <none>
+    Finalizers:    [kubernetes.io/pvc-protection]
+    Capacity:
+    Access Modes:
+    VolumeMode:    Filesystem
+    Used By:       <none>
+    Events:
+      Type    Reason                Age   From                         Message
+      ----    ------                ----  ----                         -------
+      Normal  WaitForFirstConsumer  1s    persistentvolume-controller  waiting for first consumer to be created before binding
+    ```
+
+Display PersistentVolumes before creating a consumer.
+
+```bash
+# Display PersistentVolumes before creating a consumer.
+kubectl get pv
+```
+
+??? example "Expected result"
+    ```text
+    No resources found
+    ```
+
+Create the busybox Pod with the PersistentVolumeClaim.
+
+```bash
+# Create the busybox Pod with the PersistentVolumeClaim.
+kubectl create -f ~/resources/busybox-with-pv.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod/busybox created
+    ```
+
+Wait for the PersistentVolumeClaim to become bound.
+
+```bash
+# Wait for the PersistentVolumeClaim to become bound.
+kubectl wait --for=jsonpath='{.status.phase}'=Bound pvc/hostpath-pvc --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    persistentvolumeclaim/hostpath-pvc condition met
+    ```
+
+Wait for the busybox Pod to become ready.
+
+```bash
+# Wait for the busybox Pod to become ready.
+kubectl wait --for=condition=Ready pod/busybox --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/busybox condition met
+    ```
+
+Display the bound PersistentVolumeClaim.
+
+```bash
+# Display the bound PersistentVolumeClaim.
+kubectl get pvc hostpath-pvc
+```
+
+??? example "Expected result"
+    ```text
+    NAME           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS          VOLUMEATTRIBUTESCLASS   AGE
+    hostpath-pvc   Bound    pvc-d9a10756-3433-4237-840e-17181b4417b0   10Gi       RWO            csi-rawfile-default   <unset>                 37s
+    ```
+
+Save the generated PersistentVolume name.
+
+```bash
+# Save the generated PersistentVolume name.
+PV_NAME=$(kubectl get pvc hostpath-pvc -o jsonpath='{.spec.volumeName}')
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the generated PersistentVolume name.
+
+```bash
+# Display the generated PersistentVolume name.
+printf "%s\n" "$PV_NAME"
+```
+
+??? example "Expected result"
+    ```text
+    pvc-d9a10756-3433-4237-840e-17181b4417b0
+    ```
+
+Display the generated PersistentVolume.
+
+```bash
+# Display the generated PersistentVolume.
+kubectl get pv "$PV_NAME"
+```
+
+??? example "Expected result"
+    ```text
+    NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                  STORAGECLASS          VOLUMEATTRIBUTESCLASS   REASON   AGE
+    pvc-d9a10756-3433-4237-840e-17181b4417b0   10Gi       RWO            Delete           Bound    default/hostpath-pvc   csi-rawfile-default   <unset>                          6s
+    ```
+
+Display the PersistentVolume mount.
+
+```bash
+# Display the PersistentVolume mount.
+kubectl exec busybox -- mount | grep " on /pv "
+```
+
+??? example "Expected result"
+    ```text
+    /dev/loop3 on /pv type ext4 (rw,relatime)
+    ```
+
+Create a file on the PersistentVolume.
+
+```bash
+# Create a file on the PersistentVolume.
+kubectl exec busybox -- touch /pv/hello-world.txt
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Write text to the PersistentVolume file.
+
+```bash
+# Write text to the PersistentVolume file.
+kubectl exec busybox -- sh -c "echo 'Hello world from busybox pod!' > /pv/hello-world.txt"
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Display the PersistentVolume file.
+
+```bash
+# Display the PersistentVolume file.
+kubectl exec busybox -- cat /pv/hello-world.txt
+```
+
+??? example "Expected result"
+    ```text
+    Hello world from busybox pod!
+    ```
+
+Delete the busybox Pod.
+
+```bash
+# Delete the busybox Pod.
+kubectl delete pod busybox --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod "busybox" deleted from default namespace
+    ```
+
+Create the nginx Pod with the PersistentVolumeClaim.
+
+```bash
+# Create the nginx Pod with the PersistentVolumeClaim.
+kubectl create -f ~/resources/nginx-with-pv.yaml
+```
+
+??? example "Expected result"
+    ```text
+    pod/nginx created
+    ```
+
+Wait for the nginx Pod to become ready.
+
+```bash
+# Wait for the nginx Pod to become ready.
+kubectl wait --for=condition=Ready pod/nginx --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod/nginx condition met
+    ```
+
+List the PersistentVolume file from the replacement Pod.
+
+```bash
+# List the PersistentVolume file from the replacement Pod.
+kubectl exec nginx -- ls -l /pv/hello-world.txt
+```
+
+??? example "Expected result"
+    ```text
+    -rw-r--r-- 1 root root 30 Sep  8 16:26 /pv/hello-world.txt
+    ```
+
+Display the PersistentVolume file from the replacement Pod.
+
+```bash
+# Display the PersistentVolume file from the replacement Pod.
+kubectl exec nginx -- cat /pv/hello-world.txt
+```
+
+??? example "Expected result"
+    ```text
+    Hello world from busybox pod!
+    ```
+
+Refresh the generated PersistentVolume name before cleanup.
+
+```bash
+# Refresh the generated PersistentVolume name before cleanup.
+PV_NAME=$(kubectl get pvc hostpath-pvc -o jsonpath='{.spec.volumeName}')
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Delete the nginx Pod.
+
+```bash
+# Delete the nginx Pod.
+kubectl delete pod nginx --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    pod "nginx" deleted from default namespace
+    ```
+
+Delete the PersistentVolumeClaim.
+
+```bash
+# Delete the PersistentVolumeClaim.
+kubectl delete pvc hostpath-pvc --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    persistentvolumeclaim "hostpath-pvc" deleted from default namespace
+    ```
+
+Wait for the generated PersistentVolume to be deleted.
+
+```bash
+# Wait for the generated PersistentVolume to be deleted.
+kubectl wait --for=delete "pv/$PV_NAME" --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Check for the deleted nginx Pod.
+
+```bash
+# Check for the deleted nginx Pod.
+kubectl get pod nginx -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Check for the deleted PersistentVolumeClaim.
+
+```bash
+# Check for the deleted PersistentVolumeClaim.
+kubectl get pvc hostpath-pvc -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Check for the deleted PersistentVolume.
+
+```bash
+# Check for the deleted PersistentVolume.
+kubectl get pv "$PV_NAME" -o name --ignore-not-found
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```

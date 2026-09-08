@@ -16,7 +16,7 @@ nav:
   - "📋 Kubernetes Basics": 1-kubernetes-basics.md
   - "📋 Networking": 2-networking.md
   - "📋 Keeping apps healthy": 3-keeping-apps-healthy.md
-  - "⏳ Storage and User Data": 4-storage-and-user-data.md
+  - "📋 Storage and User Data": 4-storage-and-user-data.md
   - "⏳ Autoscaling": 5-autoscaling.md
   - "⏳ Authentication and Authorization": 6-authentication-and-authorization.md
   - "⏳ Helm": 7-helm.md
