@@ -1,14 +1,14 @@
 # :material-numeric-7-circle: 7. Helm
 
-Helm is like a package manager for Kubernetes. It allows users to install simple or complex apps with `Charts`. Charts
-are packages of pre-configured Kubernetes resources.
+Helm is a package manager for Kubernetes. A chart packages Kubernetes resource templates and default values. Installing
+a chart creates a Helm release.
 
-In this chapter we'll install a `wordpress` stack with a `mariaDB` database. This requires some Kubernetes resources such as:
-pods, loadBalancer services, `PVCs` and `PVs`. All of this will be deployed from a chart.
+In this chapter, you will install a WordPress stack with a MariaDB database. The deployment uses Pods and LoadBalancer
+Services, with persistent storage supplied through persistent volume claims (PVCs) and persistent volumes (PVs).
 
 ## :material-book-open-page-variant-outline: 7.1 Deploy an app
 
-Install helm client on the student machine:
+Install the Helm client on the student machine:
 
 ```bash
 # Install the Helm client.
@@ -17,7 +17,7 @@ sudo snap install helm --channel=latest/stable --classic
 ??? example "Expected result"
     Helm is installed.
 
-Once you have Helm ready, you can add a chart repository. One popular starting location is the official Helm stable charts:
+Add the archived `stable` chart repository. Its charts are deprecated, so use it only for comparison in this exercise:
 
 ```bash
 # Add the stable chart repository.
@@ -33,7 +33,7 @@ helm repo list
 ??? example "Expected result"
     The configured chart repositories are displayed.
 
-Update the information of available charts locally from chart repositories:
+Refresh the local chart information from the configured repositories:
 
 ```bash
 # Update local chart repository information.
@@ -51,7 +51,7 @@ helm search repo stable
 ??? example "Expected result"
     Charts available from the `stable` repository are displayed.
 
-Search for the individual `Wordpress` chart:
+Search for the WordPress chart:
 
 ```bash
 # Search for the stable Wordpress chart.
@@ -60,7 +60,7 @@ helm search repo stable/wordpress
 ??? example "Expected result"
     The `Wordpress` chart search result is displayed.
 
-The Wordpress chart from this repo is deprecated. We will install Wordpress from another repo. Add the `Bitnami` repo:
+The WordPress chart in this repository is deprecated. Add the Bitnami repository to use its chart instead:
 
 ```bash
 # Add the Bitnami chart repository.
@@ -76,7 +76,7 @@ helm repo update
 ??? example "Expected result"
     Chart repository information is updated.
 
-Search the new repo for the Wordpress chart:
+Search the new repository for the WordPress chart:
 
 ```bash
 # Search for the Bitnami Wordpress chart.
@@ -85,7 +85,7 @@ helm search repo bitnami/wordpress
 ??? example "Expected result"
     The `Wordpress` chart search result is displayed.
 
-Inspect the chart:
+Inspect the chart metadata:
 
 ```bash
 # Show the Wordpress chart metadata.
@@ -94,7 +94,7 @@ helm show chart bitnami/wordpress
 ??? example "Expected result"
     The Wordpress chart metadata is displayed.
 
-Get all the information of the chart:
+Display all available chart information:
 
 ```bash
 # Show all Wordpress chart information.
@@ -103,7 +103,7 @@ helm show all bitnami/wordpress
 ??? example "Expected result"
     All Wordpress chart information is displayed.
 
-Or, list only the variables of the chart:
+Display only the chart's default values:
 
 ```bash
 # Show Wordpress chart values.
@@ -112,17 +112,16 @@ helm show values bitnami/wordpress
 ??? example "Expected result"
     The Wordpress chart values are displayed.
 
-Those variables can be overridden on deploy time either by using `--set` (we will use this method for install), or by using a
-YAML formatted file with the changed variables, e.g. `helm install -f config.yaml stable/wordpress`. More information on this
-can be found here:
+Chart values can be overridden at install time with `--set`, as used below, or with a YAML values file supplied through `-f`
+or `--values`, e.g. `helm install -f config.yaml stable/wordpress`. The Helm documentation explains both methods:
 
 https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing
 
-Here is a link to the Git repo of the chart. More information on installation and supported config options can be inspected:
+The chart repository documents its installation and supported configuration options:
 
 https://github.com/bitnami/charts/tree/master/bitnami/wordpress/#installing-the-chart
 
-Time to install the chart:
+Install the chart as a release named `my-wordpress-blog`:
 
 ```bash
 # Install the Wordpress chart.
@@ -135,10 +134,12 @@ helm install my-wordpress-blog \
 ??? example "Expected result"
     The `my-wordpress-blog` release is installed.
 
-**NOTE**: if the `mariadb.auth.rootPassword` variable is not set, the `mariadb` pod will fail to start due to failing liveness probes
+The explicit `mariadb.auth.rootPassword` gives this exercise a predictable database credential. These simple passwords are
+for training only. In real deployments, use securely generated credentials managed through Secrets and avoid passing them
+on the command line.
 
-The installation output will show lots of useful information, like how to access the chart application and how to get
-credentials for the app. This information can also be accessed with the `status` command:
+The installation output includes useful information about accessing the application and retrieving its credentials. Display
+this information again with the `status` command:
 
 ```bash
 # Show the Wordpress release status.
@@ -147,7 +148,7 @@ helm status my-wordpress-blog
 ??? example "Expected result"
     The Wordpress release status and access information are displayed.
 
-List the installed charts:
+List the installed Helm releases:
 
 ```bash
 # List installed Helm releases.
@@ -169,7 +170,7 @@ kubectl get pods
     my-wordpress-blog-mariadb-0         1/1     Running   0          91s
     ```
 
-The chart created a loadBalancer service:
+The chart created a LoadBalancer Service:
 
 ```bash
 # List services.
@@ -184,14 +185,14 @@ kubectl get svc
     my-wordpress-blog-mariadb-headless   ClusterIP      None             <none>          3306/TCP                     119s
     ```
 
-Now the wordpress app should be available via `10.237.75.129`.
+The WordPress application should now be reachable over HTTP at the LoadBalancer `EXTERNAL-IP` shown above.
 
-In this chapter we saw how easy it is to deploy simple or complex apps with Helm.
+This section demonstrated how a chart installs a complete application stack as one Helm release.
 
 ## :material-book-open-page-variant-outline: 7.2 Deployment Chart
 
-First, the application code has to be built into a Docker image. Here you can find code for a simple `nodejs` web app plus
-the `Dockerfile` for it:
+Kubernetes deploys container images rather than application source code. This repository contains a simple Node.js web app
+and its `Dockerfile`:
 
 https://github.com/cloudbase/kubernetes-tools
 
@@ -202,12 +203,12 @@ cd ~ && git clone https://github.com/cloudbase/kubernetes-tools.git
 ??? example "Expected result"
     The `kubernetes-tools` repository is cloned.
 
-There are two ways to get the image, either build it or pull it from `DockerHub`. I am going to demonstrate how to built it, you don't
-have to do it because the image is going to be pulled from `DockerHub`.
+The application image can be built from the source or pulled from Docker Hub. This exercise uses the existing public image;
+the following steps only demonstrate how it was built.
 
 !!! warning "Demonstration only"
-    **NOTE**: do not run the commands in the following box, only for demonstration, the images are already on DockerHub. You
-    can skip the next few commands until you see "Demonstration ends here".
+    Do not run the following demonstration commands. The image is already available on Docker Hub. Skip ahead to
+    "Demonstration ends here."
 
 ```bash
 # only for demonstration
@@ -230,9 +231,10 @@ docker tag <username>/web-app <username>/web-app:v1
 ??? example "Expected result"
     The web app image is tagged.
 
-The image is already public on `DockerHub`. It will automatically get pulled on all Kubernetes Nodes upon Pod creation.
+The image is public on Docker Hub. When a Pod is scheduled, the kubelet pulls the image onto that node if it is not already
+cached there.
 
-Because the image is used with a complex environment like Kubernetes, it's useful to test it beforehand on it's own:
+Before deploying an image to Kubernetes, it is useful to test the container locally:
 
 ```bash
 # Run the web app container for demonstration.
@@ -241,7 +243,7 @@ docker run -p 80:80 <username>/web-app:v1
 ??? example "Expected result"
     The web app container runs and listens on port `80`.
 
-Open another tab on your public machine and test the container:
+Open another terminal on the student machine and test the container:
 
 ```bash
 # Test the web app container for demonstration.
@@ -250,12 +252,12 @@ curl localhost:80
 ??? example "Expected result"
     The web app response is displayed.
 
-Go back on the first tab and kill the container with `CTRL+C`.
+Return to the first terminal and stop the container with `CTRL+C`.
 
 !!! warning "Demonstration ends here"
     **NOTE**: Demonstration ends here.
 
-Create a helm chart template and modify `values.yaml` to point to the correct image (`repository` and `tag`) and `replicaCount`:
+Create a Helm chart scaffold, then configure its image repository, image tag, and replica count in `values.yaml`:
 
 ```bash
 # Create the web app chart and enter its directory.
@@ -271,8 +273,7 @@ vim values.yaml
 ??? example "Expected result"
     The `values.yaml` file opens in the editor.
 
-do desired edits on `values.yaml`, for example specify
-`<username>/web-app:v1` Docker image:
+Update `values.yaml` to use the public `pvradu/web-app:v1` image and three replicas:
 
 ```yaml
 ...
@@ -286,7 +287,7 @@ image:
 ...
 ```
 
-Package the app:
+Package the chart:
 
 ```bash
 # Package the web app chart.
@@ -295,7 +296,7 @@ helm package .
 ??? example "Expected result"
     The web app chart archive is created.
 
-Dry install the chart:
+Perform a dry run to inspect the rendered resources without creating them:
 
 ```bash
 # do a dry run to check that everything is ok
@@ -304,7 +305,7 @@ helm install --debug --dry-run web-app-0.1.0.tgz --generate-name
 ??? example "Expected result"
     The rendered chart resources are displayed without creating them.
 
-Install it:
+Install the packaged chart as the `web-app-stateless` release:
 
 ```bash
 # Install the web app chart.
@@ -313,10 +314,10 @@ helm install web-app-stateless web-app-0.1.0.tgz
 ??? example "Expected result"
     The `web-app-stateless` release is installed.
 
-More info on Helm templating:
+For more information about Helm templates, see:
 https://docs.helm.sh/chart_template_guide/
 
-Verify the pod is running:
+Verify the web app Pods are running. Other Pods in the namespace may also appear:
 
 ```bash
 # List pods.
@@ -330,7 +331,7 @@ kubectl get pods
     web-app-stateless-5bd5fffc48-xwcnq   1/1     Running   0          62s
     ```
 
-Also verify there's a service created:
+Verify that the chart also created a Service:
 
 ```bash
 # Get the web app service.
@@ -342,8 +343,8 @@ kubectl get svc web-app-stateless
     web-app-stateless   ClusterIP   10.152.183.20   <none>        80/TCP    88s
     ```
 
-Because the app now has a ClusterIP service, you can go on any of the Nodes and do a curl on it on port `80`.
-Connect to the node `0` and do a few `curl` commands on the ClusterIP of the chart. What happends?
+Because a ClusterIP is reachable from within the cluster network, query the Service on port `80` from a worker node. Repeat
+the request to observe that the Service can route traffic to different ready Pod endpoints; the exact sequence is not guaranteed.
 
 ```bash
 # Query the web app ClusterIP from k8s-worker2.
@@ -387,12 +388,12 @@ helm delete web-app-stateless
 
 ## :material-book-open-page-variant-outline: 7.3 StatefulSet Chart
 
-The Docker image can be built as before. I will only demonstrate how to do this, the image is already public so no need for you
-to to this:
+The stateful application image can be built in the same way. It is already public, so the following build steps are only a
+demonstration:
 
 !!! warning "Demonstration only"
-    **NOTE**: do not run the commands in the following box, only for demonstration, the images are already on DockerHub. You
-    can skip the next few commands until you see "Demonstration ends here".
+    Do not run the following demonstration commands. The image is already available on Docker Hub. Skip ahead to
+    "Demonstration ends here."
 
 ```bash
 # only for demonstration
@@ -418,9 +419,9 @@ docker tag <username>/web-app-stateful <username>/web-app-stateful:v1
 !!! warning "Demonstration ends here"
     **NOTE**: Demonstration ends here.
 
-The image is already public on `DockerHub`. It will automatically get pulled on all Kubernetes Nodes upon Pod creation.
+When a Pod is scheduled, the kubelet pulls the public image onto that node if it is not already cached there.
 
-Build the Chart:
+Assemble the chart from the provided files:
 
 ```bash
 # Create and enter the stateful web app chart directory.
@@ -436,7 +437,7 @@ cp -r ~/kubernetes-tools/web-app-stateful/chart/* ~/web-app-stateful/
 ??? example "Expected result"
     The stateful web app chart files are copied.
 
-Package the app:
+Package the chart:
 
 ```bash
 # Package the stateful web app chart.
@@ -445,7 +446,7 @@ helm package .
 ??? example "Expected result"
     The stateful web app chart archive is created.
 
-Based on the archive that we now have, we can install the Helm chart anywhere:
+Install the packaged chart as the `web-app-stateful` release:
 
 ```bash
 # Install the stateful web app chart.
@@ -454,8 +455,9 @@ helm install web-app-stateful web-app-stateful-0.1.0.tgz
 ??? example "Expected result"
     The `web-app-stateful` release is installed.
 
-The `StatefulSet` requires a `clusterIP` headless service, this means that the service will not have an IP. So how do we connect to the
-app? There are two ways, create another `clusterIP` service or use the proxy. On the student host run the proxy service:
+This chart uses a headless Service (`clusterIP: None`) as the StatefulSet's governing Service. It has no virtual ClusterIP;
+instead, cluster DNS resolves the individual Pod endpoints. A separate regular Service could expose the application, but this
+exercise uses the Kubernetes API proxy. Start the proxy on the student machine:
 
 ```bash
 # Start the Kubernetes API proxy.
@@ -466,7 +468,7 @@ kubectl proxy
     Starting to serve on 127.0.0.1:8001
     ```
 
-Open another terminal tab on your student machine. List your apps to get the name of the `StatefulSet` and query the pods:
+Open another terminal on the student machine and confirm that the Helm release is installed:
 
 ```bash
 # List installed Helm releases.
@@ -479,7 +481,7 @@ helm list
     web-app-stateful
     ```
 
-Verify helm installed a StatefulSet and check the pods:
+Verify that Helm created a StatefulSet, then inspect its Pods:
 
 ```bash
 # List StatefulSets.
@@ -522,9 +524,9 @@ curl localhost:8001/api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
     Data stored on this pod: No data posted yet
     ```
 
-No persistent data in the pods yet -> `Data stored on this pod: No data posted yet`.
+The application reports that neither Pod has stored data yet.
 
-Write data to a pod and check to see if it was written:
+Write data to one Pod and verify that it was stored:
 
 ```bash
 # Write data to the second stateful web app pod.
@@ -546,7 +548,7 @@ curl localhost:8001/api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
     Data stored on this pod: Hey there!
     ```
 
-Indeed, data was written -> `Data stored on this pod: Hey there!`.
+The response confirms that the data was written: `Data stored on this pod: Hey there!`.
 
 Delete the pod that stores the data:
 
@@ -557,7 +559,7 @@ kubectl delete pod web-app-stateful-1
 ??? example "Expected result"
     The `web-app-stateful-1` pod is deleted.
 
-Right after the delete, list the pods to see when happened:
+Immediately list the Pods to observe what happened:
 
 ```bash
 # List pods.
@@ -570,9 +572,9 @@ kubectl get pods
     web-app-stateful-1   1/1     Running   0          8s
     ```
 
-There is a new pod but with the same name as the one deleted, we know this because it's only `8s` old.
+The StatefulSet created a replacement Pod with the same stable ordinal name. Its age shows that it is a new Pod.
 
-The pod should be recreated by the `StatefulSet` but should retain the stored information:
+The replacement Pod should retain the data because it remounts the same persistent volume claim:
 
 ```bash
 # Query the recreated stateful web app pod through the proxy.
@@ -584,9 +586,10 @@ curl localhost:8001/api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
     Data stored on this pod: Hey there!
     ```
 
-Indeed, the data persisted -> `Data stored on this pod: Hey there!`
+The response confirms that the data persisted: `Data stored on this pod: Hey there!`.
 
-Data persisted also because the pods were using a PV/PVC:
+The StatefulSet alone does not persist data. Each Pod uses a stable PVC backed by a PV, allowing its replacement to remount
+the same storage. Inspect these resources:
 
 ```bash
 # List persistent volumes.
@@ -602,7 +605,7 @@ kubectl get pvc
 ??? example "Expected result"
     Persistent volume claims are displayed.
 
-Do a cleanup:
+Delete the Helm release. PVCs created for StatefulSet Pods are normally retained and may require separate cleanup:
 
 ```bash
 # Delete the stateful web app release.
@@ -613,7 +616,8 @@ helm delete web-app-stateful
 
 ## :material-book-open-page-variant-outline: 7.4 Headlamp
 
-Headlamp is a user-friendly Kubernetes UI focused on extensibility. Headlamp was created to blend the traditional feature set of other web UIs/dashboards (i.e., to list and view resources) with added functionality. A common use case for any Kubernetes web UI is to deploy it `in-cluster` and set up an `ingress server` for having it available to users. We're going to do an `in-cluster` deployment.
+Headlamp is an extensible Kubernetes web interface for viewing and managing cluster resources. This exercise deploys it
+inside the cluster and exposes it through a LoadBalancer Service. An Ingress is another exposure option, but is not configured here.
 
 First, let's add the Headlamp chart repository:
 
@@ -653,7 +657,8 @@ helm install headlamp headlamp/headlamp --namespace kube-system \
 ??? example "Expected result"
     The `headlamp` release is installed.
 
-As of chart version 0.40.1, there’s a known bug where the Helm chart passes a -session-ttl flag that the binary doesn't recognize. The pod will CrashLoopBackOff. Fix it by running:
+Chart version `0.40.1` has a known issue in which it passes an unsupported `-session-ttl` argument. If the Headlamp Pods enter
+`CrashLoopBackOff` and their logs report this argument, remove it with:
 
 ```bash
 # Remove the unsupported Headlamp session TTL argument.
@@ -664,7 +669,7 @@ kubectl get deploy headlamp -n kube-system -o json | \
 ??? example "Expected result"
     The Headlamp deployment is updated.
 
-If the chart version is greater than 0.40.1, this step may not be needed.
+Skip this workaround if the installed chart does not include the unsupported argument.
 Check the status of the installation:
 
 ```bash
@@ -700,7 +705,8 @@ kubectl get services -n kube-system -l app.kubernetes.io/name=headlamp
     headlamp   LoadBalancer   10.152.183.231   10.237.75.130   80:32126/TCP   11m
     ```
 
-Headlamp will create a `ServiceAccount` once it is installed called `headlamp` in your `kube-system` namespace. You can create a token for the `ServiceAccount` by running:
+The chart creates a `headlamp` ServiceAccount in the `kube-system` namespace. With the chart defaults used here, it is bound
+to the `cluster-admin` ClusterRole. Request a short-lived bearer token for this ServiceAccount:
 
 ```bash
 # Create a token for the Headlamp ServiceAccount.
@@ -711,4 +717,6 @@ kubectl create token headlamp --namespace kube-system
     eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1...
     ```
 
-You can now use this token to authenticate to Headlamp. Open a tunneled browser session to `http://10.237.75.130` (Loadbalancer IP). You will be asked for a token to authenticate.
+Enter this token when Headlamp prompts for authentication. It grants full control of the cluster, so treat it as a sensitive
+credential and use this configuration only for the lab. Open a tunneled browser session to `http://<EXTERNAL-IP>`, replacing
+the placeholder with the LoadBalancer address reported above.
