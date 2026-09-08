@@ -6,7 +6,9 @@ This repository supports Kubernetes Cluster API (CAPI) training.
 
 ## Source Of Truth
 
-- Treat `ref-labs/` as read-only unless explicitly requested otherwise.
+- Treat `ref-labs/` as protected and read-only by default.
+- A review request alone does not authorize edits; modify `ref-labs/` only when a human explicitly asks to change it.
+- Keep authorized edits small and within the stated scope; do not perform broad rewrites or synchronization without separate explicit approval.
 - The active lab sequence is the eight numbered `*_gce.md` files in `ref-labs/`.
 - Treat `ref-labs/_README.md` and `ref-labs/acknowledgements.md` as supporting references.
 - Treat `ref-labs/k8s_lab_azure.md` and `ref-labs/k8s_lab_gce_deprecated.md` as legacy background only.
