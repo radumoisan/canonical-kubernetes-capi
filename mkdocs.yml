@@ -19,7 +19,7 @@ nav:
   - "📋 Storage and User Data": 4-storage-and-user-data.md
   - "📋 Autoscaling": 5-autoscaling.md
   - "📋 AuthN and AuthZ": 6-authentication-and-authorization.md
-  - "⏳ Helm": 7-helm.md
+  - "📋 Helm": 7-helm.md
   - "⏳ Upgrades": 8-upgrading-canonical-kubernetes.md
 
 markdown_extensions:

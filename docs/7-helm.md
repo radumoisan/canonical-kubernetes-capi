@@ -1,725 +1,1143 @@
 # 7. Helm
 
-Helm is a package manager for Kubernetes. A chart packages Kubernetes resource templates and default values. Installing
-a chart creates a Helm release.
+Helm is a package manager for Kubernetes. A chart packages Kubernetes resource templates and default values. Installing a
+chart creates a Helm release.
 
-In this chapter, you will install a WordPress stack with a MariaDB database. The deployment uses Pods and LoadBalancer
-Services, with persistent storage supplied through persistent volume claims (PVCs) and persistent volumes (PVs).
+!!! abstract "Goals"
+    - Install Helm and inspect chart repositories.
+    - Deploy and inspect a WordPress release.
+    - Build stateless and stateful application charts.
+    - Verify StatefulSet data persistence.
+    - Deploy Headlamp and handle its cluster-admin token safely.
 
-## :material-book-open-page-variant-outline: 7.1 Deploy an app
+!!! note "Validated versions"
+    This workflow was validated with Helm `v4.2.4`, Kubernetes `v1.35.7`, WordPress chart `30.0.12`, Headlamp chart
+    `0.45.0`, and `kubernetes-tools` commit `713c0fcbb51c4b31e65a0fce8a767c6ebd3c4b56`. Generated names, IP
+    addresses, ages, and newer repository versions may differ. The required Snap command follows the moving
+    `latest/stable` channel, so confirm `helm version` if the installed version differs from this snapshot.
 
-Install the Helm client on the student machine:
+!!! note "Expected results"
+    Tabular results are representative excerpts and may omit dynamic columns that are not relevant to the check.
+
+!!! note "Unattended execution"
+    External downloads, release waits, token creation, and cleanup loops have explicit bounds. The workflow does not require
+    an editor, a second terminal, `watch`, `kubectl proxy`, or manual interruption.
+
+## :material-book-open-page-variant-outline: 7.1 Deploy An App
+
+Select the workload-cluster kubeconfig.
 
 ```bash
-# Install the Helm client.
-sudo snap install helm --channel=latest/stable --classic
+# Select the workload-cluster kubeconfig.
+export KUBECONFIG="$HOME/.kube/myk8scluster_config"
 ```
-??? example "Expected result"
-    Helm is installed.
 
-Add the archived `stable` chart repository. Its charts are deprecated, so use it only for comparison in this exercise:
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Confirm the active context before installing resources.
 
 ```bash
-# Add the stable chart repository.
-helm repo add stable https://charts.helm.sh/stable
+# Display the active workload-cluster context.
+kubectl config current-context
 ```
+
 ??? example "Expected result"
-    The `stable` chart repository is added.
+    ```text
+    myk8scluster-admin@myk8scluster
+    ```
+
+Install the Helm client. Skip this command if the required version is already installed.
+
+```bash
+# Install the Helm client with a five-minute bound.
+timeout 300s sudo snap install helm --channel=latest/stable --classic
+```
+
+??? example "Expected result"
+    ```text
+    helm 4.2.4 from Snapcrafters* installed
+    ```
+
+Display the installed version.
+
+```bash
+# Display the Helm client version.
+helm version --short
+```
+
+??? example "Expected result"
+    ```text
+    v4.2.4+g3900f43
+    ```
+
+Stop before creating anything if release names, workload resources, or local working directories already exist. This guard
+also establishes ownership of the directories removed at the end of the chapter.
+
+```bash
+# Reject Chapter 7 release, resource, and local-directory collisions.
+timeout 60s sh -c 'test -z "$(helm repo list -o json | jq -r ".[] | select(.name == \"stable\" or .name == \"bitnami\" or .name == \"headlamp\") | .name")" && test -z "$(helm list --all-namespaces --filter "^(my-wordpress-blog|web-app-stateless|web-app-stateful|headlamp)$" -q)" && test -z "$(kubectl get deployment,statefulset,service,serviceaccount,secret,pvc --all-namespaces -o name | grep -E "(my-wordpress-blog|web-app-stateless|web-app-stateful|headlamp)" || true)" && test -z "$(kubectl get secret/oidc --namespace kube-system --ignore-not-found -o name)" && test -z "$(kubectl get clusterrolebinding/headlamp-admin --ignore-not-found -o name)" && for path in "$HOME/kubernetes-tools" "$HOME/web-app" "$HOME/web-app-stateful"; do test ! -e "$path" || { printf "Collision: %s\n" "$path"; exit 1; }; done && printf "No Chapter 7 collisions detected\n"'
+```
+
+??? example "Expected result"
+    ```text
+    No Chapter 7 collisions detected
+    ```
+
+Add the archived `stable` repository for comparison.
+
+```bash
+# Add the archived stable chart repository.
+timeout 60s helm repo add stable https://charts.helm.sh/stable
+```
+
+??? example "Expected result"
+    ```text
+    "stable" has been added to your repositories
+    ```
+
+List the configured repositories.
 
 ```bash
 # List configured chart repositories.
 helm repo list
 ```
-??? example "Expected result"
-    The configured chart repositories are displayed.
 
-Refresh the local chart information from the configured repositories:
+??? example "Expected result"
+    ```text
+    NAME     URL
+    stable   https://charts.helm.sh/stable
+    ```
+
+Refresh the archived repository.
 
 ```bash
-# Update local chart repository information.
-helm repo update
+# Refresh the stable repository metadata.
+timeout 180s helm repo update stable
 ```
-??? example "Expected result"
-    Chart repository information is updated.
 
-List the charts you can install from the stable repo:
+??? example "Expected result"
+    ```text
+    ...Successfully got an update from the "stable" chart repository
+    Update Complete.
+    ```
+
+Inspect its deprecated WordPress chart.
 
 ```bash
-# Search the stable chart repository.
-helm search repo stable
-```
-??? example "Expected result"
-    Charts available from the `stable` repository are displayed.
-
-Search for the WordPress chart:
-
-```bash
-# Search for the stable Wordpress chart.
+# Search for the deprecated WordPress chart.
 helm search repo stable/wordpress
 ```
-??? example "Expected result"
-    The `Wordpress` chart search result is displayed.
 
-The WordPress chart in this repository is deprecated. Add the Bitnami repository to use its chart instead:
+??? example "Expected result"
+    ```text
+    NAME               CHART VERSION   APP VERSION   DESCRIPTION
+    stable/wordpress   9.0.3           5.3.2         DEPRECATED Web publishing platform...
+    ```
+
+Add the current Bitnami repository.
+
+!!! warning "Limited Bitnami catalog"
+    Since August 28, 2025, Bitnami provides only a limited free catalog under `docker.io/bitnami`. Older and versioned
+    images moved to `docker.io/bitnamilegacy`, where they receive no updates. Do not replace the current image references
+    with `bitnamilegacy` images. See the [Bitnami catalog announcement](https://github.com/bitnami/containers/issues/83267).
 
 ```bash
 # Add the Bitnami chart repository.
-helm repo add bitnami https://charts.bitnami.com/bitnami
+timeout 60s helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
+
 ??? example "Expected result"
-    The `bitnami` chart repository is added.
+    ```text
+    "bitnami" has been added to your repositories
+    ```
+
+Refresh the repository.
 
 ```bash
-# Update local chart repository information.
-helm repo update
+# Refresh the Bitnami repository metadata.
+timeout 180s helm repo update bitnami
 ```
-??? example "Expected result"
-    Chart repository information is updated.
 
-Search the new repository for the WordPress chart:
+??? example "Expected result"
+    ```text
+    ...Successfully got an update from the "bitnami" chart repository
+    Update Complete.
+    ```
+
+Confirm the pinned WordPress version.
 
 ```bash
-# Search for the Bitnami Wordpress chart.
-helm search repo bitnami/wordpress
+# Search for the pinned WordPress chart version.
+helm search repo bitnami/wordpress --version 30.0.12
 ```
-??? example "Expected result"
-    The `Wordpress` chart search result is displayed.
 
-Inspect the chart metadata:
+??? example "Expected result"
+    ```text
+    NAME                CHART VERSION   APP VERSION   DESCRIPTION
+    bitnami/wordpress   30.0.12         6.9.4         WordPress is the world's most popular blogging...
+    ```
+
+Inspect the chart metadata.
 
 ```bash
-# Show the Wordpress chart metadata.
-helm show chart bitnami/wordpress
+# Display metadata for the pinned WordPress chart.
+timeout 60s helm show chart bitnami/wordpress --version 30.0.12
 ```
-??? example "Expected result"
-    The Wordpress chart metadata is displayed.
 
-Display all available chart information:
+??? example "Expected result"
+    ```yaml
+    apiVersion: v2
+    appVersion: 6.9.4
+    name: wordpress
+    version: 30.0.12
+    ```
+
+Save the full chart information without sending thousands of lines to the terminal.
 
 ```bash
-# Show all Wordpress chart information.
-helm show all bitnami/wordpress
+# Save all WordPress chart information and report its size.
+timeout 60s helm show all bitnami/wordpress --version 30.0.12 >/tmp/wordpress-chart-all.txt && wc -l /tmp/wordpress-chart-all.txt
 ```
-??? example "Expected result"
-    All Wordpress chart information is displayed.
 
-Display only the chart's default values:
+??? example "Expected result"
+    ```text
+    2429 /tmp/wordpress-chart-all.txt
+    ```
+
+Save the default values separately.
 
 ```bash
-# Show Wordpress chart values.
-helm show values bitnami/wordpress
+# Save the WordPress default values and report their size.
+timeout 60s helm show values bitnami/wordpress --version 30.0.12 >/tmp/wordpress-values.yaml && wc -l /tmp/wordpress-values.yaml
 ```
+
 ??? example "Expected result"
-    The Wordpress chart values are displayed.
+    ```text
+    1452 /tmp/wordpress-values.yaml
+    ```
 
-Chart values can be overridden at install time with `--set`, as used below, or with a YAML values file supplied through `-f`
-or `--values`, e.g. `helm install -f config.yaml stable/wordpress`. For details, see the
-[Helm chart customization documentation](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing).
-
-See the
-[Bitnami WordPress chart documentation](https://github.com/bitnami/charts/tree/master/bitnami/wordpress/#installing-the-chart)
-for installation and supported configuration options.
-
-Install the chart as a release named `my-wordpress-blog`:
+Render the release locally before creating resources. The smaller claims keep the training deployment lightweight.
 
 ```bash
-# Install the Wordpress chart.
-helm install my-wordpress-blog \
+# Render the WordPress release and summarize its resource kinds.
+timeout 120s helm template my-wordpress-blog bitnami/wordpress \
+  --version 30.0.12 \
+  --namespace default \
   --set wordpressUsername=admin \
   --set wordpressPassword=password \
   --set mariadb.auth.rootPassword=secretpassword \
-    bitnami/wordpress
+  --set persistence.size=1Gi \
+  --set mariadb.primary.persistence.size=1Gi \
+  >/tmp/my-wordpress-blog.yaml && grep '^kind:' /tmp/my-wordpress-blog.yaml | sort | uniq -c
 ```
+
 ??? example "Expected result"
-    The `my-wordpress-blog` release is installed.
+    ```text
+          1 kind: ConfigMap
+          1 kind: Deployment
+          2 kind: NetworkPolicy
+          1 kind: PersistentVolumeClaim
+          2 kind: PodDisruptionBudget
+          2 kind: Secret
+          3 kind: Service
+          2 kind: ServiceAccount
+          1 kind: StatefulSet
+    ```
 
 !!! warning "Training credentials only"
-    The explicit `mariadb.auth.rootPassword` gives this exercise a predictable database credential. These simple passwords
-    are for training only. In real deployments, use securely generated credentials managed through Secrets and avoid
-    passing them on the command line.
+    These simple credentials are intentional training values. Do not use them outside the lab. Production credentials
+    should come from an appropriate secret-management system.
 
-The installation output includes useful information about accessing the application and retrieving its credentials. Display
-this information again with the `status` command:
+!!! note "Pinned chart, rolling images"
+    Chart `30.0.12` is pinned, but it currently references the limited Bitnami catalog through rolling
+    `bitnami/wordpress:latest` and `bitnami/mariadb:latest` image tags. These images were available during validation, but
+    their contents and availability can change independently of the chart version. This is accepted for the lab and is not
+    a production recommendation. Production deployments should use a supported image source and immutable image digests.
 
-```bash
-# Show the Wordpress release status.
-helm status my-wordpress-blog
-```
-??? example "Expected result"
-    The Wordpress release status and access information are displayed.
-
-List the installed Helm releases:
+Install the release with bounded readiness and rollback.
 
 ```bash
-# List installed Helm releases.
-helm list
+# Install the WordPress release with bounded readiness and rollback.
+timeout 1800s helm install my-wordpress-blog bitnami/wordpress \
+  --version 30.0.12 \
+  --namespace default \
+  --set wordpressUsername=admin \
+  --set wordpressPassword=password \
+  --set mariadb.auth.rootPassword=secretpassword \
+  --set persistence.size=1Gi \
+  --set mariadb.primary.persistence.size=1Gi \
+  --wait \
+  --wait-for-jobs \
+  --timeout 15m \
+  --rollback-on-failure
 ```
-??? example "Expected result"
-    The installed Helm releases are displayed.
 
-List the pods:
-
-```bash
-# List pods.
-kubectl get pods
-```
 ??? example "Expected result"
     ```text
-    NAME                                READY   STATUS    RESTARTS   AGE
-    my-wordpress-blog-fc4665457-hb8jr   1/1     Running   0          91s
-    my-wordpress-blog-mariadb-0         1/1     Running   0          91s
+    NAME: my-wordpress-blog
+    NAMESPACE: default
+    STATUS: deployed
+    DESCRIPTION: Install complete
+    CHART VERSION: 30.0.12
+    APP VERSION: 6.9.4
     ```
 
-The chart created a LoadBalancer Service:
+Inspect the release.
 
 ```bash
-# List services.
-kubectl get svc
+# Display WordPress release status.
+helm status my-wordpress-blog --namespace default
 ```
+
 ??? example "Expected result"
     ```text
-    NAME                                 TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                      AGE
-    kubernetes                           ClusterIP      10.152.183.1     <none>          443/TCP                      26h
-    my-wordpress-blog                    LoadBalancer   10.152.183.62    10.237.75.129   80:31834/TCP,443:30894/TCP   119s
-    my-wordpress-blog-mariadb            ClusterIP      10.152.183.159   <none>          3306/TCP                     119s
-    my-wordpress-blog-mariadb-headless   ClusterIP      None             <none>          3306/TCP                     119s
+    NAME: my-wordpress-blog
+    NAMESPACE: default
+    STATUS: deployed
+    my-wordpress-blog            Deployment 1/1
+    my-wordpress-blog-mariadb   StatefulSet 1/1
     ```
 
-The WordPress application should now be reachable over HTTP at the LoadBalancer `EXTERNAL-IP` shown above.
+List the release.
 
-This section demonstrated how a chart installs a complete application stack as one Helm release.
+```bash
+# List the WordPress release.
+helm list --namespace default --filter "^my-wordpress-blog$"
+```
+
+??? example "Expected result"
+    ```text
+    NAME                NAMESPACE   REVISION   STATUS     CHART              APP VERSION
+    my-wordpress-blog   default     1          deployed   wordpress-30.0.12   6.9.4
+    ```
+
+Wait for both Pods and then display them.
+
+```bash
+# Wait for the WordPress and MariaDB Pods.
+kubectl wait --for=condition=Ready pod -l app.kubernetes.io/instance=my-wordpress-blog --timeout=600s
+```
+
+??? example "Expected result"
+    ```text
+    pod/my-wordpress-blog-8646dfbc9d-df5xg condition met
+    pod/my-wordpress-blog-mariadb-0 condition met
+    ```
+
+```bash
+# Display the WordPress release Pods.
+kubectl get pods -l app.kubernetes.io/instance=my-wordpress-blog -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME                                  READY   STATUS    NODE
+    my-wordpress-blog-8646dfbc9d-df5xg   1/1     Running   k8s-worker1
+    my-wordpress-blog-mariadb-0           1/1     Running   k8s-worker2
+    ```
+
+Inspect the Services and claims.
+
+```bash
+# Display the WordPress release Services.
+kubectl get service my-wordpress-blog my-wordpress-blog-mariadb my-wordpress-blog-mariadb-headless
+```
+
+??? example "Expected result"
+    ```text
+    NAME                                  TYPE           EXTERNAL-IP      PORT(S)
+    my-wordpress-blog                     LoadBalancer   10.107.242.11   80:32232/TCP,443:30657/TCP
+    my-wordpress-blog-mariadb             ClusterIP      <none>          3306/TCP
+    my-wordpress-blog-mariadb-headless    ClusterIP      <none>          3306/TCP
+    ```
+
+```bash
+# Display the WordPress release claims.
+kubectl get pvc -l app.kubernetes.io/instance=my-wordpress-blog
+```
+
+??? example "Expected result"
+    ```text
+    NAME                                  STATUS   CAPACITY   ACCESS MODES   STORAGECLASS
+    data-my-wordpress-blog-mariadb-0      Bound    1Gi        RWO            csi-rawfile-default
+    my-wordpress-blog                     Bound    1Gi        RWO            csi-rawfile-default
+    ```
+
+Verify the generated credential exists without decoding or printing it.
+
+```bash
+# Verify that the generated WordPress credential is present.
+test -n "$(kubectl get secret my-wordpress-blog -o jsonpath='{.data.wordpress-password}')" && printf "WordPress credential is present\n"
+```
+
+??? example "Expected result"
+    ```text
+    WordPress credential is present
+    ```
+
+Wait for the external address and verify HTTP access.
+
+```bash
+# Wait for the WordPress LoadBalancer address.
+kubectl wait --for=jsonpath='{.status.loadBalancer.ingress[0].ip}' service/my-wordpress-blog --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    service/my-wordpress-blog condition met
+    ```
+
+```bash
+# Verify the WordPress LoadBalancer endpoint.
+WORDPRESS_IP=$(kubectl get service my-wordpress-blog -o jsonpath='{.status.loadBalancer.ingress[0].ip}') && curl --silent --show-error --location --output /dev/null --write-out "HTTP %{http_code}\n" --max-time 30 "http://$WORDPRESS_IP/"
+```
+
+??? example "Expected result"
+    ```text
+    HTTP 200
+    ```
+
+Remove the release and its retained StatefulSet claim.
+
+```bash
+# Uninstall the WordPress release with a bounded wait.
+timeout 600s helm uninstall my-wordpress-blog --namespace default --wait --timeout 5m
+```
+
+??? example "Expected result"
+    ```text
+    release "my-wordpress-blog" uninstalled
+    ```
+
+```bash
+# Delete retained WordPress release claims.
+kubectl delete pvc -l app.kubernetes.io/instance=my-wordpress-blog --ignore-not-found --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    persistentvolumeclaim "data-my-wordpress-blog-mariadb-0" deleted from default namespace
+    ```
+
+Verify complete cleanup.
+
+```bash
+# Verify complete WordPress release cleanup.
+test -z "$(helm list --namespace default --filter '^my-wordpress-blog$' -q)" && test -z "$(kubectl get deployment,statefulset,pod,service,serviceaccount,secret,configmap,networkpolicy,poddisruptionbudget,pvc -l app.kubernetes.io/instance=my-wordpress-blog -o name)" && test -z "$(kubectl get pv -o json | jq -r '.items[] | select(.spec.claimRef.namespace == "default" and (.spec.claimRef.name | contains("my-wordpress-blog"))) | .metadata.name')" && printf "WordPress cleanup verified\n"
+```
+
+??? example "Expected result"
+    ```text
+    WordPress cleanup verified
+    ```
 
 ## :material-book-open-page-variant-outline: 7.2 Deployment Chart
 
-Kubernetes deploys container images rather than application source code. The
-[Kubernetes tools repository](https://github.com/cloudbase/kubernetes-tools) contains a simple Node.js web app and its
-`Dockerfile`:
+Clone the application source and check out the exact validated commit.
 
 ```bash
-# Clone the Kubernetes tools repository.
-cd ~ && git clone https://github.com/cloudbase/kubernetes-tools.git
-```
-??? example "Expected result"
-    The `kubernetes-tools` repository is cloned.
-
-The application image can be built from the source or pulled from Docker Hub. This exercise uses the existing public image;
-the following steps only demonstrate how it was built.
-
-!!! warning "Demonstration only"
-    Do not run the following demonstration commands. The image is already available on Docker Hub. Skip ahead to
-    "Demonstration ends here."
-
-```bash
-# only for demonstration
-cd ~/kubernetes-tools/web-app/
-```
-??? example "Expected result"
-    The working directory changes to the web app directory.
-
-```bash
-# Build the web app image for demonstration.
-docker build -t <username>/web-app .
-```
-??? example "Expected result"
-    The web app image is built.
-
-```bash
-# Tag the web app image for demonstration.
-docker tag <username>/web-app <username>/web-app:v1
-```
-??? example "Expected result"
-    The web app image is tagged.
-
-The image is public on Docker Hub. When a Pod is scheduled, the kubelet pulls the image onto that node if it is not already
-cached there.
-
-Before deploying an image to Kubernetes, it is useful to test the container locally:
-
-```bash
-# Run the web app container for demonstration.
-docker run -p 80:80 <username>/web-app:v1
-```
-??? example "Expected result"
-    The web app container runs and listens on port `80`.
-
-Open another terminal on the student machine and test the container:
-
-```bash
-# Test the web app container for demonstration.
-curl localhost:80
-```
-??? example "Expected result"
-    The web app response is displayed.
-
-Return to the first terminal and stop the container with `CTRL+C`.
-
-!!! warning "Demonstration ends here"
-    Resume the exercise with the next step.
-
-Create a Helm chart scaffold, then configure its image repository, image tag, and replica count in `values.yaml`:
-
-```bash
-# Create the web app chart and enter its directory.
-helm create ~/web-app; cd ~/web-app
-```
-??? example "Expected result"
-    The web app chart is created and the working directory changes to `~/web-app`.
-
-```bash
-# Edit the chart values file.
-vim values.yaml
-```
-??? example "Expected result"
-    The `values.yaml` file opens in the editor.
-
-Update `values.yaml` to use the public `pvradu/web-app:v1` image and three replicas:
-
-```yaml
-...
-replicaCount: 3
-
-image:
-  repository: pvradu/web-app
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "v1"
-...
+# Clone and pin the Kubernetes tools source tree.
+timeout 180s git clone https://github.com/cloudbase/kubernetes-tools.git "$HOME/kubernetes-tools" && git -C "$HOME/kubernetes-tools" checkout 713c0fcbb51c4b31e65a0fce8a767c6ebd3c4b56 && git -C "$HOME/kubernetes-tools" rev-parse HEAD
 ```
 
-Package the chart:
-
-```bash
-# Package the web app chart.
-helm package .
-```
-??? example "Expected result"
-    The web app chart archive is created.
-
-Perform a dry run to inspect the rendered resources without creating them:
-
-```bash
-# do a dry run to check that everything is ok
-helm install --debug --dry-run web-app-0.1.0.tgz --generate-name
-```
-??? example "Expected result"
-    The rendered chart resources are displayed without creating them.
-
-Install the packaged chart as the `web-app-stateless` release:
-
-```bash
-# Install the web app chart.
-helm install web-app-stateless web-app-0.1.0.tgz
-```
-??? example "Expected result"
-    The `web-app-stateless` release is installed.
-
-For more information, see the [Helm chart template guide](https://docs.helm.sh/chart_template_guide/).
-
-Verify the web app Pods are running. Other Pods in the namespace may also appear:
-
-```bash
-# List pods.
-kubectl get pods
-```
 ??? example "Expected result"
     ```text
-    NAME                                 READY   STATUS    RESTARTS   AGE
-    web-app-stateless-5bd5fffc48-654wt   1/1     Running   0          62s
-    web-app-stateless-5bd5fffc48-qrmkh   1/1     Running   0          62s
-    web-app-stateless-5bd5fffc48-xwcnq   1/1     Running   0          62s
+    Cloning into '/home/ubuntu/kubernetes-tools'...
+    HEAD is now at 713c0fc Update values.yaml
+    713c0fcbb51c4b31e65a0fce8a767c6ebd3c4b56
     ```
 
-Verify that the chart also created a Service:
+!!! note "Image build demonstration"
+    The source tree contains `web-app/Dockerfile`. Building, tagging, and running an image is not required for this lab and
+    would add an interactive foreground process. The validated chart uses the existing public `pvradu/web-app:v1` image.
+
+Create a chart scaffold.
 
 ```bash
-# Get the web app service.
-kubectl get svc web-app-stateless
+# Create the stateless web application chart.
+helm create "$HOME/web-app"
 ```
+
 ??? example "Expected result"
     ```text
-    NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-    web-app-stateless   ClusterIP   10.152.183.20   <none>        80/TCP    88s
+    Creating /home/ubuntu/web-app
     ```
 
-Because a ClusterIP is reachable from within the cluster network, query the Service on port `80` from a worker node. Repeat
-the request to observe that the Service can route traffic to different ready Pod endpoints; the exact sequence is not guaranteed.
+Set the image and replica count without an editor.
 
 ```bash
-# Query the web app ClusterIP from k8s-worker2.
-lxc exec k8s-worker2 -- sh -c "curl -s 10.152.183.20"
+# Set three replicas and the public application image non-interactively.
+LC_ALL=C perl -0pi -e 's/^replicaCount: .*$/replicaCount: 3/m; s|^  repository: .*$|  repository: pvradu/web-app|m; s/^  tag: .*$/  tag: "v1"/m' "$HOME/web-app/values.yaml" && grep -A 8 '^replicaCount:' "$HOME/web-app/values.yaml"
 ```
+
+??? example "Expected result"
+    ```yaml
+    replicaCount: 3
+
+    image:
+      repository: pvradu/web-app
+      pullPolicy: IfNotPresent
+      tag: "v1"
+    ```
+
+Lint and render the chart.
+
+```bash
+# Lint the stateless web application chart.
+helm lint "$HOME/web-app"
+```
+
 ??? example "Expected result"
     ```text
-    This app is running in pod web-app-stateless-5bd5fffc48-xwcnq
+    ==> Linting /home/ubuntu/web-app
+    [INFO] Chart.yaml: icon is recommended
+
+    1 chart(s) linted, 0 chart(s) failed
     ```
 
-### :material-application-edit-outline: try again
-
 ```bash
-# Query the web app ClusterIP from k8s-worker2 again.
-lxc exec k8s-worker2 -- sh -c "curl -s 10.152.183.20"
+# Render and summarize the stateless chart resources.
+helm template web-app-stateless "$HOME/web-app" --namespace default >/tmp/web-app-stateless.yaml && grep '^kind:' /tmp/web-app-stateless.yaml | sort | uniq -c
 ```
+
 ??? example "Expected result"
     ```text
-    This app is running in pod web-app-stateless-5bd5fffc48-654wt
+          1 kind: Deployment
+          1 kind: Pod
+          1 kind: Service
+          1 kind: ServiceAccount
     ```
 
-### :material-application-edit-outline: try one more time
+Package and install the chart.
 
 ```bash
-# Query the web app ClusterIP from k8s-worker2 one more time.
-lxc exec k8s-worker2 -- sh -c "curl -s 10.152.183.20"
+# Package the stateless chart in its working directory.
+helm package "$HOME/web-app" --destination "$HOME/web-app"
 ```
+
 ??? example "Expected result"
     ```text
-    This app is running in pod web-app-stateless-5bd5fffc48-qrmkh
+    Successfully packaged chart and saved it to: /home/ubuntu/web-app/web-app-0.1.0.tgz
     ```
 
-Delete the application:
+```bash
+# Install the stateless web application release.
+timeout 1200s helm install web-app-stateless "$HOME/web-app/web-app-0.1.0.tgz" --namespace default --wait --timeout 10m --rollback-on-failure
+```
+
+??? example "Expected result"
+    ```text
+    NAME: web-app-stateless
+    NAMESPACE: default
+    STATUS: deployed
+    DESCRIPTION: Install complete
+    ```
+
+Inspect the release.
 
 ```bash
-# Delete the stateless web app release.
-helm delete web-app-stateless
+# Display the stateless release status.
+helm status web-app-stateless --namespace default
 ```
+
 ??? example "Expected result"
-    The `web-app-stateless` release is deleted.
+    ```text
+    NAME: web-app-stateless
+    NAMESPACE: default
+    STATUS: deployed
+    web-app-stateless   Deployment 3/3
+    ```
+
+Wait for all three replicas and display their image and placement.
+
+```bash
+# Wait for and display all stateless application Pods.
+kubectl wait --for=condition=Ready pod -l app.kubernetes.io/instance=web-app-stateless --timeout=300s && kubectl get pods -l app.kubernetes.io/instance=web-app-stateless -o custom-columns=NAME:.metadata.name,READY:.status.containerStatuses[0].ready,IMAGE:.spec.containers[0].image,NODE:.spec.nodeName --no-headers
+```
+
+??? example "Expected result"
+    ```text
+    pod/web-app-stateless-5cc59678f-9j5wv condition met
+    pod/web-app-stateless-5cc59678f-d8x9d condition met
+    pod/web-app-stateless-5cc59678f-tfd8s condition met
+    web-app-stateless-5cc59678f-9j5wv   true   pvradu/web-app:v1   k8s-worker2
+    web-app-stateless-5cc59678f-d8x9d   true   pvradu/web-app:v1   k8s-ctrl
+    web-app-stateless-5cc59678f-tfd8s   true   pvradu/web-app:v1   k8s-worker1
+    ```
+
+Inspect the Service and its ready endpoints.
+
+```bash
+# Display the stateless application Service.
+kubectl get service web-app-stateless
+```
+
+??? example "Expected result"
+    ```text
+    NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)
+    web-app-stateless     ClusterIP   10.152.130.53   <none>        80/TCP
+    ```
+
+```bash
+# Display the Pods behind the stateless Service.
+kubectl get endpointslice -l kubernetes.io/service-name=web-app-stateless -o jsonpath='{range .items[*].endpoints[*]}{.targetRef.name}{"\n"}{end}' | sort
+```
+
+??? example "Expected result"
+    ```text
+    web-app-stateless-5cc59678f-9j5wv
+    web-app-stateless-5cc59678f-d8x9d
+    web-app-stateless-5cc59678f-tfd8s
+    ```
+
+Query the Service through the Kubernetes API instead of using a fixed node or ClusterIP.
+
+```bash
+# Query the stateless Service through the Kubernetes API proxy endpoint.
+timeout 30s kubectl get --raw /api/v1/namespaces/default/services/http:web-app-stateless:80/proxy/
+```
+
+??? example "Expected result"
+    ```text
+    This app is running in pod web-app-stateless-5cc59678f-9j5wv
+    ```
+
+Remove the release and verify cleanup.
+
+```bash
+# Uninstall the stateless release with a bounded wait.
+timeout 600s helm uninstall web-app-stateless --namespace default --wait --timeout 5m
+```
+
+??? example "Expected result"
+    ```text
+    release "web-app-stateless" uninstalled
+    ```
+
+```bash
+# Verify stateless release cleanup.
+timeout 180s sh -c 'while test -n "$(kubectl get deployment,pod,service,serviceaccount -l app.kubernetes.io/instance=web-app-stateless -o name)"; do sleep 3; done' && printf "Stateless release cleanup verified\n"
+```
+
+??? example "Expected result"
+    ```text
+    Stateless release cleanup verified
+    ```
 
 ## :material-book-open-page-variant-outline: 7.3 StatefulSet Chart
 
-The stateful application image can be built in the same way. It is already public, so the following build steps are only a
-demonstration:
+The source tree contains `web-app-stateful/image/Dockerfile`. The build is demonstration-only; the chart uses the existing
+public `pvradu/web-app-stateful:v1` image.
 
-!!! warning "Demonstration only"
-    Do not run the following demonstration commands. The image is already available on Docker Hub. Skip ahead to
-    "Demonstration ends here."
+Copy the chart from the pinned source tree.
 
 ```bash
-# only for demonstration
-cd ~/kubernetes-tools/web-app-stateful/image
+# Assemble the stateful web application chart.
+mkdir "$HOME/web-app-stateful" && cp -R "$HOME/kubernetes-tools/web-app-stateful/chart/." "$HOME/web-app-stateful/"
 ```
-??? example "Expected result"
-    The working directory changes to the stateful web app image directory.
 
-```bash
-# Build the stateful web app image for demonstration.
-docker build -t <username>/web-app-stateful .
-```
-??? example "Expected result"
-    The stateful web app image is built.
-
-```bash
-# Tag the stateful web app image for demonstration.
-docker tag <username>/web-app-stateful <username>/web-app-stateful:v1
-```
-??? example "Expected result"
-    The stateful web app image is tagged.
-
-!!! warning "Demonstration ends here"
-    Resume the exercise with the next step.
-
-When a Pod is scheduled, the kubelet pulls the public image onto that node if it is not already cached there.
-
-Assemble the chart from the provided files:
-
-```bash
-# Create and enter the stateful web app chart directory.
-mkdir ~/web-app-stateful && cd ~/web-app-stateful
-```
-??? example "Expected result"
-    The stateful web app chart directory is created and becomes the working directory.
-
-```bash
-# Copy the stateful web app chart files.
-cp -r ~/kubernetes-tools/web-app-stateful/chart/* ~/web-app-stateful/
-```
-??? example "Expected result"
-    The stateful web app chart files are copied.
-
-Package the chart:
-
-```bash
-# Package the stateful web app chart.
-helm package .
-```
-??? example "Expected result"
-    The stateful web app chart archive is created.
-
-Install the packaged chart as the `web-app-stateful` release:
-
-```bash
-# Install the stateful web app chart.
-helm install web-app-stateful web-app-stateful-0.1.0.tgz
-```
-??? example "Expected result"
-    The `web-app-stateful` release is installed.
-
-This chart uses a headless Service (`clusterIP: None`) as the StatefulSet's governing Service. It has no virtual ClusterIP;
-instead, cluster DNS resolves the individual Pod endpoints. A separate regular Service could expose the application, but this
-exercise uses the Kubernetes API proxy. Start the proxy on the student machine:
-
-```bash
-# Start the Kubernetes API proxy.
-kubectl proxy
-```
 ??? example "Expected result"
     ```text
-    Starting to serve on 127.0.0.1:8001
+    No output.
     ```
 
-Open another terminal on the student machine and confirm that the Helm release is installed:
+Lint and render the chart.
 
 ```bash
-# List installed Helm releases.
-helm list
+# Lint the stateful web application chart.
+helm lint "$HOME/web-app-stateful"
 ```
-??? example "Expected result"
-    Partial output includes:
 
-    ```text
-    web-app-stateful
-    ```
-
-Verify that Helm created a StatefulSet, then inspect its Pods:
-
-```bash
-# List StatefulSets.
-kubectl get statefulsets.apps
-```
 ??? example "Expected result"
     ```text
-    NAME               READY   AGE
-    web-app-stateful   2/2     2m32s
+    ==> Linting /home/ubuntu/web-app-stateful
+    [INFO] Chart.yaml: icon is recommended
+
+    1 chart(s) linted, 0 chart(s) failed
     ```
 
 ```bash
-# List pods.
-kubectl get pods
+# Render and summarize the stateful chart resources.
+helm template web-app-stateful "$HOME/web-app-stateful" --namespace default >/tmp/web-app-stateful.yaml && grep '^kind:' /tmp/web-app-stateful.yaml | sort | uniq -c
 ```
+
 ??? example "Expected result"
     ```text
-    NAME                 READY   STATUS    RESTARTS   AGE
-    web-app-stateful-0   1/1     Running   0          100s
-    web-app-stateful-1   1/1     Running   0          95s
+          1 kind: Service
+          1 kind: StatefulSet
+    ```
+
+Package and install the chart.
+
+```bash
+# Package the stateful chart in its working directory.
+helm package "$HOME/web-app-stateful" --destination "$HOME/web-app-stateful"
+```
+
+??? example "Expected result"
+    ```text
+    Successfully packaged chart and saved it to: /home/ubuntu/web-app-stateful/web-app-stateful-0.1.0.tgz
     ```
 
 ```bash
-# Query the first stateful web app pod through the proxy.
-curl localhost:8001/api/v1/namespaces/default/pods/web-app-stateful-0/proxy/
+# Install the stateful web application release.
+timeout 1200s helm install web-app-stateful "$HOME/web-app-stateful/web-app-stateful-0.1.0.tgz" --namespace default --wait --timeout 10m --rollback-on-failure
 ```
+
 ??? example "Expected result"
     ```text
-    You hit web-app-stateful-0
+    NAME: web-app-stateful
+    NAMESPACE: default
+    STATUS: deployed
+    DESCRIPTION: Install complete
+    ```
+
+Inspect the release and its stable network identities.
+
+```bash
+# Display the stateful release status.
+helm status web-app-stateful --namespace default
+```
+
+??? example "Expected result"
+    ```text
+    NAME: web-app-stateful
+    NAMESPACE: default
+    STATUS: deployed
+    web-app-stateful   StatefulSet 2/2
+    ```
+
+```bash
+# Display the stateful application controller.
+kubectl get statefulset web-app-stateful
+```
+
+??? example "Expected result"
+    ```text
+    NAME                 READY   AGE
+    web-app-stateful     2/2     50s
+    ```
+
+```bash
+# Display the stateful application Pods.
+kubectl get pods -l app=web-app-stateful -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME                   READY   STATUS    NODE
+    web-app-stateful-0     1/1     Running   k8s-worker1
+    web-app-stateful-1     1/1     Running   k8s-worker2
+    ```
+
+```bash
+# Display the stateful application's headless Service.
+kubectl get service web-app-stateful
+```
+
+??? example "Expected result"
+    ```text
+    NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)
+    web-app-stateful     ClusterIP   None         <none>        80/TCP
+    ```
+
+Display the two bound claims.
+
+```bash
+# Display stateful application claims and storage details.
+kubectl get pvc -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,CAPACITY:.status.capacity.storage,ACCESS-MODES:.status.accessModes[*],STORAGECLASS:.spec.storageClassName --no-headers | grep '^data-web-app-stateful-'
+```
+
+??? example "Expected result"
+    ```text
+    data-web-app-stateful-0   Bound   1Gi   ReadWriteOnce   csi-rawfile-default
+    data-web-app-stateful-1   Bound   1Gi   ReadWriteOnce   csi-rawfile-default
+    ```
+
+Query both Pods directly through the API.
+
+```bash
+# Query the first stateful Pod through the API proxy.
+timeout 30s kubectl get --raw /api/v1/namespaces/default/pods/web-app-stateful-0/proxy/
+```
+
+??? example "Expected result"
+    ```text
+    You've hit web-app-stateful-0
     Data stored on this pod: No data posted yet
     ```
 
 ```bash
-# Query the second stateful web app pod through the proxy.
-curl localhost:8001/api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
+# Query the second stateful Pod through the API proxy.
+timeout 30s kubectl get --raw /api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
 ```
+
 ??? example "Expected result"
     ```text
-    You hit web-app-stateful-1
+    You've hit web-app-stateful-1
     Data stored on this pod: No data posted yet
     ```
 
-The application reports that neither Pod has stored data yet.
-
-Write data to one Pod and verify that it was stored:
+Write and verify data on the second Pod.
 
 ```bash
-# Write data to the second stateful web app pod.
-curl -X POST -d "Hey there!" \
-localhost:8001/api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
+# Store a training value in the second stateful Pod.
+printf "Hey there!" | timeout 30s kubectl create --raw /api/v1/namespaces/default/pods/web-app-stateful-1/proxy/ -f -
 ```
+
 ??? example "Expected result"
     ```text
     Data stored on pod web-app-stateful-1
     ```
 
 ```bash
-# Query the second stateful web app pod through the proxy.
-curl localhost:8001/api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
+# Verify the value stored by the second stateful Pod.
+timeout 30s kubectl get --raw /api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
 ```
+
 ??? example "Expected result"
     ```text
-    You hit web-app-stateful-1
+    You've hit web-app-stateful-1
     Data stored on this pod: Hey there!
     ```
 
-The response confirms that the data was written: `Data stored on this pod: Hey there!`.
-
-Delete the pod that stores the data:
+Delete the Pod, wait for its replacement, and prove that its UID changed.
 
 ```bash
-# Delete the second stateful web app pod.
-kubectl delete pod web-app-stateful-1
+# Recreate the second Pod and verify that its UID changed.
+OLD_UID=$(kubectl get pod web-app-stateful-1 -o jsonpath='{.metadata.uid}') && kubectl delete pod web-app-stateful-1 --wait=true --timeout=180s && kubectl wait --for=condition=Ready pod/web-app-stateful-1 --timeout=300s && NEW_UID=$(kubectl get pod web-app-stateful-1 -o jsonpath='{.metadata.uid}') && test "$OLD_UID" != "$NEW_UID" && printf "Pod recreated with a new UID\n"
 ```
-??? example "Expected result"
-    The `web-app-stateful-1` pod is deleted.
 
-Immediately list the Pods to observe what happened:
-
-```bash
-# List pods.
-kubectl get pods
-```
 ??? example "Expected result"
     ```text
-    NAME                 READY   STATUS    RESTARTS   AGE
-    web-app-stateful-0   1/1     Running   0          4m14s
-    web-app-stateful-1   1/1     Running   0          8s
+    pod "web-app-stateful-1" deleted from default namespace
+    pod/web-app-stateful-1 condition met
+    Pod recreated with a new UID
     ```
 
-The StatefulSet created a replacement Pod with the same stable ordinal name. Its age shows that it is a new Pod.
-
-The replacement Pod should retain the data because it remounts the same persistent volume claim:
+Verify that the replacement remounted the same data.
 
 ```bash
-# Query the recreated stateful web app pod through the proxy.
-curl localhost:8001/api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
+# Verify data persistence after Pod replacement.
+timeout 30s kubectl get --raw /api/v1/namespaces/default/pods/web-app-stateful-1/proxy/
 ```
+
 ??? example "Expected result"
     ```text
-    You hit web-app-stateful-1
+    You've hit web-app-stateful-1
     Data stored on this pod: Hey there!
     ```
 
-The response confirms that the data persisted: `Data stored on this pod: Hey there!`.
-
-The StatefulSet alone does not persist data. Each Pod uses a stable PVC backed by a PV, allowing its replacement to remount
-the same storage. Inspect these resources:
+Display the claims and backing volumes.
 
 ```bash
-# List persistent volumes.
-kubectl get pv
+# Display stateful claims and their associated persistent volumes.
+kubectl get pvc data-web-app-stateful-0 data-web-app-stateful-1 && kubectl get pv -o custom-columns=NAME:.metadata.name,STATUS:.status.phase,CLAIM:.spec.claimRef.name,STORAGECLASS:.spec.storageClassName | grep 'data-web-app-stateful'
 ```
+
 ??? example "Expected result"
-    Persistent volumes are displayed.
+    ```text
+    NAME                       STATUS   CAPACITY   STORAGECLASS
+    data-web-app-stateful-0    Bound    1Gi        csi-rawfile-default
+    data-web-app-stateful-1    Bound    1Gi        csi-rawfile-default
+    pvc-92aa8221-...            Bound    data-web-app-stateful-1   csi-rawfile-default
+    pvc-a44c36b2-...            Bound    data-web-app-stateful-0   csi-rawfile-default
+    ```
+
+Uninstall the release and confirm the claims remain.
 
 ```bash
-# List persistent volume claims.
-kubectl get pvc
+# Uninstall the stateful release with a bounded wait.
+timeout 600s helm uninstall web-app-stateful --namespace default --wait --timeout 5m
 ```
-??? example "Expected result"
-    Persistent volume claims are displayed.
 
-Delete the Helm release. PVCs created for StatefulSet Pods are normally retained and may require separate cleanup:
+??? example "Expected result"
+    ```text
+    release "web-app-stateful" uninstalled
+    ```
 
 ```bash
-# Delete the stateful web app release.
-helm delete web-app-stateful
+# Display the retained StatefulSet claims.
+kubectl get pvc data-web-app-stateful-0 data-web-app-stateful-1
 ```
+
 ??? example "Expected result"
-    The `web-app-stateful` release is deleted.
+    ```text
+    NAME                       STATUS   CAPACITY   ACCESS MODES   STORAGECLASS
+    data-web-app-stateful-0    Bound    1Gi        RWO            csi-rawfile-default
+    data-web-app-stateful-1    Bound    1Gi        RWO            csi-rawfile-default
+    ```
+
+Delete the two exact claims and verify PV reclamation.
+
+```bash
+# Delete the retained stateful application claims.
+kubectl delete pvc data-web-app-stateful-0 data-web-app-stateful-1 --wait=true --timeout=180s
+```
+
+??? example "Expected result"
+    ```text
+    persistentvolumeclaim "data-web-app-stateful-0" deleted from default namespace
+    persistentvolumeclaim "data-web-app-stateful-1" deleted from default namespace
+    ```
+
+```bash
+# Verify complete stateful release cleanup.
+timeout 180s sh -c 'while kubectl get pv -o jsonpath="{range .items[*]}{.spec.claimRef.name}{\"\\n\"}{end}" | grep -q "^data-web-app-stateful-"; do sleep 3; done' && test -z "$(kubectl get statefulset,pod,service -l release=web-app-stateful -o name)" && printf "Stateful release cleanup verified\n"
+```
+
+??? example "Expected result"
+    ```text
+    Stateful release cleanup verified
+    ```
 
 ## :material-book-open-page-variant-outline: 7.4 Headlamp
 
-Headlamp is an extensible Kubernetes web interface for viewing and managing cluster resources. This exercise deploys it
-inside the cluster and exposes it through a LoadBalancer Service. An Ingress is another exposure option, but is not configured here.
+Headlamp is a Kubernetes web interface. This lab deploys three replicas, exposes them through a LoadBalancer, and creates a
+cluster-admin binding for its ServiceAccount.
 
-First, let's add the Headlamp chart repository:
+!!! danger "Cluster-admin access"
+    Use this configuration only for the lab. Do not print the token during unattended validation, and remove the release
+    immediately after the exercise.
+
+Add and refresh the Headlamp repository.
 
 ```bash
 # Add the Headlamp chart repository.
-helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
+timeout 60s helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
 ```
-??? example "Expected result"
-    The `headlamp` chart repository is added.
 
-Update the repository:
-
-```bash
-# Update local chart repository information.
-helm repo update
-```
-??? example "Expected result"
-    Chart repository information is updated.
-
-Search for the Headlamp chart:
-
-```bash
-# Search for the Headlamp chart.
-helm search repo headlamp
-```
-??? example "Expected result"
-    The Headlamp chart search result is displayed.
-
-Install Headlamp:
-
-```bash
-# Install Headlamp in the kube-system namespace.
-helm install headlamp headlamp/headlamp --namespace kube-system \
-  --set replicaCount=3 \
-  --set service.type=LoadBalancer
-```
-??? example "Expected result"
-    The `headlamp` release is installed.
-
-Chart version `0.40.1` has a known issue in which it passes an unsupported `-session-ttl` argument. If the Headlamp Pods enter
-`CrashLoopBackOff` and their logs report this argument, remove it with:
-
-```bash
-# Remove the unsupported Headlamp session TTL argument.
-kubectl get deploy headlamp -n kube-system -o json | \
-  jq '.spec.template.spec.containers[0].args |= map(select(. != "-session-ttl=86400"))' | \
-  kubectl apply -f -
-```
-??? example "Expected result"
-    The Headlamp deployment is updated.
-
-Skip this workaround if the installed chart does not include the unsupported argument.
-Check the status of the installation:
-
-```bash
-# Show the Headlamp release status.
-helm status headlamp -n kube-system
-```
-??? example "Expected result"
-    The Headlamp release status is displayed.
-
-Check the pods:
-
-```bash
-# List Headlamp pods.
-kubectl get pods -n kube-system -l app.kubernetes.io/name=headlamp
-```
 ??? example "Expected result"
     ```text
-    NAME                        READY   STATUS    RESTARTS   AGE
-    headlamp-7975f584c8-2j69s   1/1     Running   0          11m
-    headlamp-7975f584c8-62vvr   1/1     Running   0          11m
-    headlamp-7975f584c8-rtvng   1/1     Running   0          11m
+    "headlamp" has been added to your repositories
     ```
-
-Check the `LoadBalancer` service created:
 
 ```bash
-# List Headlamp services.
-kubectl get services -n kube-system -l app.kubernetes.io/name=headlamp
+# Refresh the Headlamp repository metadata.
+timeout 180s helm repo update headlamp
 ```
+
 ??? example "Expected result"
     ```text
-    NAME       TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)        AGE
-    headlamp   LoadBalancer   10.152.183.231   10.237.75.130   80:32126/TCP   11m
+    ...Successfully got an update from the "headlamp" chart repository
+    Update Complete.
     ```
 
-The chart creates a `headlamp` ServiceAccount in the `kube-system` namespace. With the chart defaults used here, it is bound
-to the `cluster-admin` ClusterRole. Request a short-lived bearer token for this ServiceAccount:
+Confirm the pinned version.
 
 ```bash
-# Create a token for the Headlamp ServiceAccount.
-kubectl create token headlamp --namespace kube-system
+# Search for the pinned Headlamp chart version.
+helm search repo headlamp/headlamp --version 0.45.0
 ```
+
 ??? example "Expected result"
     ```text
-    eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1...
+    NAME                CHART VERSION   APP VERSION   DESCRIPTION
+    headlamp/headlamp   0.45.0          0.45.0        Headlamp is an easy-to-use and extensible Kubernetes web UI.
     ```
 
-Enter this token when Headlamp prompts for authentication.
+Validate the rendered resources against the API server.
 
-!!! danger "Cluster-admin token"
-    The token grants full control of the cluster, so treat it as a sensitive credential and use this configuration only for
-    the lab.
+```bash
+# Run a server-side dry run of the Headlamp resources.
+timeout 180s sh -c 'helm template headlamp headlamp/headlamp --version 0.45.0 --namespace kube-system --set replicaCount=3 --set service.type=LoadBalancer | kubectl apply --request-timeout=60s --dry-run=server -f -'
+```
 
-Open a tunneled browser session to `http://<EXTERNAL-IP>`, replacing the placeholder with the LoadBalancer address reported
-above.
+??? example "Expected result"
+    ```text
+    serviceaccount/headlamp created (server dry run)
+    secret/oidc created (server dry run)
+    clusterrolebinding.rbac.authorization.k8s.io/headlamp-admin created (server dry run)
+    service/headlamp created (server dry run)
+    deployment.apps/headlamp created (server dry run)
+    ```
+
+Install the pinned chart.
+
+```bash
+# Install Headlamp with three replicas and a LoadBalancer.
+timeout 1200s helm install headlamp headlamp/headlamp --version 0.45.0 --namespace kube-system --set replicaCount=3 --set service.type=LoadBalancer --wait --timeout 10m --rollback-on-failure
+```
+
+??? example "Expected result"
+    ```text
+    NAME: headlamp
+    NAMESPACE: kube-system
+    STATUS: deployed
+    DESCRIPTION: Install complete
+    ```
+
+!!! note "Session TTL argument"
+    Chart `0.40.1` could fail because its image did not support `-session-ttl=86400`. Pinned chart `0.45.0` renders this
+    argument and starts successfully, so do not apply the old Deployment mutation.
+
+Inspect the release.
+
+```bash
+# Display the Headlamp release status.
+helm status headlamp --namespace kube-system
+```
+
+??? example "Expected result"
+    ```text
+    NAME: headlamp
+    NAMESPACE: kube-system
+    STATUS: deployed
+    headlamp   Deployment 3/3
+    headlamp   LoadBalancer 10.107.242.11
+    ```
+
+Wait for all three Pods and display their image and placement.
+
+```bash
+# Wait for and display the Headlamp Pods.
+kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=headlamp --namespace kube-system --timeout=300s && kubectl get pods -l app.kubernetes.io/name=headlamp --namespace kube-system -o custom-columns=NAME:.metadata.name,READY:.status.containerStatuses[0].ready,IMAGE:.spec.containers[0].image,NODE:.spec.nodeName --no-headers
+```
+
+??? example "Expected result"
+    ```text
+    pod/headlamp-78c9db77c6-68bzw condition met
+    pod/headlamp-78c9db77c6-7phdk condition met
+    pod/headlamp-78c9db77c6-flbv8 condition met
+    headlamp-78c9db77c6-68bzw   true   ghcr.io/headlamp-k8s/headlamp:v0.45.0   k8s-ctrl
+    headlamp-78c9db77c6-7phdk   true   ghcr.io/headlamp-k8s/headlamp:v0.45.0   k8s-worker1
+    headlamp-78c9db77c6-flbv8   true   ghcr.io/headlamp-k8s/headlamp:v0.45.0   k8s-worker2
+    ```
+
+Wait for the external address and verify HTTP access.
+
+```bash
+# Wait for and display the Headlamp LoadBalancer Service.
+kubectl wait --for=jsonpath='{.status.loadBalancer.ingress[0].ip}' service/headlamp --namespace kube-system --timeout=180s && kubectl get service headlamp --namespace kube-system
+```
+
+??? example "Expected result"
+    ```text
+    service/headlamp condition met
+    NAME       TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)
+    headlamp   LoadBalancer   10.152.63.84   10.107.242.11   80:30764/TCP
+    ```
+
+```bash
+# Verify the Headlamp LoadBalancer endpoint.
+HEADLAMP_IP=$(kubectl get service headlamp --namespace kube-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}') && curl --silent --show-error --output /dev/null --write-out "HTTP %{http_code}\n" --max-time 30 "http://$HEADLAMP_IP/"
+```
+
+??? example "Expected result"
+    ```text
+    HTTP 200
+    ```
+
+Confirm the intended authorization and validate a short-lived token without printing it.
+
+```bash
+# Verify the Headlamp ServiceAccount cluster-admin authorization.
+timeout 60s kubectl auth can-i "*" "*" --as=system:serviceaccount:kube-system:headlamp
+```
+
+??? example "Expected result"
+    ```text
+    yes
+    ```
+
+```bash
+# Validate a short-lived Headlamp token without exposing it.
+HEADLAMP_TOKEN=$(timeout 60s kubectl create token headlamp --namespace kube-system --duration=10m) && test "$(printf "%s" "$HEADLAMP_TOKEN" | awk -F. '{print NF}')" -eq 3 && printf "Short-lived Headlamp token generated\n" && unset HEADLAMP_TOKEN
+```
+
+??? example "Expected result"
+    ```text
+    Short-lived Headlamp token generated
+    ```
+
+!!! note "Browser login"
+    Browser authentication is intentionally excluded from unattended validation. For an instructor-led demonstration,
+    generate a new short-lived token immediately before login and do not save it in notes, shell history, or screenshots.
+
+Remove Headlamp and verify its cluster-scoped binding is also gone.
+
+```bash
+# Uninstall Headlamp with a bounded wait.
+timeout 600s helm uninstall headlamp --namespace kube-system --wait --timeout 5m
+```
+
+??? example "Expected result"
+    ```text
+    release "headlamp" uninstalled
+    ```
+
+```bash
+# Verify complete Headlamp cleanup.
+timeout 180s sh -c 'while test -n "$(kubectl get deployment/headlamp service/headlamp serviceaccount/headlamp secret/oidc --namespace kube-system --ignore-not-found -o name)$(kubectl get clusterrolebinding/headlamp-admin --ignore-not-found -o name)"; do sleep 3; done' && printf "Headlamp cleanup verified\n"
+```
+
+??? example "Expected result"
+    ```text
+    Headlamp cleanup verified
+    ```
+
+Remove the source tree, generated charts, packages, and temporary render files.
+
+```bash
+# Remove the Chapter 7 repository aliases created by this workflow.
+helm repo remove stable bitnami headlamp
+```
+
+??? example "Expected result"
+    ```text
+    "stable" has been removed from your repositories
+    "bitnami" has been removed from your repositories
+    "headlamp" has been removed from your repositories
+    ```
+
+```bash
+# Remove Chapter 7 local artifacts.
+rm -rf -- "$HOME/kubernetes-tools" "$HOME/web-app" "$HOME/web-app-stateful" && rm -f -- /tmp/wordpress-chart-all.txt /tmp/wordpress-values.yaml /tmp/my-wordpress-blog.yaml /tmp/web-app-stateless.yaml /tmp/web-app-stateful.yaml /tmp/headlamp.yaml
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Verify that no Chapter 7 resource or local directory remains.
+
+```bash
+# Verify final Chapter 7 cleanup.
+test -z "$(helm repo list -o json | jq -r '.[] | select(.name == "stable" or .name == "bitnami" or .name == "headlamp") | .name')" && test -z "$(helm list --all-namespaces --filter '^(my-wordpress-blog|web-app-stateless|web-app-stateful|headlamp)$' -q)" && test -z "$(kubectl get deployment,statefulset,pod,service,serviceaccount,secret,configmap,networkpolicy,poddisruptionbudget,pvc --all-namespaces -o name | grep -E '(my-wordpress-blog|web-app-stateless|web-app-stateful|headlamp)' || true)" && test -z "$(kubectl get secret/oidc --namespace kube-system --ignore-not-found -o name)" && test -z "$(kubectl get clusterrolebinding/headlamp-admin --ignore-not-found -o name)" && test -z "$(kubectl get pv -o jsonpath='{range .items[*]}{.spec.claimRef.name}{"\n"}{end}' | grep -E '(my-wordpress-blog|web-app-stateful)' || true)" && test ! -e "$HOME/kubernetes-tools" && test ! -e "$HOME/web-app" && test ! -e "$HOME/web-app-stateful" && printf "Chapter 7 cleanup verified\n"
+```
+
+??? example "Expected result"
+    ```text
+    Chapter 7 cleanup verified
+    ```
+
+Confirm final node readiness.
+
+```bash
+# Confirm final node readiness.
+kubectl wait --for=condition=Ready nodes --all --timeout=300s
+```
+
+??? example "Expected result"
+    ```text
+    node/k8s-ctrl condition met
+    node/k8s-worker1 condition met
+    node/k8s-worker2 condition met
+    ```
+
+```bash
+# Display the final cluster node status.
+kubectl get nodes
+```
+
+??? example "Expected result"
+    ```text
+    NAME          STATUS   ROLES                  AGE   VERSION
+    k8s-ctrl      Ready    control-plane,worker   19h   v1.35.7
+    k8s-worker1   Ready    worker                 19h   v1.35.7
+    k8s-worker2   Ready    worker                 19h   v1.35.7
+    ```
