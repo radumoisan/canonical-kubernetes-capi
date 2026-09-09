@@ -173,7 +173,8 @@ Confirm that the Secret belongs to the default ServiceAccount:
 
 ```bash
 # Display the ServiceAccount named by the Secret annotation.
-kubectl get secret default-serviceaccount-secret -o jsonpath='{.metadata.annotations.kubernetes\.io/service-account\.name}{"\n"}'
+kubectl get secret default-serviceaccount-secret \
+  -o jsonpath='{.metadata.annotations.kubernetes\.io/service-account\.name}{"\n"}'
 ```
 ??? example "Expected result"
     ```text
@@ -338,6 +339,8 @@ The CA certificate verifies the API server's identity, and the token authenticat
     A Pod's `serviceAccountName` is set when the Pod is created and cannot be changed later. Each Pod uses one ServiceAccount, but
     multiple Pods in a namespace can use the same ServiceAccount.
 
+### :material-application-edit-outline: Clean up projected credentials
+
 Delete the Pod:
 
 ```bash
@@ -370,13 +373,17 @@ and ServiceAccounts. RBAC uses four principal authorization resource kinds:
 * `RoleBinding`: grants a Role or ClusterRole to subjects within one namespace.
 * `ClusterRoleBinding`: grants a ClusterRole to subjects across the cluster.
 
-![Roles and bindings](assets/roles_bindings.png)
+The following diagram summarizes how Roles and bindings connect subjects to permissions:
+
+![Relationship between Roles, RoleBindings, subjects, and permissions](assets/roles_bindings.png)
 
 Verify that the API server uses `Node` and `RBAC` authorization modes:
 
 ```bash
 # Display the API server authorization mode.
-timeout 30 lxc exec k8s-ctrl -- sh -c 'ps auxww | grep "[k]ube-apiserver"' | grep -o -- '--authorization-mode=[^ ]*'
+timeout 30 lxc exec k8s-ctrl -- \
+  sh -c 'ps auxww | grep "[k]ube-apiserver"' |
+  grep -o -- '--authorization-mode=[^ ]*'
 ```
 ??? example "Expected result"
     ```text
@@ -518,7 +525,9 @@ Verify that `student-sa` can list Pods:
 
 ```bash
 # Check the granted Pod permission.
-kubectl auth can-i list pods --as=system:serviceaccount:default:student-sa -n default
+kubectl auth can-i list pods \
+  --as=system:serviceaccount:default:student-sa \
+  -n default
 ```
 ??? example "Expected result"
     ```text
@@ -530,7 +539,14 @@ failing if any other value is returned:
 
 ```bash
 # Check the denied Secret permission.
-result=$(kubectl auth can-i list secrets --as=system:serviceaccount:default:student-sa -n default 2>/dev/null || true); test "$result" = no; printf '%s\n' "$result"
+result=$(
+  kubectl auth can-i list secrets \
+    --as=system:serviceaccount:default:student-sa \
+    -n default 2>/dev/null ||
+    true
+) &&
+  test "$result" = no &&
+  printf '%s\n' "$result"
 ```
 ??? example "Expected result"
     ```text
@@ -700,7 +716,14 @@ Verify that no Chapter 6 resources remain:
 
 ```bash
 # Check for remaining Chapter 6 resources.
-kubectl get secret/default-serviceaccount-secret pod/curl serviceaccount/student-sa role.rbac.authorization.k8s.io/pod-reader rolebinding.rbac.authorization.k8s.io/read-pods -o name --ignore-not-found
+kubectl get \
+  secret/default-serviceaccount-secret \
+  pod/curl \
+  serviceaccount/student-sa \
+  role.rbac.authorization.k8s.io/pod-reader \
+  rolebinding.rbac.authorization.k8s.io/read-pods \
+  -o name \
+  --ignore-not-found
 ```
 ??? example "Expected result"
     ```text
@@ -725,7 +748,11 @@ Confirm that every cluster node remains Ready:
 
 ```bash
 # Wait for all cluster nodes to remain ready.
-kubectl wait --for=condition=Ready nodes --all --timeout=180s
+kubectl wait \
+  --for=condition=Ready \
+  nodes \
+  --all \
+  --timeout=180s
 ```
 ??? example "Expected result"
     ```text
