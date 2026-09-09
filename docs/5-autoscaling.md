@@ -1,4 +1,4 @@
-# :material-numeric-5-circle: 5. Autoscaling
+# 5. Autoscaling
 
 Select the workload cluster kubeconfig:
 
