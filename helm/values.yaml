@@ -5,7 +5,7 @@ certmanager:
   cluster_issuer: letsencrypt
 image:
   repository: cr.virtomat.io/virtomat/canonical-kubernetes-capi
-  tag: 0.0.27
+  tag: 0.0.28
   pullPolicy: IfNotPresent
 service:
   port: 80
