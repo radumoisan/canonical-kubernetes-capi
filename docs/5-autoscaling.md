@@ -30,8 +30,10 @@ Kubernetes can automatically adjust an application's replica count based on obse
 compares measured usage with the containers' CPU requests.
 
 The `HorizontalPodAutoscaler` (`HPA`) reads metrics, calculates the number of replicas required to meet its target, and updates a
-workload that supports the scale subresource. Resource metrics are exposed through the `metrics.k8s.io` API, which is commonly
-provided by Metrics Server.
+workload that supports the scale subresource.
+
+Resource metrics are exposed through the `metrics.k8s.io` API, which is commonly provided by Metrics Server. The following diagram
+shows how Metrics Server supplies those metrics to the `HPA` controller:
 
 ![Metrics Server and HPA data flow](assets/hpa1.png)
 
@@ -43,6 +45,8 @@ The autoscaling process has three main steps:
 * Collect metrics for the Pods managed by the target workload.
 * Calculate the replica count required to meet the configured target.
 * Update the desired replica count of the target workload.
+
+The following diagram summarizes this control loop:
 
 ![Horizontal Pod Autoscaler process](assets/hpa2.png)
 
@@ -119,7 +123,11 @@ Wait for the Service to have a ready endpoint:
 
 ```bash
 # Wait for a ready nginx Service endpoint.
-kubectl wait --for=jsonpath='{.endpoints[0].conditions.ready}'=true endpointslice -l kubernetes.io/service-name=nginx-hpa --timeout=180s
+kubectl wait \
+  --for=jsonpath='{.endpoints[0].conditions.ready}'=true \
+  endpointslice \
+  -l kubernetes.io/service-name=nginx-hpa \
+  --timeout=180s
 ```
 ??? example "Expected result"
     ```text
@@ -158,7 +166,8 @@ Verify the CPU request:
 
 ```bash
 # Display the nginx container CPU request.
-kubectl get deployment nginx-hpa -o jsonpath='{.spec.template.spec.containers[0].resources.requests.cpu}{"\n"}'
+kubectl get deployment nginx-hpa \
+  -o jsonpath='{.spec.template.spec.containers[0].resources.requests.cpu}{"\n"}'
 ```
 ??? example "Expected result"
     ```text
@@ -191,7 +200,8 @@ Verify the minimum, maximum, and CPU target values:
 
 ```bash
 # Display the HPA replica bounds and CPU target.
-kubectl get hpa nginx-hpa -o jsonpath='{.spec.minReplicas}{"\t"}{.spec.maxReplicas}{"\t"}{.spec.metrics[0].resource.target.averageUtilization}{"%\n"}'
+kubectl get hpa nginx-hpa \
+  -o jsonpath='{.spec.minReplicas}{"\t"}{.spec.maxReplicas}{"\t"}{.spec.metrics[0].resource.target.averageUtilization}{"%\n"}'
 ```
 ??? example "Expected result"
     ```text
@@ -214,12 +224,23 @@ The current CPU percentage and age vary. Continue only after the current metric 
 
 ### :material-application-edit-outline: Generate bounded load and scale up
 
-Create a load-generator Pod with four request loops. Each loop has a six-minute limit, so the load stops even if the remaining
-commands are interrupted:
+Create a load-generator Pod with four request loops:
+
+!!! note "Bounded load"
+    Each loop runs for at most six minutes, so the load stops even if the remaining commands are interrupted.
 
 ```bash
 # Start bounded load against the nginx Service.
-kubectl run load-generator --image=busybox --restart=Never -- /bin/sh -c 'for worker in 1 2 3 4; do timeout 360 sh -c "while true; do wget -q -O /dev/null http://nginx-hpa; done" & done; wait'
+kubectl run load-generator \
+  --image=busybox \
+  --restart=Never \
+  -- /bin/sh -c '
+    for worker in 1 2 3 4; do
+      timeout 360 sh -c \
+        "while true; do wget -q -O /dev/null http://nginx-hpa; done" &
+    done
+    wait
+  '
 ```
 ??? example "Expected result"
     ```text
@@ -241,7 +262,12 @@ Wait up to five minutes for the `HPA` to increase the current replica count abov
 
 ```bash
 # Wait for the HPA to scale above one replica.
-timeout 300 bash -c 'until replicas=$(kubectl get hpa nginx-hpa -o jsonpath="{.status.currentReplicas}"); [[ "$replicas" =~ ^[2-5]$ ]]; do sleep 10; done'
+timeout 300 bash -c \
+  'until replicas=$(kubectl get hpa nginx-hpa \
+    -o jsonpath="{.status.currentReplicas}"); \
+    [[ "$replicas" =~ ^[2-5]$ ]]; do
+      sleep 10
+    done'
 ```
 ??? example "Expected result"
     ```text
@@ -252,7 +278,12 @@ Wait for at least two nginx Pods to become ready:
 
 ```bash
 # Wait for multiple nginx Pods to become ready.
-timeout 180 bash -c 'until replicas=$(kubectl get deployment nginx-hpa -o jsonpath="{.status.readyReplicas}"); [[ "$replicas" =~ ^[2-5]$ ]]; do sleep 5; done'
+timeout 180 bash -c \
+  'until replicas=$(kubectl get deployment nginx-hpa \
+    -o jsonpath="{.status.readyReplicas}"); \
+    [[ "$replicas" =~ ^[2-5]$ ]]; do
+      sleep 5
+    done'
 ```
 ??? example "Expected result"
     ```text
@@ -317,12 +348,21 @@ kubectl delete pod load-generator --wait=true --timeout=180s
     pod "load-generator" deleted from default namespace
     ```
 
-The default scale-down stabilization window is 300 seconds. Wait up to ten minutes for both the `HPA` and the Deployment to return
-to one replica:
+!!! note "Scale-down timing"
+    The default scale-down stabilization window is five minutes. The ten-minute timeout below also allows for metric collection and
+    reconciliation delays.
+
+Wait for both the `HPA` and the Deployment to return to one replica:
 
 ```bash
 # Wait for the HPA and Deployment to scale down to one replica.
-timeout 600 bash -c 'until [[ "$(kubectl get hpa nginx-hpa -o jsonpath="{.status.currentReplicas}")" == "1" && "$(kubectl get deployment nginx-hpa -o jsonpath="{.status.readyReplicas}")" == "1" ]]; do sleep 15; done'
+timeout 600 bash -c \
+  'until [[ "$(kubectl get hpa nginx-hpa \
+    -o jsonpath="{.status.currentReplicas}")" == "1" && \
+    "$(kubectl get deployment nginx-hpa \
+    -o jsonpath="{.status.readyReplicas}")" == "1" ]]; do
+      sleep 15
+    done'
 ```
 ??? example "Expected result"
     ```text
@@ -428,6 +468,9 @@ behavior:
     selectPolicy: Max
 ```
 
+The `300`-second scale-down stabilization window explains why replicas remain above one after the load stops. Scale-up has no
+stabilization delay, allowing the `HPA` to respond quickly when CPU utilization rises.
+
 ### :material-application-edit-outline: Clean up
 
 Delete the `HPA` before deleting its target:
@@ -467,7 +510,13 @@ Verify that the named resources are absent:
 
 ```bash
 # Check for remaining Chapter 5 resources.
-kubectl get deployment/nginx-hpa service/nginx-hpa horizontalpodautoscaler/nginx-hpa pod/load-generator -o name --ignore-not-found
+kubectl get \
+  deployment/nginx-hpa \
+  service/nginx-hpa \
+  horizontalpodautoscaler/nginx-hpa \
+  pod/load-generator \
+  -o name \
+  --ignore-not-found
 ```
 ??? example "Expected result"
     ```text
