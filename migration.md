@@ -18,4 +18,4 @@ Tracks migration status for the active Kubernetes CAPI lab sequence in `ref-labs
 - `5_autoscaling_gce.md`: `Validated`
 - `6_auth_gce.md`: `Validated`
 - `7_helm_gce.md`: `Validated`
-- `8_upgrading_gce.md`: `Migrated`
+- `8_upgrading_gce.md`: `Validated`

@@ -5900,3 +5900,594 @@ kubectl get nodes
     k8s-worker1   Ready    worker                 19h   v1.35.7
     k8s-worker2   Ready    worker                 19h   v1.35.7
     ```
+
+### :material-application-edit-outline: 2026-09-09 - Chapter 8 upgrade validation
+
+Generated names, ages, and unrelated dynamic columns are omitted from representative results.
+
+The first monitor for the second worker timed out after its upgrade reboot left the LXD VM stopped. Failed monitors and
+diagnostic commands are not part of this successful training-command transcript. Successful VM restart recovery is included
+below, and the normalized lab integrates it into bounded monitoring. A management CoreDNS `.maas` forward was then added so
+the provider could reliably reach the workload API and complete the existing request without reapplying its annotation.
+
+Verify both kubeconfigs.
+
+```bash
+# Verify the management and workload kubeconfigs.
+test -r "$HOME/.kube/config" && test -r "$HOME/.kube/myk8scluster_config" && printf "Both kubeconfigs are readable\n"
+```
+
+??? example "Expected result"
+    ```text
+    Both kubeconfigs are readable
+    ```
+
+Display both contexts.
+
+```bash
+# Display the management and workload contexts.
+kubectl --kubeconfig="$HOME/.kube/config" config current-context && kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" config current-context
+```
+
+??? example "Expected result"
+    ```text
+    k8s
+    myk8scluster-admin@myk8scluster
+    ```
+
+Display the management node.
+
+```bash
+# Display the management-cluster node.
+kubectl --kubeconfig="$HOME/.kube/config" get nodes -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME           STATUS   ROLES                  VERSION   INTERNAL-IP
+    cluster-ctrl   Ready    control-plane,worker   v1.35.7   10.107.242.61
+    ```
+
+Display the workload nodes before upgrading.
+
+```bash
+# Display the workload-cluster nodes before upgrading.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get nodes -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME          STATUS   ROLES                  VERSION   INTERNAL-IP
+    k8s-ctrl      Ready    control-plane,worker   v1.35.7   10.107.242.62
+    k8s-worker1   Ready    worker                 v1.35.7   10.107.242.63
+    k8s-worker2   Ready    worker                 v1.35.7   10.107.242.64
+    ```
+
+Verify the workload datastore.
+
+```bash
+# Verify the workload control-plane datastore.
+test "$(lxc exec k8s-ctrl -- snap services k8s | awk '$1 == "k8s.etcd" { print $3 }')" = "active" && printf "The workload control plane uses the supported etcd datastore\n"
+```
+
+??? example "Expected result"
+    ```text
+    The workload control plane uses the supported etcd datastore
+    ```
+
+Verify the management API.
+
+```bash
+# Verify management API readiness.
+kubectl --kubeconfig="$HOME/.kube/config" get --raw="/readyz"
+```
+
+??? example "Expected result"
+    ```text
+    ok
+    ```
+
+Verify the workload API.
+
+```bash
+# Verify workload API readiness.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get --raw="/readyz"
+```
+
+??? example "Expected result"
+    ```text
+    ok
+    ```
+
+Display provider versions.
+
+```bash
+# Display management-cluster controller images.
+kubectl --kubeconfig="$HOME/.kube/config" get deployments -A -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,IMAGE:.spec.template.spec.containers[*].image --no-headers
+```
+
+??? example "Expected result"
+    ```text
+    cabpck-system    cabpck-bootstrap-controller-manager   ghcr.io/canonical/cluster-api-k8s/bootstrap-controller:v0.6.2,...
+    cacpck-system    cacpck-controller-manager             ghcr.io/canonical/cluster-api-k8s/controlplane-controller:v0.6.2
+    capi-system      capi-controller-manager               registry.k8s.io/cluster-api/cluster-api-controller:v1.13.5
+    capmaas-system   capmaas-controller-manager            .../cluster-api-provider-maas-controller:v0.9.0,...
+    ```
+
+Enforce the validated provider versions.
+
+```bash
+# Require the validated CAPI provider versions.
+kubectl --kubeconfig="$HOME/.kube/config" get deployments -A -o json | jq -e 'any(.items[]; .metadata.namespace == "cabpck-system" and any(.spec.template.spec.containers[]; .image | endswith(":v0.6.2"))) and any(.items[]; .metadata.namespace == "cacpck-system" and any(.spec.template.spec.containers[]; .image | endswith(":v0.6.2"))) and any(.items[]; .metadata.namespace == "capi-system" and any(.spec.template.spec.containers[]; .image | endswith(":v1.13.5"))) and any(.items[]; .metadata.namespace == "capmaas-system" and any(.spec.template.spec.containers[]; .image | endswith(":v0.9.0")))' >/dev/null && printf "Validated CAPI provider versions are installed\n"
+```
+
+??? example "Expected result"
+    ```text
+    Validated CAPI provider versions are installed
+    ```
+
+Display the CAPI topology.
+
+```bash
+# Display the cluster, control plane, worker deployment, and Machines.
+kubectl --kubeconfig="$HOME/.kube/config" get clusters,ck8scontrolplanes,machinedeployments,machines
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster                                  True   1   2   Provisioned
+    myk8scluster-control-plane    true   true    1.35.7   1   1   1
+    myk8scluster-worker-md-0      True   2       2        2   Running   v1.35.7
+    myk8scluster-control-plane-cvgdl       k8s-ctrl      True   True   Running   v1.35.7
+    myk8scluster-worker-md-0-m8bgf-rjszd   k8s-worker1   True   True   Running   v1.35.7
+    myk8scluster-worker-md-0-m8bgf-sxbrk   k8s-worker2   True   True   Running   v1.35.7
+    ```
+
+Verify management Pod health.
+
+```bash
+# Verify management-cluster Pod health.
+kubectl --kubeconfig="$HOME/.kube/config" get pods -A -o json | jq -e 'all(.items[]; .status.phase == "Succeeded" or (.status.phase == "Running" and (.status.containerStatuses | type == "array") and (.status.containerStatuses | length > 0) and all(.status.containerStatuses[]; .ready == true)))' >/dev/null && printf "Management cluster Pods are healthy\n"
+```
+
+??? example "Expected result"
+    ```text
+    Management cluster Pods are healthy
+    ```
+
+Verify workload Pod health.
+
+```bash
+# Verify workload-cluster Pod health.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get pods -A -o json | jq -e 'all(.items[]; .status.phase == "Succeeded" or (.status.phase == "Running" and (.status.containerStatuses | type == "array") and (.status.containerStatuses | length > 0) and all(.status.containerStatuses[]; .ready == true)))' >/dev/null && printf "Workload cluster Pods are healthy\n"
+```
+
+??? example "Expected result"
+    ```text
+    Workload cluster Pods are healthy
+    ```
+
+Display Machine readiness and upgrade state.
+
+```bash
+# Display Machine readiness and upgrade state.
+kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -r '.items[] | [.metadata.name, .status.nodeRef.name, .status.phase, ([.status.conditions[] | select(.type == "Ready")][0].status // "Missing"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-status"] // "none"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-to"] // "none")] | @tsv' | sort -k2
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-control-plane-cvgdl       k8s-ctrl      Running   True   none   none
+    myk8scluster-worker-md-0-m8bgf-rjszd   k8s-worker1   Running   True   none   none
+    myk8scluster-worker-md-0-m8bgf-sxbrk   k8s-worker2   Running   True   none   none
+    ```
+
+Display installed, tracked, and target snap versions.
+
+```bash
+# Display source, tracking, and target snap versions on every workload node.
+for node in k8s-ctrl k8s-worker1 k8s-worker2; do printf "%s\t" "$node"; lxc exec "$node" -- snap info k8s | awk '$1 == "tracking:" { tracking=$2 } $1 == "installed:" { installed=$2 } $1 == "1.36-classic/candidate:" { target=$2 } END { print installed, tracking, target }'; done
+```
+
+??? example "Expected result"
+    ```text
+    k8s-ctrl      v1.35.7 1.35-classic/stable v1.36.4
+    k8s-worker1   v1.35.7 1.35-classic/stable v1.36.4
+    k8s-worker2   v1.35.7 1.35-classic/stable v1.36.4
+    ```
+
+Request the control-plane upgrade.
+
+```bash
+# Discover and request the in-place control-plane upgrade.
+CONTROL_PLANE_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-ctrl")] | if length == 1 then .[0].metadata.name else error("expected one control-plane machine") end') && kubectl --kubeconfig="$HOME/.kube/config" annotate machine "$CONTROL_PLANE_MACHINE" "v1beta2.k8sd.io/in-place-upgrade-to=channel=1.36-classic/candidate"
+```
+
+??? example "Expected result"
+    ```text
+    machine.cluster.x-k8s.io/myk8scluster-control-plane-cvgdl annotated
+    ```
+
+Monitor the control-plane upgrade.
+
+```bash
+# Monitor the control-plane Machine upgrade.
+CONTROL_PLANE_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-ctrl")][0].metadata.name') && timeout 1800s bash -c 'set -euo pipefail; last=""; while true; do status=$(kubectl --kubeconfig="$HOME/.kube/config" get machine "$1" -o json | jq -r ".metadata.annotations[\"v1beta2.k8sd.io/in-place-upgrade-status\"] // \"pending\""); if [[ "$status" != "$last" ]]; then printf "%s upgrade status: %s\n" "$1" "$status"; last="$status"; fi; case "$status" in done) exit 0 ;; failed) exit 2 ;; esac; sleep 10; done' _ "$CONTROL_PLANE_MACHINE"
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-control-plane-cvgdl upgrade status: in-progress
+    myk8scluster-control-plane-cvgdl upgrade status: done
+    ```
+
+Display the completed control-plane annotations.
+
+```bash
+# Display the completed control-plane upgrade annotations.
+CONTROL_PLANE_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-ctrl")][0].metadata.name') && kubectl --kubeconfig="$HOME/.kube/config" get machine "$CONTROL_PLANE_MACHINE" -o json | jq -r '[.metadata.name, .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-release"], .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-status"], (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-to"] // "absent"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at"] // "absent"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-change-id"] // "absent")] | @tsv'
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-control-plane-cvgdl   channel=1.36-classic/candidate   done   absent   absent   absent
+    ```
+
+Verify the control-plane node.
+
+```bash
+# Verify control-plane readiness and runtime version.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" wait --for=condition=Ready node/k8s-ctrl --timeout=600s && test "$(kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get node k8s-ctrl -o jsonpath='{.status.nodeInfo.kubeletVersion}')" = "v1.36.4" && printf "k8s-ctrl is Ready at v1.36.4\n"
+```
+
+??? example "Expected result"
+    ```text
+    node/k8s-ctrl condition met
+    k8s-ctrl is Ready at v1.36.4
+    ```
+
+Request the first worker upgrade.
+
+```bash
+# Discover and request the first worker upgrade.
+WORKER_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-worker1")] | if length == 1 then .[0].metadata.name else error("expected one machine for k8s-worker1") end') && kubectl --kubeconfig="$HOME/.kube/config" annotate machine "$WORKER_MACHINE" "v1beta2.k8sd.io/in-place-upgrade-to=channel=1.36-classic/candidate"
+```
+
+??? example "Expected result"
+    ```text
+    machine.cluster.x-k8s.io/myk8scluster-worker-md-0-m8bgf-rjszd annotated
+    ```
+
+Monitor the first worker upgrade.
+
+```bash
+# Monitor the first worker Machine upgrade.
+WORKER_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-worker1")][0].metadata.name') && timeout 1800s bash -c 'set -euo pipefail; last=""; while true; do status=$(kubectl --kubeconfig="$HOME/.kube/config" get machine "$1" -o json | jq -r ".metadata.annotations[\"v1beta2.k8sd.io/in-place-upgrade-status\"] // \"pending\""); if [[ "$status" != "$last" ]]; then printf "%s upgrade status: %s\n" "$1" "$status"; last="$status"; fi; case "$status" in done) exit 0 ;; failed) exit 2 ;; esac; sleep 10; done' _ "$WORKER_MACHINE"
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-worker-md-0-m8bgf-rjszd upgrade status: pending
+    myk8scluster-worker-md-0-m8bgf-rjszd upgrade status: in-progress
+    myk8scluster-worker-md-0-m8bgf-rjszd upgrade status: done
+    ```
+
+Display the completed first-worker annotations.
+
+```bash
+# Display the completed first-worker upgrade annotations.
+WORKER_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-worker1")][0].metadata.name') && kubectl --kubeconfig="$HOME/.kube/config" get machine "$WORKER_MACHINE" -o json | jq -r '[.metadata.name, .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-release"], .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-status"], (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-to"] // "absent"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at"] // "absent"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-change-id"] // "absent")] | @tsv'
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-worker-md-0-m8bgf-rjszd   channel=1.36-classic/candidate   done   absent   absent   absent
+    ```
+
+Verify the first worker.
+
+```bash
+# Verify first-worker readiness and runtime version.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" wait --for=condition=Ready node/k8s-worker1 --timeout=600s && test "$(kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get node k8s-worker1 -o jsonpath='{.status.nodeInfo.kubeletVersion}')" = "v1.36.4" && printf "k8s-worker1 is Ready at v1.36.4\n"
+```
+
+??? example "Expected result"
+    ```text
+    node/k8s-worker1 condition met
+    k8s-worker1 is Ready at v1.36.4
+    ```
+
+Verify all nodes before the second worker.
+
+```bash
+# Verify cluster readiness before the second worker upgrade.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" wait --for=condition=Ready nodes --all --timeout=300s
+```
+
+??? example "Expected result"
+    ```text
+    node/k8s-ctrl condition met
+    node/k8s-worker1 condition met
+    node/k8s-worker2 condition met
+    ```
+
+Request the second worker upgrade.
+
+```bash
+# Discover and request the second worker upgrade.
+WORKER_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-worker2")] | if length == 1 then .[0].metadata.name else error("expected one machine for k8s-worker2") end') && kubectl --kubeconfig="$HOME/.kube/config" annotate machine "$WORKER_MACHINE" "v1beta2.k8sd.io/in-place-upgrade-to=channel=1.36-classic/candidate"
+```
+
+??? example "Expected result"
+    ```text
+    machine.cluster.x-k8s.io/myk8scluster-worker-md-0-m8bgf-sxbrk annotated
+    ```
+
+Restart the second worker after its upgrade reboot left the lab VM stopped.
+
+```bash
+# Restart the stopped second-worker VM.
+timeout 120s lxc start k8s-worker2
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Configure deterministic management DNS.
+
+```bash
+# Route management-cluster .maas queries through the MAAS DNS gateway.
+MAAS_DNS=$(ip -4 -o addr show lxdbr0 | awk '{split($4, address, "/"); print address[1]}') && COREFILE=$(kubectl --kubeconfig="$HOME/.kube/config" get configmap ck-dns-coredns --namespace kube-system -o jsonpath='{.data.Corefile}') && if grep -q "^maas:53 {" <<<"$COREFILE"; then printf "MAAS forwarding already configured\n"; else PATCHED_COREFILE=$(printf 'maas:53 {\n    errors\n    cache 30\n    forward . %s\n}\n%s' "$MAAS_DNS" "$COREFILE") && kubectl --kubeconfig="$HOME/.kube/config" patch configmap ck-dns-coredns --namespace kube-system --type merge -p "$(jq -nc --arg corefile "$PATCHED_COREFILE" '{data: {Corefile: $corefile}}')"; fi
+```
+
+??? example "Expected result"
+    ```text
+    configmap/ck-dns-coredns patched
+    ```
+
+Verify management-cluster workload API resolution.
+
+```bash
+# Require ten consistent workload API DNS responses.
+COREDNS_IP=$(kubectl --kubeconfig="$HOME/.kube/config" get service coredns --namespace kube-system -o jsonpath='{.spec.clusterIP}') && API_SERVER=$(kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" config view --minify -o jsonpath='{.clusters[0].cluster.server}') && API_HOST=${API_SERVER#https://} && API_HOST=${API_HOST%%:*} && EXPECTED_IP=$(getent ahostsv4 "$API_HOST" | awk 'NR == 1 { print $1 }') && timeout 180s bash -c 'while true; do resolved=0; for query in {1..10}; do [[ "$(lxc exec cluster-ctrl -- dig +time=2 +tries=1 +short @"$1" "$2" A | sort -u)" == "$3" ]] && ((resolved+=1)); done; if [[ "$resolved" -eq 10 ]]; then printf "Management DNS resolved %s consistently\n" "$2"; exit 0; fi; sleep 5; done' _ "$COREDNS_IP" "$API_HOST" "$EXPECTED_IP"
+```
+
+??? example "Expected result"
+    ```text
+    Management DNS resolved myk8scluster-1d008f.maas consistently
+    ```
+
+Resume monitoring the existing second-worker request.
+
+```bash
+# Monitor the second worker Machine upgrade.
+WORKER_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-worker2")][0].metadata.name') && timeout 600s bash -c 'last=""; while true; do if ! machine_json=$(kubectl --kubeconfig="$HOME/.kube/config" get machine "$1" -o json 2>/dev/null); then sleep 10; continue; fi; status=$(jq -r ".metadata.annotations[\"v1beta2.k8sd.io/in-place-upgrade-status\"] // \"pending\"" <<<"$machine_json"); if [[ "$status" != "$last" ]]; then printf "%s upgrade status: %s\n" "$1" "$status"; last="$status"; fi; case "$status" in done) exit 0 ;; failed) exit 2 ;; esac; sleep 10; done' _ "$WORKER_MACHINE"
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-worker-md-0-m8bgf-sxbrk upgrade status: done
+    ```
+
+Display the completed second-worker annotations.
+
+```bash
+# Display the completed second-worker upgrade annotations.
+WORKER_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-worker2")][0].metadata.name') && kubectl --kubeconfig="$HOME/.kube/config" get machine "$WORKER_MACHINE" -o json | jq -r '[.metadata.name, .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-release"], .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-status"], (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-to"] // "absent"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at"] // "absent"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-change-id"] // "absent")] | @tsv'
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-worker-md-0-m8bgf-sxbrk   channel=1.36-classic/candidate   done   absent   absent   absent
+    ```
+
+Verify the second worker.
+
+```bash
+# Verify second-worker readiness and runtime version.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" wait --for=condition=Ready node/k8s-worker2 --timeout=600s && test "$(kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get node k8s-worker2 -o jsonpath='{.status.nodeInfo.kubeletVersion}')" = "v1.36.4" && printf "k8s-worker2 is Ready at v1.36.4\n"
+```
+
+??? example "Expected result"
+    ```text
+    node/k8s-worker2 condition met
+    k8s-worker2 is Ready at v1.36.4
+    ```
+
+Restart the first worker after its delayed upgrade shutdown.
+
+```bash
+# Restart the stopped first-worker VM.
+lxc start k8s-worker1
+```
+
+??? example "Expected result"
+    ```text
+    No output.
+    ```
+
+Require a final stabilization window.
+
+```bash
+# Require stable VM and node health across the workload cluster.
+timeout 900s bash -c 'stable_since=0; while true; do running=$(lxc list --format csv -c ns | grep -Ec "^k8s-(ctrl|worker1|worker2),RUNNING$"); node_count=$(kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get nodes --no-headers 2>/dev/null | wc -l); version_count=$(kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get nodes -o jsonpath="{range .items[*]}{.status.nodeInfo.kubeletVersion}{\"\\n\"}{end}" 2>/dev/null | grep -cx "v1.36.4"); if [[ "$running" -eq 3 && "$node_count" -eq 3 && "$version_count" -eq 3 ]] && kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" wait --for=condition=Ready nodes --all --timeout=10s >/dev/null 2>&1; then now=$(date +%s); [[ "$stable_since" -ne 0 ]] || stable_since=$now; if (( now - stable_since >= 120 )); then printf "All workload VMs and nodes remained healthy at v1.36.4 for 120 seconds\n"; exit 0; fi; else stable_since=0; fi; sleep 10; done'
+```
+
+??? example "Expected result"
+    ```text
+    All workload VMs and nodes remained healthy at v1.36.4 for 120 seconds
+    ```
+
+Display the final workload nodes.
+
+```bash
+# Display the upgraded workload-cluster nodes.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get nodes -o wide
+```
+
+??? example "Expected result"
+    ```text
+    NAME          STATUS   ROLES                  VERSION   INTERNAL-IP     CONTAINER-RUNTIME
+    k8s-ctrl      Ready    control-plane,worker   v1.36.4   10.107.242.62   containerd://2.3.3
+    k8s-worker1   Ready    worker                 v1.36.4   10.107.242.63   containerd://2.3.3
+    k8s-worker2   Ready    worker                 v1.36.4   10.107.242.64   containerd://2.3.3
+    ```
+
+Assert the final workload node state.
+
+```bash
+# Verify every workload node is Ready at the validated target version.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get nodes -o json | jq -e '(.items | length == 3) and all(.items[]; .status.nodeInfo.kubeletVersion == "v1.36.4" and ([.status.conditions[] | select(.type == "Ready")][0].status == "True"))' >/dev/null && printf "All workload nodes are Ready at v1.36.4\n"
+```
+
+??? example "Expected result"
+    ```text
+    All workload nodes are Ready at v1.36.4
+    ```
+
+Verify workload Pod health after the upgrade.
+
+```bash
+# Verify final workload-cluster Pod health.
+kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get pods -A -o json | jq -e 'all(.items[]; .status.phase == "Succeeded" or (.status.phase == "Running" and (.status.containerStatuses | type == "array") and (.status.containerStatuses | length > 0) and all(.status.containerStatuses[]; .ready == true)))' >/dev/null && printf "Workload cluster Pods are healthy\n"
+```
+
+??? example "Expected result"
+    ```text
+    Workload cluster Pods are healthy
+    ```
+
+Display final snap versions and channels.
+
+```bash
+# Display final snap versions and tracking channels.
+for node in k8s-ctrl k8s-worker1 k8s-worker2; do printf "%s\t" "$node"; lxc exec "$node" -- snap info k8s | awk '$1 == "tracking:" { tracking=$2 } $1 == "installed:" { installed=$2 } END { print installed, tracking }'; done
+```
+
+??? example "Expected result"
+    ```text
+    k8s-ctrl      v1.36.4 1.36-classic/candidate
+    k8s-worker1   v1.36.4 1.36-classic/candidate
+    k8s-worker2   v1.36.4 1.36-classic/candidate
+    ```
+
+Display runtime and declarative Machine state.
+
+```bash
+# Display runtime upgrade annotations alongside declarative Machine versions.
+kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -r '.items | sort_by(.status.nodeRef.name)[] | [.metadata.name, .status.nodeRef.name, .spec.version, .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-release"], .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-status"], (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-to"] // "absent"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at"] // "absent"), (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-change-id"] // "absent")] | @tsv'
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-control-plane-cvgdl       k8s-ctrl      v1.35.7   channel=1.36-classic/candidate   done   absent   absent   absent
+    myk8scluster-worker-md-0-m8bgf-rjszd   k8s-worker1   v1.35.7   channel=1.36-classic/candidate   done   absent   absent   absent
+    myk8scluster-worker-md-0-m8bgf-sxbrk   k8s-worker2   v1.35.7   channel=1.36-classic/candidate   done   absent   absent   absent
+    ```
+
+Assert final Machine annotations.
+
+```bash
+# Verify completed Machine upgrade annotations.
+kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -e '(.items | length == 3) and all(.items[]; .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-release"] == "channel=1.36-classic/candidate" and .metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-status"] == "done" and (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-to"] == null) and (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-last-failed-attempt-at"] == null) and (.metadata.annotations["v1beta2.k8sd.io/in-place-upgrade-change-id"] == null))' >/dev/null && printf "All Machine upgrades completed without residual request or failure annotations\n"
+```
+
+??? example "Expected result"
+    ```text
+    All Machine upgrades completed without residual request or failure annotations
+    ```
+
+Display final CAPI state.
+
+```bash
+# Display final CAPI control-plane, worker, and Machine status.
+kubectl --kubeconfig="$HOME/.kube/config" get ck8scontrolplanes,machinedeployments,machines
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-control-plane            true   true   1.35.7   1   1   1
+    myk8scluster-worker-md-0              True   2      2        2   Running   v1.35.7
+    myk8scluster-control-plane-cvgdl       k8s-ctrl      True   True   Running   v1.35.7
+    myk8scluster-worker-md-0-m8bgf-rjszd   k8s-worker1   True   True   Running   v1.35.7
+    myk8scluster-worker-md-0-m8bgf-sxbrk   k8s-worker2   True   True   Running   v1.35.7
+    ```
+
+Display final Cluster conditions.
+
+```bash
+# Display final Cluster availability and Machine readiness conditions.
+kubectl --kubeconfig="$HOME/.kube/config" get cluster myk8scluster -o json | jq -r '[.status.conditions[] | select(.type == "Available" or .type == "ControlPlaneAvailable" or .type == "WorkersAvailable" or .type == "ControlPlaneMachinesReady" or .type == "WorkerMachinesReady") | [.type, .status]] | sort_by(.[0])[] | @tsv'
+```
+
+??? example "Expected result"
+    ```text
+    Available                    True
+    ControlPlaneAvailable        True
+    ControlPlaneMachinesReady    True
+    WorkerMachinesReady          True
+    WorkersAvailable             True
+    ```
+
+Verify final management Pod health.
+
+```bash
+# Verify final management-cluster Pod health.
+kubectl --kubeconfig="$HOME/.kube/config" get pods -A -o json | jq -e 'all(.items[]; .status.phase == "Succeeded" or (.status.phase == "Running" and (.status.containerStatuses | type == "array") and (.status.containerStatuses | length > 0) and all(.status.containerStatuses[]; .ready == true)))' >/dev/null && printf "Management cluster Pods are healthy\n"
+```
+
+??? example "Expected result"
+    ```text
+    Management cluster Pods are healthy
+    ```
+
+Display final workload VM state.
+
+```bash
+# Display final workload VM state.
+lxc list --format csv -c ns | grep "^k8s-" | sort
+```
+
+??? example "Expected result"
+    ```text
+    k8s-ctrl,RUNNING
+    k8s-worker1,RUNNING
+    k8s-worker2,RUNNING
+    ```
+
+Verify both APIs after the upgrade.
+
+```bash
+# Verify final management and workload API readiness.
+kubectl --kubeconfig="$HOME/.kube/config" get --raw="/readyz" && kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get --raw="/readyz"
+```
+
+??? example "Expected result"
+    ```text
+    okok
+    ```
+
+Smoke-check the normalized monitor's completed-state path.
+
+```bash
+# Smoke-check the normalized Machine monitor after completion.
+wait_for_machine_upgrade() { local machine="$1" node="$2"; timeout 1800s bash -c 'last=""; while true; do state=$(lxc list "$2" --format csv -c s); if [[ "$state" == "STOPPED" ]] && lxc start "$2"; then printf "%s VM restarted after upgrade reboot\n" "$2"; fi; if ! machine_json=$(kubectl --kubeconfig="$HOME/.kube/config" get machine "$1" -o json 2>/dev/null); then sleep 10; continue; fi; status=$(jq -r ".metadata.annotations[\"v1beta2.k8sd.io/in-place-upgrade-status\"] // \"pending\"" <<<"$machine_json"); if [[ "$status" != "$last" ]]; then printf "%s upgrade status: %s\n" "$1" "$status"; last="$status"; fi; case "$status" in done) exit 0 ;; failed) exit 2 ;; esac; sleep 10; done' _ "$machine" "$node"; }; WORKER2_MACHINE=$(kubectl --kubeconfig="$HOME/.kube/config" get machines -l cluster.x-k8s.io/cluster-name=myk8scluster -o json | jq -er '[.items[] | select(.status.nodeRef.name == "k8s-worker2")][0].metadata.name') && wait_for_machine_upgrade "$WORKER2_MACHINE" k8s-worker2
+```
+
+??? example "Expected result"
+    ```text
+    myk8scluster-worker-md-0-m8bgf-sxbrk upgrade status: done
+    ```
+
+Validate the normalized stabilization helper.
+
+```bash
+# Validate the normalized post-upgrade stabilization helper.
+stabilize_node() { local node="$1" version="$2"; timeout 900s bash -c 'stable_since=0; while true; do state=$(lxc list "$1" --format csv -c s); if [[ "$state" == "STOPPED" ]] && lxc start "$1"; then printf "%s VM restarted during stabilization\n" "$1"; fi; current_version=$(kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" get node "$1" -o jsonpath="{.status.nodeInfo.kubeletVersion}" 2>/dev/null || true); if [[ "$state" == "RUNNING" && "$current_version" == "$2" ]] && kubectl --kubeconfig="$HOME/.kube/myk8scluster_config" wait --for=condition=Ready "node/$1" --timeout=10s >/dev/null 2>&1; then now=$(date +%s); [[ "$stable_since" -ne 0 ]] || stable_since=$now; if (( now - stable_since >= 120 )); then printf "%s remained Ready at %s for 120 seconds\n" "$1" "$2"; exit 0; fi; else stable_since=0; fi; sleep 10; done' _ "$node" "$version"; }; stabilize_node k8s-worker2 v1.36.4
+```
+
+??? example "Expected result"
+    ```text
+    k8s-worker2 remained Ready at v1.36.4 for 120 seconds
+    ```
